@@ -150,21 +150,21 @@ function SalesPage() {
 <meta charset="UTF-8">
 <title>Recibo de Venta #${sale.id}</title>
 <style>
-* { margin: 0; padding: 0; }
+* { margin: 0; padding: 0; line-height: 1; }
 html, body { margin: 0; padding: 0; }
-body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; }
+body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 1mm; }
 @page { margin: 0; padding: 0; size: 50mm auto; }
-.header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
-.header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
-.header p { font-size: 8pt; margin: 1mm 0 0 0; }
-.divider { border-bottom: 1px dashed #000; margin: 2mm 0; }
-.info-section { font-size: 7pt; margin-bottom: 3mm; }
-.info-row { display: flex; justify-content: space-between; margin-bottom: 1mm; }
+.header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 1mm; margin-bottom: 1mm; }
+.header h2 { font-size: 10pt; font-weight: bold; margin: 0; line-height: 1.2; }
+.header p { font-size: 7pt; margin: 0.5mm 0 0 0; }
+.divider { border-bottom: 1px dashed #000; margin: 1mm 0; }
+.info-section { font-size: 6.5pt; margin-bottom: 1mm; }
+.info-row { display: flex; justify-content: space-between; margin-bottom: 0.5mm; }
 .info-label { font-weight: bold; width: 35%; }
 .info-value { width: 60%; text-align: right; word-break: break-word; }
-.items-header { font-size: 7pt; font-weight: bold; text-align: center; margin-bottom: 1mm; }
-.item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; }
-.item-headers { display: flex; margin-bottom: 0.8mm; font-weight: bold; }
+.items-header { font-size: 6.5pt; font-weight: bold; text-align: center; margin-bottom: 0.5mm; }
+.item-block { font-size: 6pt; margin-bottom: 1mm; padding-bottom: 0.5mm; border-bottom: 1px dotted #ddd; }
+.item-headers { display: flex; margin-bottom: 0.3mm; font-weight: bold; }
 .item-values { display: flex; }
 .header-no { width: 8%; text-align: center; }
 .header-desc { width: 45%; text-align: left; }
@@ -174,10 +174,10 @@ body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; col
 .value-desc { width: 45%; text-align: left; word-break: break-word; }
 .value-qty { width: 17%; text-align: center; }
 .value-subtotal { width: 30%; text-align: right; }
-.total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2mm 0; margin: 2mm 0; }
-.total-label { font-size: 8pt; font-weight: bold; }
-.total-amount { font-size: 12pt; font-weight: bold; }
-.footer { text-align: center; font-size: 7pt; margin-top: 2mm; margin-bottom: 0; }
+.total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 1mm 0; margin: 1mm 0; }
+.total-label { font-size: 7pt; font-weight: bold; }
+.total-amount { font-size: 11pt; font-weight: bold; }
+.footer { text-align: center; font-size: 6.5pt; margin-top: 0.5mm; margin-bottom: 0; line-height: 1.2; }
 </style>
 </head>
 <body>
@@ -311,21 +311,21 @@ ${itemsHtml}
 <meta charset="UTF-8">
 <title>Recibo de Venta</title>
 <style>
-* { margin: 0; padding: 0; }
+* { margin: 0; padding: 0; line-height: 1; }
 html, body { margin: 0; padding: 0; }
-body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; }
+body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 1mm; }
 @page { margin: 0; padding: 0; size: 50mm auto; }
-.header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
-.header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
-.header p { font-size: 8pt; margin: 1mm 0 0 0; }
-.divider { border-bottom: 1px dashed #000; margin: 2mm 0; }
-.info-section { font-size: 7pt; margin-bottom: 3mm; }
-.info-row { display: flex; justify-content: space-between; margin-bottom: 1mm; }
+.header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 1mm; margin-bottom: 1mm; }
+.header h2 { font-size: 10pt; font-weight: bold; margin: 0; line-height: 1.2; }
+.header p { font-size: 7pt; margin: 0.5mm 0 0 0; }
+.divider { border-bottom: 1px dashed #000; margin: 1mm 0; }
+.info-section { font-size: 6.5pt; margin-bottom: 1mm; }
+.info-row { display: flex; justify-content: space-between; margin-bottom: 0.5mm; }
 .info-label { font-weight: bold; width: 35%; }
 .info-value { width: 60%; text-align: right; word-break: break-word; }
-.items-header { font-size: 7pt; font-weight: bold; text-align: center; margin-bottom: 1mm; }
-.item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; }
-.item-headers { display: flex; margin-bottom: 0.8mm; font-weight: bold; }
+.items-header { font-size: 6.5pt; font-weight: bold; text-align: center; margin-bottom: 0.5mm; }
+.item-block { font-size: 6pt; margin-bottom: 1mm; padding-bottom: 0.5mm; border-bottom: 1px dotted #ddd; }
+.item-headers { display: flex; margin-bottom: 0.3mm; font-weight: bold; }
 .item-values { display: flex; }
 .header-no { width: 8%; text-align: center; }
 .header-desc { width: 45%; text-align: left; }
@@ -335,10 +335,10 @@ body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; col
 .value-desc { width: 45%; text-align: left; word-break: break-word; }
 .value-qty { width: 17%; text-align: center; }
 .value-subtotal { width: 30%; text-align: right; }
-.total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2mm 0; margin: 2mm 0; }
-.total-label { font-size: 8pt; font-weight: bold; }
-.total-amount { font-size: 12pt; font-weight: bold; }
-.footer { text-align: center; font-size: 7pt; margin-top: 2mm; margin-bottom: 0; }
+.total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 1mm 0; margin: 1mm 0; }
+.total-label { font-size: 7pt; font-weight: bold; }
+.total-amount { font-size: 11pt; font-weight: bold; }
+.footer { text-align: center; font-size: 6.5pt; margin-top: 0.5mm; margin-bottom: 0; line-height: 1.2; }
 </style>
 </head>
 <body>
