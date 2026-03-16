@@ -222,27 +222,22 @@ ${itemsHtml}
 </div>
 
 <script>
-  // Forzar que solo se imprima una página sin espacios en blanco
   window.onbeforeprint = () => {
     document.body.style.height = 'auto'
     document.body.style.overflow = 'visible'
     document.documentElement.style.height = 'auto'
   }
   
-  // Enviar comando de corte de papel después de imprimir
   window.onafterprint = async () => {
     try {
       const printerServerUrl = '${process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'}'
-      // Cortar papel
       await fetch(printerServerUrl + '/api/cut-paper', { method: 'POST' })
-      // Luego abrir gavete
       await fetch(printerServerUrl + '/api/open-drawer', { method: 'POST' })
     } catch (error) {
       console.log('Servidor de impresora no disponible')
     }
   }
   
-  // Auto-imprimir cuando se abre la ventana
   window.onload = () => {
     setTimeout(() => {
       window.print()
@@ -391,20 +386,16 @@ ${itemsHtml}
 </div>
 
 <script>
-  // Forzar que solo se imprima una página sin espacios en blanco
   window.onbeforeprint = () => {
     document.body.style.height = 'auto'
     document.body.style.overflow = 'visible'
     document.documentElement.style.height = 'auto'
   }
   
-  // Enviar comando de corte de papel después de imprimir
   window.onafterprint = async () => {
     try {
       const printerServerUrl = '${process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'}'
-      // Cortar papel
       await fetch(printerServerUrl + '/api/cut-paper', { method: 'POST' })
-      // Luego abrir gavete
       await fetch(printerServerUrl + '/api/open-drawer', { method: 'POST' })
     } catch (error) {
       console.log('Servidor de impresora no disponible')
