@@ -225,6 +225,17 @@ ${itemsHtml}
     const printWindow = window.open('', '_blank', 'height=900,width=800,top=50,left=50,scrollbars=yes')
     printWindow.document.write(html)
     printWindow.document.close()
+    
+    // Ejecutar corte de papel después de imprimir
+    printWindow.onafterprint = async () => {
+      try {
+        const printerServerUrl = process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'
+        await fetch(printerServerUrl + '/api/cut-paper', { method: 'POST' })
+        await fetch(printerServerUrl + '/api/open-drawer', { method: 'POST' })
+      } catch (error) {
+        console.log('Servidor no disponible')
+      }
+    }
     } catch (error) {
       console.error('Error:', error)
       alert('Error al cargar la factura')
@@ -358,26 +369,22 @@ ${itemsHtml}
 <p>Gracias por su compra</p>
 <p>Vuelva pronto</p>
 </div>
-
-<script>
-  // Enviar comando de corte de papel después de imprimir
-  window.onafterprint = async () => {
-    try {
-      const printerServerUrl = '${process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'}'
-      // Cortar papel
-      await fetch(printerServerUrl + '/api/cut-paper', { method: 'POST' })
-      // Luego abrir gavete
-      await fetch(printerServerUrl + '/api/open-drawer', { method: 'POST' })
-    } catch (error) {
-      console.log('Servidor de impresora no disponible')
-    }
-  }
-</script>
 </body>
 </html>`
 
     printWindow.document.write(html)
     printWindow.document.close()
+    
+    // Ejecutar corte de papel después de imprimir
+    printWindow.onafterprint = async () => {
+      try {
+        const printerServerUrl = process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'
+        await fetch(printerServerUrl + '/api/cut-paper', { method: 'POST' })
+        await fetch(printerServerUrl + '/api/open-drawer', { method: 'POST' })
+      } catch (error) {
+        console.log('Servidor no disponible')
+      }
+    }
     
     setTimeout(() => {
       printWindow.focus()
