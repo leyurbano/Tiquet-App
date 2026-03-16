@@ -86,6 +86,31 @@ const searchCustomerByCedula = async (cedula) => {
   }
 }
 
+  // Agregar nuevo cliente
+  const addNewCustomer = async () => {
+    if (!customer.name.trim() || !customer.cedula.trim()) {
+      alert('Por favor completa nombre y cédula del cliente')
+      return
+    }
+
+    try {
+      const newCustomer = await clientService.createClient({
+        nombre: customer.name,
+        documento: customer.cedula,
+        telefono: customer.phone || ''
+      })
+
+      if (newCustomer) {
+        setCustomerFound(newCustomer)
+        setShowAddCustomerBtn(false)
+        alert('✅ Cliente registrado correctamente')
+      }
+    } catch (error) {
+      console.error('Error adding customer:', error)
+      alert('❌ Error al registrar el cliente')
+    }
+  }
+
   // Buscar producto por ID/item
   const getProductById = (productId) => {
     return products.find(p => p.id === parseInt(productId))
@@ -208,7 +233,7 @@ const handleSubmit = (e) => {
             {showAddCustomerBtn && customer.cedula.trim().length > 0 && (
               <button
                 type="button"
-                onClick={() => alert('Funcionalidad para agregar cliente')}
+                onClick={addNewCustomer}
                 className="btn-add-customer"
               >
                 ➕ Agregar Cliente
