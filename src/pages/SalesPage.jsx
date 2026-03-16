@@ -4,6 +4,7 @@ import SalesList from '../components/SalesList'
 import { salesService } from '../services/salesService'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
+import { getNowColombia, formatToColombia } from '../utils/dateFormatter'
 import './SalesPage.css'
 
 function SalesPage() {
@@ -36,10 +37,10 @@ function SalesPage() {
     setLoading(true)
     
     try {
-      // Crear la venta con columnas correctas
+      // Crear la venta con columnas correctas - USAR FECHA DE COLOMBIA
       const newSale = await salesService.createSale({
         cliente_id: saleData.cliente_id,
-        fecha: new Date().toISOString(),
+        fecha: getNowColombia(),
         total: saleData.total
       })
 
@@ -107,17 +108,8 @@ function SalesPage() {
       const clientDocument = clientData?.documento || 'N/A'
       const clientPhone = clientData?.telefono || 'N/A'
       
-      // Formatear fecha y hora - convertir a zona horaria local
-      const saleDate = new Date(sale.fecha)
-      const fechaStr = saleDate.toLocaleString('es-CO', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      })
+      // Formatear fecha y hora - SIEMPRE en zona horaria de Colombia
+      const fechaStr = formatToColombia(sale.fecha)
       
       const totalStr = sale.total.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 0})
 

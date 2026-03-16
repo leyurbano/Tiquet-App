@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
+import { formatToColombia } from '../utils/dateFormatter'
 
 function SalesList({ sales, clients = [], loading = false, onViewInvoice }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -58,7 +59,7 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice }) {
                   <td>#{sale.id}</td>
                   <td>{getClientName(sale.cliente_id)}</td>
                   <td className="amount-cell">{formatCOP(sale.total || 0)}</td>
-                  <td>{new Date(sale.fecha).toLocaleString()}</td>
+                  <td>{formatToColombia(sale.fecha)}</td>
                   <td>
                     <button 
                       onClick={() => onViewInvoice && onViewInvoice(sale)}

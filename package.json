@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.52.0",
+    "dayjs": "^1.11.20",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^6.20.0",
-    "@supabase/supabase-js": "^2.52.0"
+    "utc": "^0.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.6.0",
