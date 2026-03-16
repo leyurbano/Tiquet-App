@@ -151,7 +151,9 @@ function SalesPage() {
 <title>Recibo de Venta #${sale.id}</title>
 <style>
 * { margin: 0; padding: 0; }
+html, body { margin: 0; padding: 0; }
 body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; }
+@page { margin: 0; padding: 0; size: 50mm auto; }
 .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
 .header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
 .header p { font-size: 8pt; margin: 1mm 0 0 0; }
@@ -175,7 +177,7 @@ body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; col
 .total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2mm 0; margin: 2mm 0; }
 .total-label { font-size: 8pt; font-weight: bold; }
 .total-amount { font-size: 12pt; font-weight: bold; }
-.footer { text-align: center; font-size: 7pt; margin-top: 3mm; }
+.footer { text-align: center; font-size: 7pt; margin-top: 2mm; margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -288,7 +290,9 @@ ${itemsHtml}
 <title>Recibo de Venta</title>
 <style>
 * { margin: 0; padding: 0; }
+html, body { margin: 0; padding: 0; }
 body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; }
+@page { margin: 0; padding: 0; size: 50mm auto; }
 .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
 .header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
 .header p { font-size: 8pt; margin: 1mm 0 0 0; }
@@ -312,7 +316,7 @@ body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; col
 .total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2mm 0; margin: 2mm 0; }
 .total-label { font-size: 8pt; font-weight: bold; }
 .total-amount { font-size: 12pt; font-weight: bold; }
-.footer { text-align: center; font-size: 7pt; margin-top: 3mm; }
+.footer { text-align: center; font-size: 7pt; margin-top: 2mm; margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -371,10 +375,15 @@ ${itemsHtml}
     setShowPrintModal(false)
   }
 
-  // Abrir gavete de dinero
+  // Abrir gavete de dinero y cortar papel
   const openCashDrawer = async () => {
     try {
       const printerServerUrl = process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'
+      // Primero cortar el papel (terminar la impresión)
+      await fetch(`${printerServerUrl}/api/cut-paper`, {
+        method: 'POST'
+      })
+      // Luego abrir el gavete
       await fetch(`${printerServerUrl}/api/open-drawer`, {
         method: 'POST'
       })
