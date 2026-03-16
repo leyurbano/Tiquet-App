@@ -14,8 +14,8 @@ function ProductsPage() {
   const [productsPerPage] = useState(1000)
 
   useEffect(() => {
-    loadProducts(currentPage)
-  }, [currentPage])
+    loadProducts(1)
+  }, [])
 
   const loadProducts = async (page) => {
     setLoading(true)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './ProductList.css'
 import { formatCOP } from '../utils/currencyFormatter'
 
@@ -9,7 +9,6 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
     if (!searchTerm.trim()) return true
     return (product.descripcion || '').toLowerCase().includes(searchTerm.toLowerCase())
   })
-  console.log('RENDER products:', products?.length, 'filtered:', filteredProducts?.length, 'loading:', loading)
 
   return (
     <div className="product-list-container">

@@ -4,8 +4,6 @@ export const productService = {
   // Obtener todos los productos con paginación
   async getAllProducts(page = 1, limit = 1000) {
     try {
-      console.log(`🔍 Iniciando carga de productos página ${page}...`)
-      
       const offset = (page - 1) * limit
       const { data, error, count } = await supabase
         .from('productos')
@@ -14,15 +12,12 @@ export const productService = {
         .range(offset, offset + limit - 1)
       
       if (error) {
-        console.error('❌ Error de Supabase:', error.message)
         throw error
       }
       
-      console.log(`✅ Productos cargados: ${data?.length || 0} de ${count} total`)
       return { data: data || [], total: count || 0, page, limit }
     } catch (error) {
-      console.error('❌ Error fetching products:', error.message || error)
-      console.error('📍 Stack:', error.stack)
+      console.error('❌ Error fetching products:', error.message)
       return { data: [], total: 0, page, limit }
     }
   },

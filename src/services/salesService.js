@@ -1,10 +1,10 @@
 import { supabase } from './supabaseClient'
 
 export const salesService = {
-  // Obtener todas las ventas
-  async getAllSales() {
+  // Obtener todas las ventas (opcionalmente filtradas por fecha)
+  async getAllSales(filterByToday = false) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('ventas')
         .select(`
           *,
@@ -13,7 +13,20 @@ export const salesService = {
             productos (*)
           )
         `)
-        .order('id', { ascending: false })
+
+      // Si se solicita, filtrar solo las ventas de hoy
+      if (filterByToday) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const tomorrow = new Date(today)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        
+        query = query
+          .gte('fecha', today.toISOString())
+          .lt('fecha', tomorrow.toISOString())
+      }
+
+      const { data, error } = await query.order('id', { ascending: false })
       
       if (error) throw error
       return data || []
@@ -49,8 +62,6 @@ export const salesService = {
   // Crear venta
   async createSale(sale) {
     try {
-      console.log('📝 Intentando crear venta con:', sale)
-      
       const { data, error } = await supabase
         .from('ventas')
         .insert([{
@@ -61,11 +72,10 @@ export const salesService = {
         .select()
       
       if (error) {
-        console.error('❌ Error de Supabase:', error)
+        console.error('Error de Supabase:', error)
         throw error
       }
       
-      console.log('✅ Venta creada:', data?.[0])
       return data?.[0]
     } catch (error) {
       console.error('Error creating sale:', error.message || error)

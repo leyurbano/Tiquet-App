@@ -28,6 +28,15 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+.search-input:invalid {
+  border-color: #e5e7eb;
+}
+
+.search-input:invalid:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 .empty-message {
   text-align: center;
   color: #6b7280;

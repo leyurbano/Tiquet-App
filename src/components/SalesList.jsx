@@ -2,36 +2,44 @@ import React, { useState, useEffect } from 'react'
 import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
 
-function SalesList({ sales, loading = false }) {
+function SalesList({ sales, clients = [], loading = false, onViewInvoice }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredSales, setFilteredSales] = useState(sales)
 
+  // Función para obtener el nombre del cliente
+  const getClientName = (clienteId) => {
+    if (!clienteId) return 'Sin cliente'
+    const client = clients.find(c => c.id === clienteId)
+    return client ? client.nombre : `Cliente #${clienteId}`
+  }
+
   useEffect(() => {
-    const filtered = sales.filter(sale =>
-      (sale.customer_name && sale.customer_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (sale.customer_phone && sale.customer_phone.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+    const filtered = sales.filter(sale => {
+      const clientName = getClientName(sale.cliente_id).toLowerCase()
+      return clientName.includes(searchTerm.toLowerCase()) || 
+             sale.cliente_id.toString().includes(searchTerm)
+    })
     setFilteredSales(filtered)
-  }, [searchTerm, sales])
+  }, [searchTerm, sales, clients])
 
   if (loading) {
-    return <div className="loading-text">⏳ Cargando ventas...</div>
+    return <div className="loading-text">⏳ Cargando ventas del día...</div>
   }
 
   return (
     <div className="sales-list-container">
-      <h2 className="sales-list-title">Historial de Ventas</h2>
+      <h2 className="sales-list-title">Historial de Ventas del Día</h2>
 
       <input
         type="text"
-        placeholder="Buscar por cliente o email..."
+        placeholder="Buscar por nombre de cliente..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         className="search-input"
       />
 
       {filteredSales.length === 0 ? (
-        <p className="empty-message">No hay ventas registradas</p>
+        <p className="empty-message">No hay ventas registradas hoy</p>
       ) : (
         <div className="table-wrapper">
           <table className="sales-table">
@@ -39,27 +47,27 @@ function SalesList({ sales, loading = false }) {
               <tr className="table-header">
                 <th>ID</th>
                 <th>Cliente</th>
-                <th>Teléfono</th>
                 <th className="amount-cell">Monto</th>
-                <th>Método</th>
-                <th>Estado</th>
                 <th>Fecha</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredSales.map(sale => (
                 <tr key={sale.id} className="table-row">
                   <td>#{sale.id}</td>
-                  <td>{sale.customer_name}</td>
-                  <td>{sale.customer_phone}</td>
-                  <td className="amount-cell">{formatCOP(sale.total_amount)}</td>
-                  <td>{sale.payment_method}</td>
+                  <td>{getClientName(sale.cliente_id)}</td>
+                  <td className="amount-cell">{formatCOP(sale.total || 0)}</td>
+                  <td>{new Date(sale.fecha).toLocaleString()}</td>
                   <td>
-                    <span className={`status-badge status-${sale.status}`}>
-                      {sale.status}
-                    </span>
+                    <button 
+                      onClick={() => onViewInvoice && onViewInvoice(sale)}
+                      className="btn-invoice"
+                      title="Ver factura"
+                    >
+                      📄 Factura
+                    </button>
                   </td>
-                  <td>{new Date(sale.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>

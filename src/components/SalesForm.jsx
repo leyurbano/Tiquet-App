@@ -111,6 +111,9 @@ const handleSubmit = (e) => {
     cliente_id: customerFound?.id || null,
     fecha: saleDate,
     total: calculateTotal(),
+    customer_name: customer.name || 'N/A',
+    customer_cedula: customer.cedula || 'N/A',
+    customer_phone: customer.phone || 'N/A',
     items: items.map(item => ({
       producto_id: item.product_id,
       cantidad: item.quantity,

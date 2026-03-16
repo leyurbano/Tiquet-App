@@ -42,26 +42,32 @@
 
 .sales-grid {
   width: 100%;
-  max-width: 50%;
+  max-width: 90%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   gap: 2rem;
 }
 
 .form-section {
   width: 100%;
+  order: 1;
 }
 
 .list-section {
-  display: none;
+  width: 100%;
+  order: 2;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .list-section.with-form {
-  display: none;
+  display: block !important;
 }
 
 .list-section.full-width {
-  display: none;
+  display: block !important;
 }
 
 @media (max-width: 1024px) {
@@ -92,3 +98,69 @@
     font-size: 1.875rem;
   }
 }
+
+/* Modal de Impresión */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+}
+
+.modal-content h2 {
+  margin-bottom: 1.5rem;
+  color: #111827;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-print,
+.btn-skip {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-print {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-print:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.btn-skip {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.btn-skip:hover {
+  background-color: #d1d5db;
+  transform: translateY(-2px);
+}
+
