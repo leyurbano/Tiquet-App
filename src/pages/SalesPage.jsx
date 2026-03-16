@@ -219,6 +219,28 @@ ${itemsHtml}
 <p>Gracias por su compra</p>
 <p>Vuelva pronto</p>
 </div>
+
+<script>
+  // Enviar comando de corte de papel después de imprimir
+  window.onafterprint = async () => {
+    try {
+      const printerServerUrl = '${process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'}'
+      // Cortar papel
+      await fetch(printerServerUrl + '/api/cut-paper', { method: 'POST' })
+      // Luego abrir gavete
+      await fetch(printerServerUrl + '/api/open-drawer', { method: 'POST' })
+    } catch (error) {
+      console.log('Servidor de impresora no disponible')
+    }
+  }
+  
+  // Auto-imprimir cuando se abre la ventana
+  window.onload = () => {
+    setTimeout(() => {
+      window.print()
+    }, 500)
+  }
+</script>
 </body>
 </html>`
 
@@ -358,6 +380,21 @@ ${itemsHtml}
 <p>Gracias por su compra</p>
 <p>Vuelva pronto</p>
 </div>
+
+<script>
+  // Enviar comando de corte de papel después de imprimir
+  window.onafterprint = async () => {
+    try {
+      const printerServerUrl = '${process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'}'
+      // Cortar papel
+      await fetch(printerServerUrl + '/api/cut-paper', { method: 'POST' })
+      // Luego abrir gavete
+      await fetch(printerServerUrl + '/api/open-drawer', { method: 'POST' })
+    } catch (error) {
+      console.log('Servidor de impresora no disponible')
+    }
+  }
+</script>
 </body>
 </html>`
 
@@ -367,28 +404,20 @@ ${itemsHtml}
     setTimeout(() => {
       printWindow.focus()
       printWindow.print()
-      
-      // Abrir gavete después de imprimir
-      openCashDrawer()
     }, 500)
     
     setShowPrintModal(false)
   }
 
-  // Abrir gavete de dinero y cortar papel
+  // Esta función ya no se necesita pues el corte se maneja desde el HTML impreso
+  // Se mantiene para compatibilidad futura
   const openCashDrawer = async () => {
     try {
       const printerServerUrl = process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'
-      // Primero cortar el papel (terminar la impresión)
-      await fetch(`${printerServerUrl}/api/cut-paper`, {
-        method: 'POST'
-      })
-      // Luego abrir el gavete
       await fetch(`${printerServerUrl}/api/open-drawer`, {
         method: 'POST'
       })
     } catch (error) {
-      // Silenciosamente fallar si el servidor no está disponible
       console.log('Gavete no disponible o servidor no conectado')
     }
   }
