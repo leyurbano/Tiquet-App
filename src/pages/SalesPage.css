@@ -1,0 +1,94 @@
+/* SalesPage.css */
+
+.sales-page {
+  width: 100%;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sales-header {
+  width: 100%;
+  max-width: 50%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 2rem;
+}
+
+.sales-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.btn-new-sale {
+  background-color: #16a34a;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.btn-new-sale:hover {
+  background-color: #15803d;
+}
+
+.sales-grid {
+  width: 100%;
+  max-width: 50%;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.form-section {
+  width: 100%;
+}
+
+.list-section {
+  display: none;
+}
+
+.list-section.with-form {
+  display: none;
+}
+
+.list-section.full-width {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .sales-grid {
+    max-width: 90%;
+  }
+
+  .sales-header {
+    max-width: 90%;
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sales-grid {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  .sales-header {
+    max-width: 100%;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0;
+  }
+
+  .sales-title {
+    font-size: 1.875rem;
+  }
+}

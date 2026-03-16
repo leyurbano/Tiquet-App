@@ -1,0 +1,135 @@
+/* SalesList.css */
+
+.sales-list-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.sales-list-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.empty-message {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem 0;
+}
+
+.loading-text {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-header {
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-header th {
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
+}
+
+.amount-cell {
+  text-align: right !important;
+}
+
+.table-row {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+.table-row:hover {
+  background-color: #f9fafb;
+}
+
+.sales-table td {
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.sales-table td:first-child {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.sales-table td:nth-child(2) {
+  font-weight: 500;
+}
+
+.sales-table td:nth-child(5) {
+  text-align: right;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-completed {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-cancelled {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+@media (max-width: 768px) {
+  .sales-table {
+    font-size: 0.875rem;
+  }
+  
+  .sales-table th,
+  .sales-table td {
+    padding: 0.5rem;
+  }
+}

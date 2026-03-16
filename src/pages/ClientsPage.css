@@ -1,0 +1,33 @@
+.clients-page-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.clients-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .clients-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.clients-form-column {
+  flex-shrink: 0;
+}
+
+.clients-list-column {
+  flex: 1;
+}
+
+@media (max-width: 1024px) {
+  .clients-form-column,
+  .clients-list-column {
+    width: 100%;
+  }
+}
