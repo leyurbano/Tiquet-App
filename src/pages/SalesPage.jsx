@@ -371,9 +371,25 @@ ${itemsHtml}
     setTimeout(() => {
       printWindow.focus()
       printWindow.print()
+      
+      // Abrir gavete después de imprimir
+      openCashDrawer()
     }, 500)
     
     setShowPrintModal(false)
+  }
+
+  // Abrir gavete de dinero
+  const openCashDrawer = async () => {
+    try {
+      const printerServerUrl = process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'
+      await fetch(`${printerServerUrl}/api/open-drawer`, {
+        method: 'POST'
+      })
+    } catch (error) {
+      // Silenciosamente fallar si el servidor no está disponible
+      console.log('Gavete no disponible o servidor no conectado')
+    }
   }
 
   return (
