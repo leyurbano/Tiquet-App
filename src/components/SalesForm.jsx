@@ -14,10 +14,39 @@ function SalesForm({ products, onSubmit, onCancel }) {
 
   const [items, setItems] = useState([])
   const [selectedProduct, setSelectedProduct] = useState('')
+  const [productSearch, setProductSearch] = useState('')
+  const [filteredProducts, setFilteredProducts] = useState([])
   const [quantity, setQuantity] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [customerFound, setCustomerFound] = useState(null)
   const [showAddCustomerBtn, setShowAddCustomerBtn] = useState(false)
+
+  // Buscar productos por descripción/nombre
+  const handleProductSearch = (searchValue) => {
+    setProductSearch(searchValue)
+    
+    if (!searchValue.trim()) {
+      setFilteredProducts([])
+      setSelectedProduct('')
+      return
+    }
+
+    const search = searchValue.toLowerCase()
+    const filtered = products.filter(p => 
+      p.descripcion.toLowerCase().includes(search) ||
+      p.name?.toLowerCase().includes(search) ||
+      p.id.toString().includes(search)
+    )
+    
+    setFilteredProducts(filtered)
+  }
+
+  const selectProductFromSearch = (product) => {
+    setSelectedProduct(product.id.toString())
+    setProductSearch(product.descripcion)
+    setFilteredProducts([])
+  }
+
 // DESPUÉS
 const searchCustomerByCedula = async (cedula) => {
   const trimmedCedula = cedula.trim()
@@ -224,23 +253,44 @@ const handleSubmit = (e) => {
                 type="number"
                 placeholder="producto"
                 value={selectedProduct}
-                onChange={(e) => setSelectedProduct(e.target.value)}
+                onChange={(e) => {
+                  setSelectedProduct(e.target.value)
+                  if (e.target.value) {
+                    const product = products.find(p => p.id === parseInt(e.target.value))
+                    if (product) {
+                      setProductSearch(product.descripcion)
+                    }
+                  } else {
+                    setProductSearch('')
+                  }
+                }}
                 maxLength="5"
                 className="form-input"
               />
             </div>
-            <div className="form-group">
+            <div className="form-group product-search-group">
               <label className="form-label">Descripción</label>
-              <div className="product-display">
-                {selectedProductData ? (
-                  <>
-                    <span className="product-name">{selectedProductData.descripcion}</span>
-                    <span className="product-price">{formatCOP(selectedProductData.precio_venta)}</span>
-                  </>
-                ) : (
-                  <span className="product-empty">Selecciona un item</span>
-                )}
-              </div>
+              <input
+                type="text"
+                placeholder="Busca por nombre..."
+                value={productSearch}
+                onChange={(e) => handleProductSearch(e.target.value)}
+                className="form-input"
+              />
+              {filteredProducts.length > 0 && (
+                <div className="product-dropdown">
+                  {filteredProducts.map(product => (
+                    <div
+                      key={product.id}
+                      className="product-option"
+                      onClick={() => selectProductFromSearch(product)}
+                    >
+                      <span className="product-option-name">{product.descripcion}</span>
+                      <span className="product-option-price">{formatCOP(product.precio_venta)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="form-group">
               <label className="form-label">Cantidad</label>
