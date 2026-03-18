@@ -127,13 +127,14 @@ function SalesPage() {
   .item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; }
   .item-headers { display: flex; margin-bottom: 0.8mm; font-weight: bold; }
   .item-values { display: flex; }
-  .header-no { width: 6%; text-align: center; }
-  .header-desc { width: 38%; text-align: left; }
-  .header-qty { width: 12%; text-align: center; }
+  .header-no { width: 5%; text-align: center; }
+  .header-desc { width: 43%; text-align: left; }
+  .header-qty { width: 8%; text-align: center; }
   .header-subtotal { width: 44%; text-align: right; }
-  .value-no { width: 6%; text-align: center; }
-  .value-desc { width: 38%; text-align: left; word-break: break-word; }
-  .value-qty { width: 12%; text-align: center; }
+
+  .value-no { width: 5%; text-align: center; }
+  .value-desc { width: 43%; text-align: left; word-break: break-word; }
+  .value-qty { width: 8%; text-align: center; }
   .value-subtotal { width: 44%; text-align: right; white-space: nowrap; }
   .total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2mm 0; margin: 2mm 0; }
   .total-label { font-size: 8pt; font-weight: bold; }
