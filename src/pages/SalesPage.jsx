@@ -152,20 +152,20 @@ function SalesPage() {
 <style>
 * { margin: 0; padding: 0; }
 html, body { margin: 0; padding: 0; }
-body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; }
+body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; margin: 0 auto; text-align: center; }
 @page { margin: 0; padding: 0; size: 50mm auto; }
 .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
 .header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
 .header p { font-size: 8pt; margin: 1mm 0 0 0; }
 .divider { border-bottom: 1px dashed #000; margin: 2mm 0; }
-.info-section { font-size: 7pt; margin-bottom: 3mm; }
-.info-row { display: flex; justify-content: space-between; margin-bottom: 1mm; }
-.info-label { font-weight: bold; width: 35%; }
+.info-section { font-size: 7pt; margin-bottom: 3mm; text-align: center; }
+.info-row { display: flex; justify-content: center; margin-bottom: 1mm; }
+.info-label { font-weight: bold; width: 35%; text-align: left; }
 .info-value { width: 60%; text-align: right; word-break: break-word; }
 .items-header { font-size: 7pt; font-weight: bold; text-align: center; margin-bottom: 1mm; }
-.item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; }
-.item-headers { display: flex; margin-bottom: 0.8mm; font-weight: bold; }
-.item-values { display: flex; }
+.item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; text-align: center; }
+.item-headers { display: flex; justify-content: center; margin-bottom: 0.8mm; font-weight: bold; }
+.item-values { display: flex; justify-content: center; }
 .header-no { width: 8%; text-align: center; }
 .header-desc { width: 45%; text-align: left; }
 .header-qty { width: 17%; text-align: center; }
@@ -182,7 +182,8 @@ body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; col
 </head>
 <body>
 <div class="header">
-<h2>RECIBO DE VENTA <br> FRALU DETALLES</h2>
+<img src="/Fralu.png" alt="Logo Fralu" style="width: 40mm; height: auto; margin-bottom: 2mm;">
+<h2>RECIBO DE VENTA</h2>
 <p>${fechaStr}</p>
 </div>
 
@@ -302,20 +303,20 @@ ${itemsHtml}
 <style>
 * { margin: 0; padding: 0; }
 html, body { margin: 0; padding: 0; }
-body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; }
+body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; margin: 0 auto; text-align: center; }
 @page { margin: 0; padding: 0; size: 50mm auto; }
 .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
 .header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
 .header p { font-size: 8pt; margin: 1mm 0 0 0; }
 .divider { border-bottom: 1px dashed #000; margin: 2mm 0; }
-.info-section { font-size: 7pt; margin-bottom: 3mm; }
-.info-row { display: flex; justify-content: space-between; margin-bottom: 1mm; }
-.info-label { font-weight: bold; width: 35%; }
+.info-section { font-size: 7pt; margin-bottom: 3mm; text-align: center; }
+.info-row { display: flex; justify-content: center; margin-bottom: 1mm; }
+.info-label { font-weight: bold; width: 35%; text-align: left; }
 .info-value { width: 60%; text-align: right; word-break: break-word; }
 .items-header { font-size: 7pt; font-weight: bold; text-align: center; margin-bottom: 1mm; }
-.item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; }
-.item-headers { display: flex; margin-bottom: 0.8mm; font-weight: bold; }
-.item-values { display: flex; }
+.item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; text-align: center; }
+.item-headers { display: flex; justify-content: center; margin-bottom: 0.8mm; font-weight: bold; }
+.item-values { display: flex; justify-content: center; }
 .header-no { width: 8%; text-align: center; }
 .header-desc { width: 45%; text-align: left; }
 .header-qty { width: 17%; text-align: center; }
@@ -331,8 +332,7 @@ body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; col
 </style>
 </head>
 <body>
-<div class="header">
-<h2>RECIBO DE VENTA <br> FRALU DETALLES</h2>
+<div class="header"><img src="/Fralu.png" alt="Logo Fralu" style="width: 40mm; height: auto; margin-bottom: 2mm;"><h2>RECIBO DE VENTA <br> FRALU DETALLES</h2>
 <p>${fechaStr}</p>
 </div>
 
