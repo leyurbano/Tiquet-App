@@ -152,8 +152,8 @@ function SalesPage() {
 <style>
 * { margin: 0; padding: 0; }
 html, body { margin: 0; padding: 0; }
-body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; margin: 0 auto; text-align: center; }
-@page { margin: 0; padding: 0; size: 50mm auto; }
+body { font-family: 'Courier New', monospace; width: 55mm; background: #fff; color: #000; padding: 2mm 1mm; margin: 0 auto; text-align: center; }
+@page { margin: 0; padding: 0; size: 55mm auto; }
 .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
 .header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
 .header p { font-size: 8pt; margin: 1mm 0 0 0; }
@@ -303,8 +303,8 @@ ${itemsHtml}
 <style>
 * { margin: 0; padding: 0; }
 html, body { margin: 0; padding: 0; }
-body { font-family: 'Courier New', monospace; width: 50mm; background: #fff; color: #000; padding: 2mm; margin: 0 auto; text-align: center; }
-@page { margin: 0; padding: 0; size: 50mm auto; }
+body { font-family: 'Courier New', monospace; width: 55mm; background: #fff; color: #000; padding: 2mm 1mm; margin: 0 auto; text-align: center; }
+@page { margin: 0; padding: 0; size: 55mm auto; }
 .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
 .header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
 .header p { font-size: 8pt; margin: 1mm 0 0 0; }
