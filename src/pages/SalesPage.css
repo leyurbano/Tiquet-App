@@ -10,7 +10,7 @@
 
 .sales-header {
   width: 100%;
-  max-width: 50%;
+  max-width: 90%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -60,14 +60,6 @@
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
-}
-
-.list-section.with-form {
-  display: block !important;
-}
-
-.list-section.full-width {
-  display: block !important;
 }
 
 @media (max-width: 1024px) {
@@ -164,3 +156,8 @@
   transform: translateY(-2px);
 }
 
+@media print {
+  .sales-page {
+    display: none !important;
+  }
+}
