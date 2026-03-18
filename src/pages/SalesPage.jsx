@@ -91,55 +91,55 @@ function SalesPage() {
 
   // CSS compartido para ambas plantillas de impresión
   const getReceiptCSS = () => `
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; width: 55mm; }
-    body { 
-      font-family: 'Courier New', monospace; 
-      background: #fff; 
-      color: #000; 
-      padding: 1mm; 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; width: 55mm; }
+  body { 
+    font-family: 'Courier New', monospace; 
+    background: #fff; 
+    color: #000; 
+    padding: 1mm; 
+  }
+  @page { 
+    margin: 0mm; 
+    padding: 0; 
+    size: 55mm auto; 
+  }
+  @media print {
+    html, body {
+      width: 55mm;
+      margin: 0 !important;
+      padding: 0 !important;
     }
-    @page { 
-      margin: 0mm; 
-      padding: 0; 
-      size: 55mm auto; 
+    * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-    @media print {
-      html, body {
-        width: 55mm;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-      * {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-    }
-    .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
-    .header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
-    .header p { font-size: 8pt; margin: 1mm 0 0 0; }
-    .divider { border-bottom: 1px dashed #000; margin: 2mm 0; }
-    .info-section { font-size: 7pt; margin-bottom: 3mm; text-align: center; }
-    .info-row { display: flex; justify-content: center; margin-bottom: 1mm; }
-    .info-label { font-weight: bold; width: 35%; text-align: left; }
-    .info-value { width: 60%; text-align: right; word-break: break-word; }
-    .items-header { font-size: 7pt; font-weight: bold; text-align: center; margin-bottom: 1mm; }
-    .item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; text-align: center; }
-    .item-headers { display: flex; justify-content: center; margin-bottom: 0.8mm; font-weight: bold; }
-    .item-values { display: flex; justify-content: center; }
-    .header-no { width: 8%; text-align: center; }
-    .header-desc { width: 45%; text-align: left; }
-    .header-qty { width: 17%; text-align: center; }
-    .header-subtotal { width: 30%; text-align: right; }
-    .value-no { width: 8%; text-align: center; }
-    .value-desc { width: 45%; text-align: left; word-break: break-word; }
-    .value-qty { width: 17%; text-align: center; }
-    .value-subtotal { width: 30%; text-align: right; }
-    .total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2mm 0; margin: 2mm 0; }
-    .total-label { font-size: 8pt; font-weight: bold; }
-    .total-amount { font-size: 12pt; font-weight: bold; }
-    .footer { text-align: center; font-size: 7pt; margin-top: 2mm; margin-bottom: 0; }
-  `
+  }
+  .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3mm; margin-bottom: 3mm; }
+  .header h2 { font-size: 11pt; font-weight: bold; margin: 0; }
+  .header p { font-size: 8pt; margin: 1mm 0 0 0; }
+  .divider { border-bottom: 1px dashed #000; margin: 2mm 0; }
+  .info-section { font-size: 7pt; margin-bottom: 3mm; }
+  .info-row { display: flex; justify-content: flex-start; margin-bottom: 1mm; padding: 0 2mm; }
+  .info-label { font-weight: bold; width: 30%; text-align: left; }
+  .info-value { width: 70%; text-align: left; padding-left: 2mm; word-break: break-word; }
+  .items-header { font-size: 7pt; font-weight: bold; text-align: center; margin-bottom: 1mm; }
+  .item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; }
+  .item-headers { display: flex; margin-bottom: 0.8mm; font-weight: bold; }
+  .item-values { display: flex; }
+  .header-no { width: 6%; text-align: center; }
+  .header-desc { width: 38%; text-align: left; }
+  .header-qty { width: 12%; text-align: center; }
+  .header-subtotal { width: 44%; text-align: right; }
+  .value-no { width: 6%; text-align: center; }
+  .value-desc { width: 38%; text-align: left; word-break: break-word; }
+  .value-qty { width: 12%; text-align: center; }
+  .value-subtotal { width: 44%; text-align: right; white-space: nowrap; }
+  .total-section { text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2mm 0; margin: 2mm 0; }
+  .total-label { font-size: 8pt; font-weight: bold; }
+  .total-amount { font-size: 12pt; font-weight: bold; }
+  .footer { text-align: center; font-size: 7pt; margin-top: 2mm; margin-bottom: 0; }
+`
 
   // Función para abrir ventana e imprimir esperando imagen
   const printAndCut = (printWindow) => {
