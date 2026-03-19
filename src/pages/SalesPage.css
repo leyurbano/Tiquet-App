@@ -65,6 +65,8 @@ html, body {
   flex-shrink: 0;
   min-width: 0;
   order: 1;
+  box-sizing: border-box;  /* agrega esto */
+  padding-left: 1rem;  
 }
 
 .list-section {
