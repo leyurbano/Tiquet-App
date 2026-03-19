@@ -49,7 +49,7 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice }) {
                 <th>ID</th>
                 <th>Cliente</th>
                 <th className="amount-cell">Monto</th>
-                <th>Fecha</th>
+                
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -59,7 +59,7 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice }) {
                   <td>#{sale.id}</td>
                   <td>{getClientName(sale.cliente_id)}</td>
                   <td className="amount-cell">{formatCOP(sale.total || 0)}</td>
-                  <td>{formatToColombia(sale.fecha)}</td>
+                
                   <td>
                     <button 
                       onClick={() => onViewInvoice && onViewInvoice(sale)}
