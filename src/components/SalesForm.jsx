@@ -21,23 +21,19 @@ function SalesForm({ products, onSubmit, onCancel }) {
   const [customerFound, setCustomerFound] = useState(null)
   const [showAddCustomerBtn, setShowAddCustomerBtn] = useState(false)
 
-  // Buscar productos por descripción/nombre
   const handleProductSearch = (searchValue) => {
     setProductSearch(searchValue)
-    
     if (!searchValue.trim()) {
       setFilteredProducts([])
       setSelectedProduct('')
       return
     }
-
     const search = searchValue.toLowerCase()
     const filtered = products.filter(p => 
       p.descripcion.toLowerCase().includes(search) ||
       p.name?.toLowerCase().includes(search) ||
       p.id.toString().includes(search)
     )
-    
     setFilteredProducts(filtered)
   }
 
@@ -47,59 +43,47 @@ function SalesForm({ products, onSubmit, onCancel }) {
     setFilteredProducts([])
   }
 
-// DESPUÉS
-const searchCustomerByCedula = async (cedula) => {
-  const trimmedCedula = cedula.trim()
-  
-  // Limpiar si está vacío
-  if (!trimmedCedula || trimmedCedula.length === 0) {
-    setCustomer({ name: '', cedula: '', phone: '' })
-    setShowAddCustomerBtn(false)
-    setCustomerFound(null)
-    return
-  }
-
-  // Actualizar campo cédula
-  setCustomer(prev => ({ ...prev, cedula: cedula }))
-
-  // Solo buscar si tiene al menos 6 caracteres
-  if (trimmedCedula.length < 6) return
-
-  try {
-    const foundCustomer = await clientService.getClientByDocument(trimmedCedula)
-    
-    if (foundCustomer) {
-      setCustomer({
-        name: foundCustomer.nombre,
-        cedula: foundCustomer.documento,
-        phone: foundCustomer.telefono
-      })
-      setCustomerFound(foundCustomer)
+  const searchCustomerByCedula = async (cedula) => {
+    const trimmedCedula = cedula.trim()
+    if (!trimmedCedula || trimmedCedula.length === 0) {
+      setCustomer({ name: '', cedula: '', phone: '' })
       setShowAddCustomerBtn(false)
-    } else {
-      setShowAddCustomerBtn(true)
       setCustomerFound(null)
+      return
     }
-  } catch (error) {
-    console.error('Error searching customer:', error)
-    setShowAddCustomerBtn(false)
+    setCustomer(prev => ({ ...prev, cedula: cedula }))
+    if (trimmedCedula.length < 6) return
+    try {
+      const foundCustomer = await clientService.getClientByDocument(trimmedCedula)
+      if (foundCustomer) {
+        setCustomer({
+          name: foundCustomer.nombre,
+          cedula: foundCustomer.documento,
+          phone: foundCustomer.telefono
+        })
+        setCustomerFound(foundCustomer)
+        setShowAddCustomerBtn(false)
+      } else {
+        setShowAddCustomerBtn(true)
+        setCustomerFound(null)
+      }
+    } catch (error) {
+      console.error('Error searching customer:', error)
+      setShowAddCustomerBtn(false)
+    }
   }
-}
 
-  // Agregar nuevo cliente
   const addNewCustomer = async () => {
     if (!customer.name.trim() || !customer.cedula.trim()) {
       alert('Por favor completa nombre y cédula del cliente')
       return
     }
-
     try {
       const newCustomer = await clientService.createClient({
         nombre: customer.name,
         documento: customer.cedula,
         telefono: customer.phone || ''
       })
-
       if (newCustomer) {
         setCustomerFound(newCustomer)
         setShowAddCustomerBtn(false)
@@ -111,7 +95,6 @@ const searchCustomerByCedula = async (cedula) => {
     }
   }
 
-  // Buscar producto por ID/item
   const getProductById = (productId) => {
     return products.find(p => p.id === parseInt(productId))
   }
@@ -120,12 +103,9 @@ const searchCustomerByCedula = async (cedula) => {
 
   const addItem = () => {
     if (!selectedProduct || !quantity) return
-
     const product = products.find(p => p.id === parseInt(selectedProduct))
     if (!product) return
-
     const existingItem = items.find(item => item.product_id === product.id)
-    
     if (existingItem) {
       setItems(items.map(item =>
         item.product_id === product.id
@@ -140,7 +120,6 @@ const searchCustomerByCedula = async (cedula) => {
         quantity: parseInt(quantity)
       }])
     }
-
     setSelectedProduct('')
     setQuantity('')
   }
@@ -153,39 +132,36 @@ const searchCustomerByCedula = async (cedula) => {
     return items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
   }
 
- 
-const handleSubmit = (e) => {
-  e.preventDefault()
-  if (items.length === 0) {
-    alert('Agrega al menos un producto')
-    return
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (items.length === 0) {
+      alert('Agrega al menos un producto')
+      return
+    }
+    onSubmit({
+      cliente_id: customerFound?.id || null,
+      fecha: saleDate,
+      total: calculateTotal(),
+      customer_name: customer.name || 'N/A',
+      customer_cedula: customer.cedula || 'N/A',
+      customer_phone: customer.phone || 'N/A',
+      items: items.map(item => ({
+        producto_id: item.product_id,
+        cantidad: item.quantity,
+        precio: item.unit_price
+      }))
+    })
+    setSaleDate(new Date().toISOString().split('T')[0])
+    setCustomer({ name: '', cedula: '', phone: '' })
+    setItems([])
   }
-
-  onSubmit({
-    cliente_id: customerFound?.id || null,
-    fecha: saleDate,
-    total: calculateTotal(),
-    customer_name: customer.name || 'N/A',
-    customer_cedula: customer.cedula || 'N/A',
-    customer_phone: customer.phone || 'N/A',
-    items: items.map(item => ({
-      producto_id: item.product_id,
-      cantidad: item.quantity,
-      precio: item.unit_price
-    }))
-  })
-
-  setSaleDate(new Date().toISOString().split('T')[0])
-  setCustomer({ name: '', cedula: '', phone: '' })
-  setItems([])
-}
 
   return (
     <form onSubmit={handleSubmit} className="sales-form-wrapper">
       <h2 className="form-title">📝 Nueva Venta</h2>
 
-      {/* Datos de la Venta y Cliente */}
-      <div className="form-section">
+      {/* Fecha y Forma de Pago */}
+      <div className="sf-section">
         <div className="form-row-2">
           <div className="form-group">
             <label className="form-label">Fecha</label>
@@ -214,7 +190,7 @@ const handleSubmit = (e) => {
       </div>
 
       {/* Datos del Cliente */}
-      <div className="form-section">
+      <div className="sf-section">
         <h3 className="form-section-title">👤 Datos del Cliente</h3>
         <div className="form-row-3">
           <div className="form-group">
@@ -223,10 +199,7 @@ const handleSubmit = (e) => {
               type="text"
               placeholder="CC, CE, NIT"
               value={customer.cedula}
-              onChange={(e) => {
-                const newValue = e.target.value
-                searchCustomerByCedula(newValue)
-              }}
+              onChange={(e) => searchCustomerByCedula(e.target.value)}
               maxLength="10"
               className="form-input"
             />
@@ -240,7 +213,6 @@ const handleSubmit = (e) => {
               </button>
             )}
           </div>
-
           <div className="form-group">
             <label className="form-label">Nombre Completo</label>
             <input
@@ -252,7 +224,6 @@ const handleSubmit = (e) => {
               className="form-input"
             />
           </div>
-          
           <div className="form-group">
             <label className="form-label">Celular</label>
             <input
@@ -268,7 +239,7 @@ const handleSubmit = (e) => {
       </div>
 
       {/* Agregar productos */}
-      <div className="form-section">
+      <div className="sf-section">
         <h3 className="form-section-title">🛒 Agregar Productos</h3>
         <div className="add-product-section">
           <div className="form-row-add-item">
@@ -282,9 +253,7 @@ const handleSubmit = (e) => {
                   setSelectedProduct(e.target.value)
                   if (e.target.value) {
                     const product = products.find(p => p.id === parseInt(e.target.value))
-                    if (product) {
-                      setProductSearch(product.descripcion)
-                    }
+                    if (product) setProductSearch(product.descripcion)
                   } else {
                     setProductSearch('')
                   }
@@ -341,7 +310,7 @@ const handleSubmit = (e) => {
 
       {/* Items de la venta */}
       {items.length > 0 && (
-        <div className="form-section">
+        <div className="sf-section">
           <h3 className="form-section-title">📦 Productos en la Venta</h3>
           <div className="sales-items-table">
             <div className="table-header-sales">
@@ -370,7 +339,7 @@ const handleSubmit = (e) => {
             ))}
           </div>
 
-          <div className="total-section">
+          <div className="sf-total">
             <span className="total-label">💰 Total de la Compra:</span>
             <span className="total-amount">{formatCOP(calculateTotal())}</span>
           </div>
@@ -379,17 +348,10 @@ const handleSubmit = (e) => {
 
       {/* Botones */}
       <div className="form-buttons">
-        <button
-          type="submit"
-          className="btn-submit"
-        >
+        <button type="submit" className="btn-submit">
           ✅ Registrar Venta
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn-cancel"
-        >
+        <button type="button" onClick={onCancel} className="btn-cancel">
           ❌ Cancelar
         </button>
       </div>
