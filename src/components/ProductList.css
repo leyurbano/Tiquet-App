@@ -28,6 +28,7 @@
   margin-bottom: 1rem;
   font-size: 0.9375rem;
   transition: border-color 0.2s;
+  box-sizing: border-box; /* FIX: evita que el input se desborde */
 }
 
 .search-input:focus {
@@ -58,16 +59,20 @@
   color: #6b7280;
 }
 
+/* FIX: width: 100% para que el scroll horizontal funcione correctamente */
 .table-wrapper {
   overflow-x: auto;
   overflow-y: visible;
   margin-bottom: 1.5rem;
   max-height: none;
   height: auto;
+  width: 100%;
 }
 
+/* FIX: min-width fuerza el scroll horizontal cuando la pantalla es angosta */
 .products-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
   font-size: 0.9375rem;
   background-color: white;
@@ -129,13 +134,17 @@
   font-weight: 600;
 }
 
+/* FIX: eliminado display:flex que rompía la celda de tabla */
 .cell-actions {
   padding: 0.75rem 1rem;
   text-align: center;
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  white-space: nowrap;
+}
+
+/* FIX: separación entre botones sin usar flex en el td */
+.cell-actions .btn-edit,
+.cell-actions .btn-delete {
+  margin: 0 0.25rem;
 }
 
 .btn-edit,
