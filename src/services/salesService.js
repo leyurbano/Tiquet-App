@@ -1,4 +1,12 @@
 import { supabase } from './supabaseClient'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+const COLOMBIA_TZ = 'America/Bogota'
 
 export const salesService = {
   // Obtener ventas por fecha específica (por defecto hoy)
@@ -14,26 +22,23 @@ export const salesService = {
           )
         `)
 
-      // Filtrar por fecha específica
       if (fecha) {
-        const start = new Date(fecha)
-        start.setHours(0, 0, 0, 0)
-        const end = new Date(fecha)
-        end.setHours(23, 59, 59, 999)
+        // Construye medianoche y fin del día en hora colombiana → convierte a UTC real
+        const start = dayjs.tz(`${fecha} 00:00:00`, COLOMBIA_TZ).toISOString()
+        const end   = dayjs.tz(`${fecha} 23:59:59`, COLOMBIA_TZ).toISOString()
 
         query = query
-          .gte('fecha', start.toISOString())
-          .lte('fecha', end.toISOString())
+          .gte('fecha', start)
+          .lte('fecha', end)
 
       } else if (filterByToday) {
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const tomorrow = new Date(today)
-        tomorrow.setDate(tomorrow.getDate() + 1)
+        const today = dayjs().tz(COLOMBIA_TZ).format('YYYY-MM-DD')
+        const start = dayjs.tz(`${today} 00:00:00`, COLOMBIA_TZ).toISOString()
+        const end   = dayjs.tz(`${today} 23:59:59`, COLOMBIA_TZ).toISOString()
 
         query = query
-          .gte('fecha', today.toISOString())
-          .lt('fecha', tomorrow.toISOString())
+          .gte('fecha', start)
+          .lte('fecha', end)
       }
 
       const { data, error } = await query.order('id', { ascending: false })
@@ -76,7 +81,7 @@ export const salesService = {
         .from('ventas')
         .insert([{
           cliente_id: sale.cliente_id,
-          fecha: sale.fecha || new Date().toISOString(),
+          fecha: sale.fecha || dayjs().tz(COLOMBIA_TZ).toISOString(),
           total: sale.total
         }])
         .select()
