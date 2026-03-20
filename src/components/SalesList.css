@@ -17,7 +17,7 @@
 /* Barra de búsqueda + botón fecha en una fila */
 .sales-search-bar {
   display: flex;
-  align-items:normal center;
+  align-items: stretch;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
@@ -44,7 +44,7 @@
 }
 
 .btn-date {
-  padding: 0.63rem 0.75rem;    
+  padding: 0 0.65rem;
   background-color: #eff6ff;
   color: #1d4ed8;
   border: 1px solid #bfdbfe;
@@ -54,9 +54,10 @@
   font-weight: 600;
   white-space: nowrap;
   transition: background-color 0.2s, border-color 0.2s;
-  display: flex;             /* ← centra el texto verticalmente */
+  display: flex;
   align-items: center;
   box-sizing: border-box;
+  height: 70%;
 }
 
 .btn-date:hover {
@@ -64,7 +65,7 @@
   border-color: #93c5fd;
 }
 
-/* Input date invisible, solo se usa para abrir el picker */
+/* Input date invisible */
 .date-input-hidden {
   position: absolute;
   top: 0;
@@ -91,7 +92,7 @@
 
 /* Scroll: ~10 filas */
 .table-wrapper {
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
   max-height: 400px;
   width: 100%;
@@ -108,7 +109,8 @@
 .sales-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
+  min-width: 350px;
 }
 
 .table-header {
@@ -123,18 +125,24 @@
   font-weight: 600;
   color: #4b5563;
   text-transform: uppercase;
-  overflow: hidden;
 }
 
-/* Anchos fijos por columna */
+/* Anchos por columna */
 .sales-table th:nth-child(1),
-.sales-table td:nth-child(1) { width: 12%; }
+.sales-table td:nth-child(1) { width: 10%; }
+
 .sales-table th:nth-child(2),
 .sales-table td:nth-child(2) { width: 35%; }
+
 .sales-table th:nth-child(3),
-.sales-table td:nth-child(3) { width: 20%; text-align: right; }
+.sales-table td:nth-child(3) { width: 25%; text-align: right; }
+
 .sales-table th:nth-child(4),
-.sales-table td:nth-child(4) { width: 33%; text-align: center; }
+.sales-table td:nth-child(4) { width: 30%; text-align: center; min-width: 140px; }
+
+.table-header th:last-child {
+  text-align: center;
+}
 
 .amount-cell {
   text-align: right !important;
@@ -153,9 +161,9 @@
   padding: 0.5rem 0.4rem;
   text-align: left;
   font-size: 0.8rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .sales-table td:first-child {
@@ -166,21 +174,62 @@
   font-weight: 500;
 }
 
+/* Celda de acciones */
+.actions-cell {
+  text-align: center;
+  padding: 0.5rem 0.4rem;
+  overflow: visible !important;
+  white-space: normal !important;
+  height: auto;
+}
+
+.actions-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+}
+
 .btn-invoice {
-  padding: 0.3rem 0.75rem;
+  padding: 0.3rem 0.5rem;
   background-color: #3b82f6;
   color: white;
   border: none;
   border-radius: 0.375rem;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 500;
   transition: background-color 0.2s;
-  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-invoice:hover { background-color: #2563eb; }
 .btn-invoice:active { background-color: #1d4ed8; }
+
+/* Botón eliminar venta */
+.btn-delete-sale {
+  padding: 0.3rem 0.5rem;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-delete-sale:hover {
+  background-color: #fecaca;
+  border-color: #f87171;
+}
+
+.btn-delete-sale:active {
+  background-color: #dc2626;
+  color: white;
+}
 
 /* Barra de total al pie */
 .sales-total-bar {

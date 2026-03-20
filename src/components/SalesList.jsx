@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
 
-function SalesList({ sales, clients = [], loading = false, onViewInvoice, selectedDate, onDateChange }) {
+function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredSales, setFilteredSales] = useState(sales)
   const dateInputRef = useRef(null)
@@ -24,7 +24,6 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, select
 
   const totalDia = filteredSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
 
-  // Muestra "Hoy" si es hoy, si no "DD/MM/YYYY"
   const formatDateLabel = (dateStr) => {
     const today = new Date()
     const yyyy = today.getFullYear()
@@ -40,6 +39,14 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, select
     dateInputRef.current?.showPicker()
   }
 
+  const handleDelete = (sale) => {
+    const clientName = getClientName(sale.cliente_id)
+    const confirmMsg = `¿Eliminar la venta #${sale.id} de ${clientName} por ${formatCOP(sale.total)}?\n\nEsto restaurará el stock de los productos.`
+    if (window.confirm(confirmMsg)) {
+      onDelete && onDelete(sale.id)
+    }
+  }
+
   if (loading) {
     return <div className="loading-text">⏳ Cargando ventas...</div>
   }
@@ -48,7 +55,6 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, select
     <div className="sales-list-container">
       <h2 className="sales-list-title">Historial de Ventas</h2>
 
-      {/* Barra de búsqueda + botón fecha */}
       <div className="sales-search-bar">
         <input
           type="text"
@@ -88,7 +94,7 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, select
                   <th>ID</th>
                   <th>Cliente</th>
                   <th className="amount-cell">Monto</th>
-                  <th>Acciones</th>
+                  <th style={{ textAlign: 'center' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -97,14 +103,23 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, select
                     <td>#{sale.id}</td>
                     <td>{getClientName(sale.cliente_id)}</td>
                     <td className="amount-cell">{formatCOP(sale.total || 0)}</td>
-                    <td>
-                      <button
-                        onClick={() => onViewInvoice && onViewInvoice(sale)}
-                        className="btn-invoice"
-                        title="Ver factura"
-                      >
-                        📄 Factura
-                      </button>
+                    <td className="actions-cell">
+                      <div className="actions-buttons">
+                        <button
+                          onClick={() => onViewInvoice && onViewInvoice(sale)}
+                          className="btn-invoice"
+                          title="Ver factura"
+                        >
+                          📄
+                        </button>
+                        <button
+                          onClick={() => handleDelete(sale)}
+                          className="btn-delete-sale"
+                          title="Eliminar venta y restaurar stock"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

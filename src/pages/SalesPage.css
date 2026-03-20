@@ -57,26 +57,20 @@ html, body {
   flex-direction: row;
   align-items: flex-start;
   gap: 1rem;
-   padding-right: 1rem;
 }
 
 .form-section {
-  width: 60%;
+  width: 58%;
   flex-shrink: 0;
   min-width: 0;
   order: 1;
 }
 
 .list-section {
-  width: 40%;
-  flex-shrink: 0;
-  min-width: 0;
-  max-width: 40%;
+  flex: 1;              /* ← toma el espacio restante */
+  min-width: 0;         /* ← necesario para que flex funcione bien */
+  overflow: visible;    /* ← era hidden, cortaba los botones */
   order: 2;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  overflow: hidden;
 }
 
 @media (max-width: 1024px) {

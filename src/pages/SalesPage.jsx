@@ -435,7 +435,7 @@ ${itemsHtml}
             onDateChange={setSelectedDate}
             onViewInvoice={handleViewInvoice}
             onDelete={async (id) => {
-              if (window.confirm('¿Eliminar esta venta?')) {
+              if (window.confirm("¿Eliminar esta venta y restaurar el stock?")) {
                 await salesService.deleteSale(id)
                 await loadSalesByDate(selectedDate)
               }
