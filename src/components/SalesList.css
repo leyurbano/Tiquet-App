@@ -17,7 +17,7 @@
 /* Barra de búsqueda + botón fecha en una fila */
 .sales-search-bar {
   display: flex;
-  align-items: center;
+  align-items:normal center;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
@@ -44,7 +44,7 @@
 }
 
 .btn-date {
-  padding: 0.35rem 0.75rem;
+  padding: 0.63rem 0.75rem;    
   background-color: #eff6ff;
   color: #1d4ed8;
   border: 1px solid #bfdbfe;
@@ -54,6 +54,9 @@
   font-weight: 600;
   white-space: nowrap;
   transition: background-color 0.2s, border-color 0.2s;
+  display: flex;             /* ← centra el texto verticalmente */
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .btn-date:hover {
