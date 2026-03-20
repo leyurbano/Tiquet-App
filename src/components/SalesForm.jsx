@@ -3,7 +3,7 @@ import './SalesForm.css'
 import { formatCOP } from '../utils/currencyFormatter'
 import { clientService } from '../services/clientService'
 
-function SalesForm({ products, onSubmit, onCancel }) {
+function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId = null }) {
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0])
   
   const [customer, setCustomer] = useState({
@@ -20,6 +20,7 @@ function SalesForm({ products, onSubmit, onCancel }) {
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [customerFound, setCustomerFound] = useState(null)
   const [showAddCustomerBtn, setShowAddCustomerBtn] = useState(false)
+  const [autoSetFinalCustomer, setAutoSetFinalCustomer] = useState(false)
 
   const handleProductSearch = (searchValue) => {
     setProductSearch(searchValue)
@@ -101,8 +102,14 @@ function SalesForm({ products, onSubmit, onCancel }) {
 
   const selectedProductData = selectedProduct ? getProductById(selectedProduct) : null
 
-  const addItem = () => {
+  const addItem = async () => {
     if (!selectedProduct || !quantity) return
+    
+    // Si no hay cliente seleccionado, buscar cliente 222222222 en la base de datos
+    if (!customerFound && !autoSetFinalCustomer && !customer.cedula.trim()) {
+      await searchCustomerByCedula('222222222')
+    }
+    
     const product = products.find(p => p.id === parseInt(selectedProduct))
     if (!product) return
     const existingItem = items.find(item => item.product_id === product.id)
@@ -122,6 +129,7 @@ function SalesForm({ products, onSubmit, onCancel }) {
     }
     setSelectedProduct('')
     setQuantity('')
+    setAutoSetFinalCustomer(true)
   }
 
   const removeItem = (productId) => {

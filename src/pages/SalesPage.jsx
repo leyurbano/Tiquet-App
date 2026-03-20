@@ -15,6 +15,7 @@ function SalesPage() {
   const [loading, setLoading] = useState(false)
   const [lastSale, setLastSale] = useState(null)
   const [showPrintModal, setShowPrintModal] = useState(false)
+  const [finalCustomerId, setFinalCustomerId] = useState(null)
 
   // Fecha seleccionada: por defecto hoy en formato YYYY-MM-DD
   const getTodayLocal = () => {
@@ -44,6 +45,13 @@ function SalesPage() {
     ])
     setProducts(productsData.data || [])
     setClients(clientsData)
+    
+    // Buscar cliente final por documento 222222222
+    const finalCustomer = clientsData.find(c => c.documento === '222222222')
+    if (finalCustomer) {
+      setFinalCustomerId(finalCustomer.id)
+    }
+    
     await loadSalesByDate(getTodayLocal())
     setLoading(false)
   }
@@ -420,8 +428,10 @@ ${itemsHtml}
           <div className="form-section">
             <SalesForm
               products={products}
+              clients={clients}
               onSubmit={handleCreateSale}
               onCancel={() => setShowForm(false)}
+              finalCustomerId={finalCustomerId}
             />
           </div>
         )}
