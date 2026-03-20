@@ -8,7 +8,7 @@ function Navbar({ currentPage, setCurrentPage }) {
         <div className="navbar-content">
           {/* Logo */}
           <div className="navbar-logo">
-            <h1 className="logo-title">📊 SisVentas</h1>
+            <h1 className="logo-title">📊 Tiquet-App</h1>
           </div>
 
           {/* Navigation Links */}

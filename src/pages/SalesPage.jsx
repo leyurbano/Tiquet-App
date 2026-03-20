@@ -15,27 +15,57 @@ function SalesPage() {
   const [loading, setLoading] = useState(false)
   const [lastSale, setLastSale] = useState(null)
   const [showPrintModal, setShowPrintModal] = useState(false)
+  const [finalCustomerId, setFinalCustomerId] = useState(null)
+
+  // Fecha seleccionada: por defecto hoy en formato YYYY-MM-DD
+  const getTodayLocal = () => {
+    const now = new Date()
+    const yyyy = now.getFullYear()
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const dd = String(now.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+  }
+
+  const [selectedDate, setSelectedDate] = useState(getTodayLocal())
 
   useEffect(() => {
-    loadData()
+    loadInitialData()
   }, [])
 
-  const loadData = async () => {
+  // Recargar ventas cuando cambia la fecha
+  useEffect(() => {
+    loadSalesByDate(selectedDate)
+  }, [selectedDate])
+
+  const loadInitialData = async () => {
     setLoading(true)
-    const [salesData, productsData, clientsData] = await Promise.all([
-      salesService.getAllSales(true),
+    const [productsData, clientsData] = await Promise.all([
       productService.getAllProducts(),
       clientService.getAllClients()
     ])
-    setSales(salesData)
     setProducts(productsData.data || [])
     setClients(clientsData)
+    
+    // Buscar cliente final por documento 222222222
+    const finalCustomer = clientsData.find(c => c.documento === '222222222')
+    if (finalCustomer) {
+      setFinalCustomerId(finalCustomer.id)
+    }
+    
+    await loadSalesByDate(getTodayLocal())
+    setLoading(false)
+  }
+
+  const loadSalesByDate = async (fecha) => {
+    setLoading(true)
+    const salesData = await salesService.getAllSales(false, fecha)
+    setSales(salesData)
     setLoading(false)
   }
 
   const handleCreateSale = async (saleData) => {
     setLoading(true)
-    
+
     try {
       const newSale = await salesService.createSale({
         cliente_id: saleData.cliente_id,
@@ -75,7 +105,8 @@ function SalesPage() {
         })
         setShowPrintModal(true)
 
-        await loadData()
+        // Recargar ventas de la fecha actualmente seleccionada
+        await loadSalesByDate(selectedDate)
         setShowForm(true)
         alert('✅ Venta registrada exitosamente')
       } else {
@@ -85,11 +116,10 @@ function SalesPage() {
       console.error('Error:', error)
       alert('❌ Error al registrar la venta')
     }
-    
+
     setLoading(false)
   }
 
-  // CSS compartido para ambas plantillas de impresión
   const getReceiptCSS = () => `
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { margin: 0; padding: 0; width: 55mm; }
@@ -131,7 +161,6 @@ function SalesPage() {
   .header-desc { width: 43%; text-align: left; }
   .header-qty { width: 8%; text-align: center; }
   .header-subtotal { width: 44%; text-align: right; }
-
   .value-no { width: 5%; text-align: center; }
   .value-desc { width: 43%; text-align: left; word-break: break-word; }
   .value-qty { width: 8%; text-align: center; }
@@ -142,10 +171,9 @@ function SalesPage() {
   .footer { text-align: center; font-size: 7pt; margin-top: 2mm; margin-bottom: 0; }
 `
 
-  // Función para abrir ventana e imprimir esperando imagen
   const printAndCut = (printWindow) => {
     const img = printWindow.document.querySelector('img')
-    
+
     printWindow.onafterprint = async () => {
       try {
         const printerServerUrl = process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'
@@ -227,9 +255,7 @@ function SalesPage() {
   <p style="font-size: 7pt; margin: 1mm 0;">3212389832</p>
   <p>${fechaStr}</p>
 </div>
-
 <div class="divider"></div>
-
 <div class="info-section">
   <div class="info-row">
     <span class="info-label">Cliente:</span>
@@ -244,19 +270,14 @@ function SalesPage() {
     <span class="info-value">${clientPhone}</span>
   </div>
 </div>
-
 <div class="divider"></div>
-
 <div class="items-header">ARTICULOS</div>
 ${itemsHtml}
-
 <div class="divider"></div>
-
 <div class="total-section">
   <div class="total-label">TOTAL</div>
   <div class="total-amount">$${totalStr}</div>
 </div>
-
 <div class="footer">
   <p>Gracias por su compra</p>
   <p>Vuelva pronto</p>
@@ -338,9 +359,7 @@ ${itemsHtml}
   <p style="font-size: 7pt; margin: 1mm 0;">3212389832</p>
   <p>${fechaStr}</p>
 </div>
-
 <div class="divider"></div>
-
 <div class="info-section">
   <div class="info-row">
     <span class="info-label">Cliente:</span>
@@ -355,19 +374,14 @@ ${itemsHtml}
     <span class="info-value">${clientePhone}</span>
   </div>
 </div>
-
 <div class="divider"></div>
-
 <div class="items-header">ARTICULOS</div>
 ${itemsHtml}
-
 <div class="divider"></div>
-
 <div class="total-section">
   <div class="total-label">TOTAL</div>
   <div class="total-amount">$${totalStr}</div>
 </div>
-
 <div class="footer">
   <p>Gracias por su compra</p>
   <p>Vuelva pronto</p>
@@ -380,15 +394,6 @@ ${itemsHtml}
     printAndCut(printWindow)
 
     setShowPrintModal(false)
-  }
-
-  const openCashDrawer = async () => {
-    try {
-      const printerServerUrl = process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'
-      await fetch(`${printerServerUrl}/api/open-drawer`, { method: 'POST' })
-    } catch (error) {
-      console.log('Gavete no disponible o servidor no conectado')
-    }
   }
 
   return (
@@ -423,8 +428,10 @@ ${itemsHtml}
           <div className="form-section">
             <SalesForm
               products={products}
+              clients={clients}
               onSubmit={handleCreateSale}
               onCancel={() => setShowForm(false)}
+              finalCustomerId={finalCustomerId}
             />
           </div>
         )}
@@ -434,11 +441,13 @@ ${itemsHtml}
             sales={sales}
             clients={clients}
             loading={loading}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
             onViewInvoice={handleViewInvoice}
             onDelete={async (id) => {
-              if (window.confirm('¿Eliminar esta venta?')) {
+              if (window.confirm("¿Eliminar esta venta y restaurar el stock?")) {
                 await salesService.deleteSale(id)
-                await loadData()
+                await loadSalesByDate(selectedDate)
               }
             }}
           />
