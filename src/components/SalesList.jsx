@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
-import { formatToColombia } from '../utils/dateFormatter'
 
-function SalesList({ sales, clients = [], loading = false, onViewInvoice }) {
+function SalesList({ sales, clients = [], loading = false, onViewInvoice, selectedDate, onDateChange }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredSales, setFilteredSales] = useState(sales)
+  const dateInputRef = useRef(null)
 
   const getClientName = (clienteId) => {
     if (!clienteId) return 'Sin cliente'
@@ -22,27 +22,63 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice }) {
     setFilteredSales(filtered)
   }, [searchTerm, sales, clients])
 
-  // Total del día
   const totalDia = filteredSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
 
+  // Muestra "Hoy" si es hoy, si no "DD/MM/YYYY"
+  const formatDateLabel = (dateStr) => {
+    const today = new Date()
+    const yyyy = today.getFullYear()
+    const mm = String(today.getMonth() + 1).padStart(2, '0')
+    const dd = String(today.getDate()).padStart(2, '0')
+    const todayStr = `${yyyy}-${mm}-${dd}`
+    if (dateStr === todayStr) return 'Hoy'
+    const [y, m, d] = dateStr.split('-')
+    return `${d}/${m}/${y}`
+  }
+
+  const handleDateButtonClick = () => {
+    dateInputRef.current?.showPicker()
+  }
+
   if (loading) {
-    return <div className="loading-text">⏳ Cargando ventas del día...</div>
+    return <div className="loading-text">⏳ Cargando ventas...</div>
   }
 
   return (
     <div className="sales-list-container">
-      <h2 className="sales-list-title">Historial de Ventas del Día</h2>
+      <h2 className="sales-list-title">Historial de Ventas</h2>
 
-      <input
-        type="text"
-        placeholder="Buscar cliente..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="search-input"
-      />
+      {/* Barra de búsqueda + botón fecha */}
+      <div className="sales-search-bar">
+        <input
+          type="text"
+          placeholder="Buscar cliente..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+        <div className="date-picker-wrapper">
+          <button
+            className="btn-date"
+            onClick={handleDateButtonClick}
+            title="Seleccionar fecha"
+          >
+            📅 {formatDateLabel(selectedDate)}
+          </button>
+          <input
+            ref={dateInputRef}
+            type="date"
+            value={selectedDate}
+            onChange={(e) => onDateChange(e.target.value)}
+            className="date-input-hidden"
+          />
+        </div>
+      </div>
 
       {filteredSales.length === 0 ? (
-        <p className="empty-message">No hay ventas registradas hoy</p>
+        <p className="empty-message">
+          📭 No hay ventas para el {formatDateLabel(selectedDate) === 'Hoy' ? 'día de hoy' : formatDateLabel(selectedDate)}
+        </p>
       ) : (
         <>
           <div className="table-wrapper">
@@ -76,10 +112,9 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice }) {
             </table>
           </div>
 
-          {/* Total del día */}
           <div className="sales-total-bar">
             <span className="sales-total-label">
-              Total del día ({filteredSales.length} {filteredSales.length === 1 ? 'venta' : 'ventas'})
+              Total ({filteredSales.length} {filteredSales.length === 1 ? 'venta' : 'ventas'})
             </span>
             <span className="sales-total-amount">{formatCOP(totalDia)}</span>
           </div>

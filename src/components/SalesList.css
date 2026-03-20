@@ -14,13 +14,19 @@
   color: #111827;
 }
 
-/* Input más pequeño */
+/* Barra de búsqueda + botón fecha en una fila */
+.sales-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
 .search-input {
-  width: 60%;
+  width: 55%;
   padding: 0.35rem 0.65rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  margin-bottom: 0.75rem;
   font-size: 0.8125rem;
   transition: border-color 0.2s;
   box-sizing: border-box;
@@ -30,6 +36,40 @@
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Botón fecha */
+.date-picker-wrapper {
+  position: relative;
+}
+
+.btn-date {
+  padding: 0.35rem 0.75rem;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.btn-date:hover {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+}
+
+/* Input date invisible, solo se usa para abrir el picker */
+.date-input-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .empty-message {
@@ -46,7 +86,7 @@
   color: #6b7280;
 }
 
-/* Scroll: muestra 10 filas (~40px cada una = 400px) y luego scroll */
+/* Scroll: ~10 filas */
 .table-wrapper {
   overflow-x: hidden;
   overflow-y: auto;
@@ -166,6 +206,10 @@
 @media (max-width: 768px) {
   .search-input {
     width: 100%;
+  }
+
+  .sales-search-bar {
+    flex-wrap: wrap;
   }
 
   .sales-table th,

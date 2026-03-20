@@ -1,8 +1,8 @@
 import { supabase } from './supabaseClient'
 
 export const salesService = {
-  // Obtener todas las ventas (opcionalmente filtradas por fecha)
-  async getAllSales(filterByToday = false) {
+  // Obtener ventas por fecha específica (por defecto hoy)
+  async getAllSales(filterByToday = false, fecha = null) {
     try {
       let query = supabase
         .from('ventas')
@@ -14,20 +14,30 @@ export const salesService = {
           )
         `)
 
-      // Si se solicita, filtrar solo las ventas de hoy
-      if (filterByToday) {
+      // Filtrar por fecha específica
+      if (fecha) {
+        const start = new Date(fecha)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(fecha)
+        end.setHours(23, 59, 59, 999)
+
+        query = query
+          .gte('fecha', start.toISOString())
+          .lte('fecha', end.toISOString())
+
+      } else if (filterByToday) {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         const tomorrow = new Date(today)
         tomorrow.setDate(tomorrow.getDate() + 1)
-        
+
         query = query
           .gte('fecha', today.toISOString())
           .lt('fecha', tomorrow.toISOString())
       }
 
       const { data, error } = await query.order('id', { ascending: false })
-      
+
       if (error) throw error
       return data || []
     } catch (error) {
@@ -50,7 +60,7 @@ export const salesService = {
         `)
         .eq('id', id)
         .single()
-      
+
       if (error) throw error
       return data
     } catch (error) {
@@ -70,12 +80,12 @@ export const salesService = {
           total: sale.total
         }])
         .select()
-      
+
       if (error) {
         console.error('Error de Supabase:', error)
         throw error
       }
-      
+
       return data?.[0]
     } catch (error) {
       console.error('Error creating sale:', error.message || error)
@@ -96,7 +106,7 @@ export const salesService = {
           total: item.cantidad * item.precio
         }])
         .select()
-      
+
       if (error) throw error
       return data?.[0]
     } catch (error) {
@@ -112,7 +122,7 @@ export const salesService = {
         .from('ventas')
         .delete()
         .eq('id', id)
-      
+
       if (error) throw error
       return true
     } catch (error) {
