@@ -35,68 +35,44 @@
   background-color: #15803d;
 }
 
+/* Mobile: una sola columna */
 .products-grid {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 2rem;
 }
 
-.form-section {
-  grid-column: span 1;
-  min-height: auto;
+.products-form-section {
+  width: 100%;
 }
 
-.list-section {
-  grid-column: span 1;
-  min-height: auto;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
-  overflow: visible !important;
-  width: 100% !important;
-  height: auto !important;
+.products-list-section {
+  width: 100%;
+  min-width: 0;
 }
 
-.list-section.with-form {
-  grid-column: span 1;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  order: 2;
-}
-
-.form-section {
-  order: 1;
-}
-
-.list-section.full-width {
-  grid-column: span 1;
-}
-
+/* Desktop: flex row cuando hay formulario */
 @media (min-width: 1024px) {
   .products-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    flex-direction: row;
+    align-items: flex-start;
   }
-  
-  .form-section {
-    grid-column: span 1;
-    order: 1;
+
+  .products-form-section {
+    width: 380px;
+    flex-shrink: 0;
   }
-  
-  .list-section {
-    grid-column: span 1;
-    order: 2;
+
+  /* Con formulario: lista toma el espacio restante */
+  .products-list-section.with-form {
+    flex: 1;
+    min-width: 0;
   }
-  
-  .list-section.with-form {
-    grid-column: span 1;
-    order: 2;
-  }
-  
-  .list-section.full-width {
-    grid-column: span 2;
+
+  /* Sin formulario: lista ocupa todo el ancho */
+  .products-list-section.full-width {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
   }
 }

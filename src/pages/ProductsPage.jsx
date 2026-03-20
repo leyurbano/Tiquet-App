@@ -92,7 +92,7 @@ function ProductsPage() {
 
       <div className="products-grid">
         {showForm && (
-          <div className="form-section">
+          <div className="products-form-section">
             <ProductForm
               initialData={editingProduct}
               onSubmit={handleSubmit}
@@ -100,7 +100,7 @@ function ProductsPage() {
             />
           </div>
         )}
-        <div className={`list-section ${showForm ? 'with-form' : 'full-width'}`}>
+        <div className={`products-list-section ${showForm ? 'with-form' : 'full-width'}`}>
           <ProductList
             products={products}
             onEdit={handleEdit}
