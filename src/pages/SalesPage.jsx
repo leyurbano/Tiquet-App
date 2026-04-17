@@ -446,8 +446,13 @@ ${itemsHtml}
             onViewInvoice={handleViewInvoice}
             onDelete={async (id) => {
               if (window.confirm("¿Eliminar esta venta y restaurar el stock?")) {
-                await salesService.deleteSale(id)
-                await loadSalesByDate(selectedDate)
+                const result = await salesService.deleteSaleWithRestore(id)
+                if (result.success) {
+                  alert(`✅ Venta eliminada y ${result.itemsRestored} producto(s) restaurado(s)`)
+                  await loadSalesByDate(selectedDate)
+                } else {
+                  alert(`❌ Error al eliminar la venta: ${result.error}`)
+                }
               }
             }}
           />
