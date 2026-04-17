@@ -41,9 +41,9 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((product) => (
                 <tr key={product.id} className="table-row">
-                  <td className="cell-numeric">{index + 1}</td>
+                  <td className="cell-numeric">{product.id}</td>
                   <td className="cell-description">
                     {(product.descripcion || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
                   </td>
