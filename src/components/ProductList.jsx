@@ -10,17 +10,34 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
     return (product.descripcion || '').toLowerCase().includes(searchTerm.toLowerCase())
   })
 
+  // Calcular totales de todos los productos
+  const totalProducts = products.reduce((sum, product) => sum + (product.cantidad || 0), 0)
+  const totalInventoryValue = products.reduce((sum, product) => sum + (product.costo_total || 0), 0)
+
   return (
     <div className="product-list-container">
       <h2 className="product-list-title">📋 Lista de Productos ({filteredProducts.length})</h2>
 
-      <input
-        type="text"
-        placeholder="Buscar por descripción..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="search-input"
-      />
+      <div className="search-and-stats-wrapper">
+        <input
+          type="text"
+          placeholder="Buscar por descripción..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+
+        <div className="stats-container">
+          <div className="stat-label">
+            <span className="stat-label-text">Total Productos:</span>
+            <span className="stat-value">{totalProducts}</span>
+          </div>
+          <div className="stat-label">
+            <span className="stat-label-text">Valor Inventario:</span>
+            <span className="stat-value">{formatCOP(totalInventoryValue)}</span>
+          </div>
+        </div>
+      </div>
 
       {loading ? (
         <div className="loading-text">⏳ Cargando productos...</div>
@@ -41,9 +58,9 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((product) => (
                 <tr key={product.id} className="table-row">
-                  <td className="cell-numeric">{index + 1}</td>
+                  <td className="cell-numeric">{product.id}</td>
                   <td className="cell-description">
                     {(product.descripcion || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
                   </td>
