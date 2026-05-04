@@ -2,10 +2,13 @@ import React, { useState } from 'react'
 import './SalesForm.css'
 import { formatCOP } from '../utils/currencyFormatter'
 import { clientService } from '../services/clientService'
+import { getTodayColombia } from '../utils/dateFormatter'
 
 function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId = null }) {
-  const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0])
-  
+  // ✅ CORRECCIÓN: getTodayColombia() en vez de new Date().toISOString().split('T')[0]
+  // new Date().toISOString() siempre es UTC — a las 7 PM Colombia ya marca el día siguiente
+  const [saleDate, setSaleDate] = useState(getTodayColombia)
+
   const [customer, setCustomer] = useState({
     name: '',
     cedula: '',
@@ -30,7 +33,7 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
       return
     }
     const search = searchValue.toLowerCase()
-    const filtered = products.filter(p => 
+    const filtered = products.filter(p =>
       p.descripcion.toLowerCase().includes(search) ||
       p.name?.toLowerCase().includes(search) ||
       p.id.toString().includes(search)
@@ -104,12 +107,11 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
 
   const addItem = async () => {
     if (!selectedProduct || !quantity) return
-    
-    // Si no hay cliente seleccionado, buscar cliente 222222222 en la base de datos
+
     if (!customerFound && !autoSetFinalCustomer && !customer.cedula.trim()) {
       await searchCustomerByCedula('222222222')
     }
-    
+
     const product = products.find(p => p.id === parseInt(selectedProduct))
     if (!product) return
     const existingItem = items.find(item => item.product_id === product.id)
@@ -159,7 +161,8 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
         precio: item.unit_price
       }))
     })
-    setSaleDate(new Date().toISOString().split('T')[0])
+    // ✅ CORRECCIÓN: reset también usa getTodayColombia()
+    setSaleDate(getTodayColombia())
     setCustomer({ name: '', cedula: '', phone: '' })
     setItems([])
   }
@@ -168,7 +171,6 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
     <form onSubmit={handleSubmit} className="sales-form-wrapper">
       <h2 className="form-title">📝 Nueva Venta</h2>
 
-      {/* Fecha y Forma de Pago */}
       <div className="sf-section">
         <div className="form-row-2">
           <div className="form-group">
@@ -197,7 +199,6 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
         </div>
       </div>
 
-      {/* Datos del Cliente */}
       <div className="sf-section">
         <h3 className="form-section-title">👤 Datos del Cliente</h3>
         <div className="form-row-3">
@@ -246,7 +247,6 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
         </div>
       </div>
 
-      {/* Agregar productos */}
       <div className="sf-section">
         <h3 className="form-section-title">🛒 Agregar Productos</h3>
         <div className="add-product-section">
@@ -316,7 +316,6 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
         </div>
       </div>
 
-      {/* Items de la venta */}
       {items.length > 0 && (
         <div className="sf-section">
           <h3 className="form-section-title">📦 Productos en la Venta</h3>
@@ -354,7 +353,6 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
         </div>
       )}
 
-      {/* Botones */}
       <div className="form-buttons">
         <button type="submit" className="btn-submit">
           ✅ Registrar Venta
