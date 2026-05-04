@@ -4,7 +4,7 @@ import SalesList from '../components/SalesList'
 import { salesService } from '../services/salesService'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
-import { getNowColombia, formatToColombia } from '../utils/dateFormatter'
+import { getNowColombia, getTodayColombia, formatToColombia } from '../utils/dateFormatter'
 import './SalesPage.css'
 
 function SalesPage() {
@@ -17,22 +17,13 @@ function SalesPage() {
   const [showPrintModal, setShowPrintModal] = useState(false)
   const [finalCustomerId, setFinalCustomerId] = useState(null)
 
-  // Fecha seleccionada: por defecto hoy en formato YYYY-MM-DD
-  const getTodayLocal = () => {
-    const now = new Date()
-    const yyyy = now.getFullYear()
-    const mm = String(now.getMonth() + 1).padStart(2, '0')
-    const dd = String(now.getDate()).padStart(2, '0')
-    return `${yyyy}-${mm}-${dd}`
-  }
-
-  const [selectedDate, setSelectedDate] = useState(getTodayLocal())
+  // ✅ getTodayColombia() ahora devuelve siempre la fecha correcta en Colombia
+  const [selectedDate, setSelectedDate] = useState(getTodayColombia)
 
   useEffect(() => {
     loadInitialData()
   }, [])
 
-  // Recargar ventas cuando cambia la fecha
   useEffect(() => {
     loadSalesByDate(selectedDate)
   }, [selectedDate])
@@ -45,14 +36,13 @@ function SalesPage() {
     ])
     setProducts(productsData.data || [])
     setClients(clientsData)
-    
-    // Buscar cliente final por documento 222222222
+
     const finalCustomer = clientsData.find(c => c.documento === '222222222')
     if (finalCustomer) {
       setFinalCustomerId(finalCustomer.id)
     }
-    
-    await loadSalesByDate(getTodayLocal())
+
+    await loadSalesByDate(getTodayColombia())
     setLoading(false)
   }
 
@@ -67,9 +57,13 @@ function SalesPage() {
     setLoading(true)
 
     try {
+      // getNowColombia() ahora devuelve ISO con offset colombiano real,
+      // no UTC puro — Supabase almacena y filtra el día correcto.
+      const nowColombiaISO = getNowColombia()
+
       const newSale = await salesService.createSale({
         cliente_id: saleData.cliente_id,
-        fecha: getNowColombia(),
+        fecha: nowColombiaISO,
         total: saleData.total
       })
 
@@ -94,7 +88,7 @@ function SalesPage() {
 
         setLastSale({
           id: newSale.id,
-          fecha: new Date().toISOString(),
+          fecha: nowColombiaISO,
           total: saleData.total,
           items: itemsWithProductInfo,
           customer: {
@@ -105,7 +99,6 @@ function SalesPage() {
         })
         setShowPrintModal(true)
 
-        // Recargar ventas de la fecha actualmente seleccionada
         await loadSalesByDate(selectedDate)
         setShowForm(true)
         alert('✅ Venta registrada exitosamente')
@@ -208,7 +201,10 @@ function SalesPage() {
       const clientDocument = clientData?.documento || 'N/A'
       const clientPhone = clientData?.telefono || 'N/A'
       const fechaStr = formatToColombia(sale.fecha)
-      const totalStr = sale.total.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+      const totalStr = sale.total.toLocaleString('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      })
 
       let itemsHtml = ''
       let itemNumber = 1
@@ -218,7 +214,10 @@ function SalesPage() {
           const price = parseFloat(item.precio) || 0
           const subtotal = price * qty
           const productName = (item.productos?.descripcion || 'SIN DESC').toString()
-          const subtotalStr = subtotal.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+          const subtotalStr = subtotal.toLocaleString('es-CO', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          })
 
           itemsHtml += `
             <div class="item-block">
@@ -313,8 +312,14 @@ ${itemsHtml}
     const clienteName = (lastSale.customer?.name || 'SIN NOMBRE').toString().toUpperCase()
     const clienteCedula = (lastSale.customer?.cedula || 'N/A').toString()
     const clientePhone = (lastSale.customer?.phone || 'N/A').toString()
-    const fechaStr = new Date().toLocaleString('es-CO')
-    const totalStr = total.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+
+    // ✅ formatToColombia convierte correctamente el ISO con offset a hora Colombia
+    const fechaStr = formatToColombia(lastSale.fecha)
+
+    const totalStr = total.toLocaleString('es-CO', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })
 
     let itemsHtml = ''
     let itemNumber = 1
@@ -323,7 +328,10 @@ ${itemsHtml}
       const price = parseFloat(item.unit_price) || 0
       const subtotal = price * qty
       const productName = (item.product_name || 'SIN DESC').toString()
-      const subtotalStr = subtotal.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+      const subtotalStr = subtotal.toLocaleString('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      })
 
       itemsHtml += `
         <div class="item-block">
@@ -445,7 +453,7 @@ ${itemsHtml}
             onDateChange={setSelectedDate}
             onViewInvoice={handleViewInvoice}
             onDelete={async (id) => {
-              if (window.confirm("¿Eliminar esta venta y restaurar el stock?")) {
+              if (window.confirm('¿Eliminar esta venta y restaurar el stock?')) {
                 const result = await salesService.deleteSaleWithRestore(id)
                 if (result.success) {
                   alert(`✅ Venta eliminada y ${result.itemsRestored} producto(s) restaurado(s)`)
