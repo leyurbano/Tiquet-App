@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
+import { getTodayColombia } from '../utils/dateFormatter'
 
 function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -25,11 +26,9 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDele
   const totalDia = filteredSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
 
   const formatDateLabel = (dateStr) => {
-    const today = new Date()
-    const yyyy = today.getFullYear()
-    const mm = String(today.getMonth() + 1).padStart(2, '0')
-    const dd = String(today.getDate()).padStart(2, '0')
-    const todayStr = `${yyyy}-${mm}-${dd}`
+    // ✅ CORRECCIÓN: getTodayColombia() en vez de new Date()
+    // new Date() usa UTC — a las 7 PM Colombia ya compara con el día siguiente
+    const todayStr = getTodayColombia()
     if (dateStr === todayStr) return 'Hoy'
     const [y, m, d] = dateStr.split('-')
     return `${d}/${m}/${y}`
