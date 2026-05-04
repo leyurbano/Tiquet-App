@@ -8,15 +8,30 @@ dayjs.extend(timezone)
 const COLOMBIA_TZ = 'America/Bogota'
 
 /**
- * Obtiene la fecha/hora actual en Colombia como ISO string correcto
+  Obtiene la fecha/hora actual en Colombia como ISO string con offset correcto.
+
+  ANTES: dayjs().tz(COLOMBIA_TZ).toISOString()
+    → .toISOString() SIEMPRE convierte a UTC puro ("Z"), ignorando la timezone.
+    → A las 11 PM Colombia devuelve el día siguiente en UTC.
+
+  AHORA: .format() con offset explícito mantiene la hora colombiana real.
+    → Supabase lo recibe, lo almacena y lo filtra con el día correcto.
  */
 export const getNowColombia = () => {
-  // toISOString() convierte correctamente la hora colombiana a UTC real
-  return dayjs().tz(COLOMBIA_TZ).toISOString()
+  return dayjs().tz(COLOMBIA_TZ).format('YYYY-MM-DDTHH:mm:ssZ')
 }
 
 /**
- * Convierte una fecha a formato legible en hora de Colombia
+ * Obtiene solo la fecha de hoy en Colombia (YYYY-MM-DD).
+ * Úsala para inicializar selectedDate y cualquier filtro por fecha.
+ */
+export const getTodayColombia = () => {
+  return dayjs().tz(COLOMBIA_TZ).format('YYYY-MM-DD')
+}
+
+/**
+ * Convierte cualquier fecha (ISO UTC o con offset) a formato legible en Colombia.
+ * Úsala en todos los lugares donde muestres fechas al usuario.
  */
 export const formatToColombia = (date) => {
   if (!date) return 'N/A'
@@ -25,8 +40,8 @@ export const formatToColombia = (date) => {
     .format('DD/MM/YYYY, h:mm:ss A')
 }
 
-/**
- * Convierte una fecha a formato corto de tabla
+/*
+  Convierte una fecha a formato corto para tablas.
  */
 export const formatToColombiaShort = (date) => {
   if (!date) return 'N/A'
