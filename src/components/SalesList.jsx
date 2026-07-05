@@ -25,6 +25,22 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDele
 
   const totalDia = filteredSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
 
+  const efectivoCount = filteredSales.reduce((count, sale) => {
+    return count + (Number(sale.medio_pago_id) === 1 ? 1 : 0)
+  }, 0)
+
+  const transferenciaCount = filteredSales.reduce((count, sale) => {
+    return count + (Number(sale.medio_pago_id) === 2 ? 1 : 0)
+  }, 0)
+
+  const efectivoTotal = filteredSales.reduce((sum, sale) => {
+    return sum + (Number(sale.medio_pago_id) === 1 ? (sale.total || 0) : 0)
+  }, 0)
+
+  const transferenciaTotal = filteredSales.reduce((sum, sale) => {
+    return sum + (Number(sale.medio_pago_id) === 2 ? (sale.total || 0) : 0)
+  }, 0)
+
   const formatDateLabel = (dateStr) => {
     // ✅ CORRECCIÓN: getTodayColombia() en vez de new Date()
     // new Date() usa UTC — a las 7 PM Colombia ya compara con el día siguiente
@@ -125,6 +141,20 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDele
               </tbody>
             </table>
           </div>
+           <div className="sales-cash-transfer-bar">
+             <div className="sales-efectivo-bar">
+            <span className="sales-efectivo-label">
+              Efectivo: ({efectivoCount} {filteredSales.length === 1 ? 'venta' : 'ventas'})
+            </span>      
+            <span className="sales-total-tra">{formatCOP(efectivoTotal)}</span>
+          </div>
+          <div className="sales-transferencia-bar">
+            <span className="sales-transferencia-label">
+              Transferencia: ({transferenciaCount} {filteredSales.length === 1 ? 'venta' : 'ventas'})
+            </span> 
+            <span className="sales-total-tra">{formatCOP(transferenciaTotal)}</span>     
+          </div>
+          </div>
 
           <div className="sales-total-bar">
             <span className="sales-total-label">
@@ -132,6 +162,7 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDele
             </span>
             <span className="sales-total-amount">{formatCOP(totalDia)}</span>
           </div>
+         
         </>
       )}
     </div>

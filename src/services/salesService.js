@@ -75,7 +75,8 @@ export const salesService = {
         .insert([{
           cliente_id: sale.cliente_id,
           fecha: sale.fecha || dayjs().tz(COLOMBIA_TZ).toISOString(),
-          total: sale.total
+          total: sale.total,
+          medio_pago_id: sale.medio_pago_id
         }])
         .select()
 
