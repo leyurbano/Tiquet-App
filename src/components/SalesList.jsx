@@ -125,6 +125,18 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDele
               </tbody>
             </table>
           </div>
+           <div className="sales-cash-transfer-bar">
+             <div  className="sales-efectivo-bar">
+            <span className="sales-efectivo-label">
+              Efectivo:
+            </span>      
+          </div>
+          <div  className="sales-transferencia-bar">
+            <span className="sales-transferencia-label">
+              Transferencia:
+            </span>      
+          </div>
+          </div>
 
           <div className="sales-total-bar">
             <span className="sales-total-label">
@@ -132,6 +144,7 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDele
             </span>
             <span className="sales-total-amount">{formatCOP(totalDia)}</span>
           </div>
+         
         </>
       )}
     </div>
