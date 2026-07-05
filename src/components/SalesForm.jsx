@@ -1,171 +1,194 @@
-import React, { useState } from 'react'
-import './SalesForm.css'
-import { formatCOP } from '../utils/currencyFormatter'
-import { clientService } from '../services/clientService'
-import { getTodayColombia } from '../utils/dateFormatter'
+import React, { useState } from "react";
+import "./SalesForm.css";
+import { formatCOP } from "../utils/currencyFormatter";
+import { clientService } from "../services/clientService";
+import { getTodayColombia } from "../utils/dateFormatter";
 
-function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId = null }) {
+function SalesForm({
+  products,
+  clients = [],
+  onSubmit,
+  onCancel,
+  finalCustomerId = null,
+}) {
   // ✅ CORRECCIÓN: getTodayColombia() en vez de new Date().toISOString().split('T')[0]
   // new Date().toISOString() siempre es UTC — a las 7 PM Colombia ya marca el día siguiente
-  const [saleDate, setSaleDate] = useState(getTodayColombia)
+  const [saleDate, setSaleDate] = useState(getTodayColombia);
 
   const [customer, setCustomer] = useState({
-    name: '',
-    cedula: '',
-    phone: ''
-  })
+    name: "",
+    cedula: "",
+    phone: "",
+  });
 
-  const [items, setItems] = useState([])
-  const [selectedProduct, setSelectedProduct] = useState('')
-  const [productSearch, setProductSearch] = useState('')
-  const [filteredProducts, setFilteredProducts] = useState([])
-  const [quantity, setQuantity] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('cash')
-  const [customerFound, setCustomerFound] = useState(null)
-  const [showAddCustomerBtn, setShowAddCustomerBtn] = useState(false)
-  const [autoSetFinalCustomer, setAutoSetFinalCustomer] = useState(false)
+  const [items, setItems] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [quantity, setQuantity] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(""); 
+  const [customerFound, setCustomerFound] = useState(null);
+  const [showAddCustomerBtn, setShowAddCustomerBtn] = useState(false);
+  const [autoSetFinalCustomer, setAutoSetFinalCustomer] = useState(false);
 
   const handleProductSearch = (searchValue) => {
-    setProductSearch(searchValue)
+    setProductSearch(searchValue);
     if (!searchValue.trim()) {
-      setFilteredProducts([])
-      setSelectedProduct('')
-      return
+      setFilteredProducts([]);
+      setSelectedProduct("");
+      return;
     }
-    const search = searchValue.toLowerCase()
-    const filtered = products.filter(p =>
-      p.descripcion.toLowerCase().includes(search) ||
-      p.name?.toLowerCase().includes(search) ||
-      p.id.toString().includes(search)
-    )
-    setFilteredProducts(filtered)
-  }
+    const search = searchValue.toLowerCase();
+    const filtered = products.filter(
+      (p) =>
+        p.descripcion.toLowerCase().includes(search) ||
+        p.name?.toLowerCase().includes(search) ||
+        p.id.toString().includes(search),
+    );
+    setFilteredProducts(filtered);
+  };
 
   const selectProductFromSearch = (product) => {
-    setSelectedProduct(product.id.toString())
-    setProductSearch(product.descripcion)
-    setFilteredProducts([])
-  }
+    setSelectedProduct(product.id.toString());
+    setProductSearch(product.descripcion);
+    setFilteredProducts([]);
+  };
 
   const searchCustomerByCedula = async (cedula) => {
-    const trimmedCedula = cedula.trim()
+    const trimmedCedula = cedula.trim();
     if (!trimmedCedula || trimmedCedula.length === 0) {
-      setCustomer({ name: '', cedula: '', phone: '' })
-      setShowAddCustomerBtn(false)
-      setCustomerFound(null)
-      return
+      setCustomer({ name: "", cedula: "", phone: "" });
+      setShowAddCustomerBtn(false);
+      setCustomerFound(null);
+      return;
     }
-    setCustomer(prev => ({ ...prev, cedula: cedula }))
-    if (trimmedCedula.length < 6) return
+    setCustomer((prev) => ({ ...prev, cedula: cedula }));
+    if (trimmedCedula.length < 6) return;
     try {
-      const foundCustomer = await clientService.getClientByDocument(trimmedCedula)
+      const foundCustomer =
+        await clientService.getClientByDocument(trimmedCedula);
       if (foundCustomer) {
         setCustomer({
           name: foundCustomer.nombre,
           cedula: foundCustomer.documento,
-          phone: foundCustomer.telefono
-        })
-        setCustomerFound(foundCustomer)
-        setShowAddCustomerBtn(false)
+          phone: foundCustomer.telefono,
+        });
+        setCustomerFound(foundCustomer);
+        setShowAddCustomerBtn(false);
       } else {
-        setShowAddCustomerBtn(true)
-        setCustomerFound(null)
+        setShowAddCustomerBtn(true);
+        setCustomerFound(null);
       }
     } catch (error) {
-      console.error('Error searching customer:', error)
-      setShowAddCustomerBtn(false)
+      console.error("Error searching customer:", error);
+      setShowAddCustomerBtn(false);
     }
-  }
+  };
 
   const addNewCustomer = async () => {
     if (!customer.name.trim() || !customer.cedula.trim()) {
-      alert('Por favor completa nombre y cédula del cliente')
-      return
+      alert("Por favor completa nombre y cédula del cliente");
+      return;
     }
     try {
       const newCustomer = await clientService.createClient({
         nombre: customer.name,
         documento: customer.cedula,
-        telefono: customer.phone || ''
-      })
+        telefono: customer.phone || "",
+      });
       if (newCustomer) {
-        setCustomerFound(newCustomer)
-        setShowAddCustomerBtn(false)
-        alert('✅ Cliente registrado correctamente')
+        setCustomerFound(newCustomer);
+        setShowAddCustomerBtn(false);
+        alert("✅ Cliente registrado correctamente");
       }
     } catch (error) {
-      console.error('Error adding customer:', error)
-      alert('❌ Error al registrar el cliente')
+      console.error("Error adding customer:", error);
+      alert("❌ Error al registrar el cliente");
     }
-  }
+  };
 
   const getProductById = (productId) => {
-    return products.find(p => p.id === parseInt(productId))
-  }
+    return products.find((p) => p.id === parseInt(productId));
+  };
 
-  const selectedProductData = selectedProduct ? getProductById(selectedProduct) : null
+  const selectedProductData = selectedProduct
+    ? getProductById(selectedProduct)
+    : null;
 
   const addItem = async () => {
-    if (!selectedProduct || !quantity) return
+    if (!selectedProduct || !quantity) return;
 
     if (!customerFound && !autoSetFinalCustomer && !customer.cedula.trim()) {
-      await searchCustomerByCedula('222222222')
+      await searchCustomerByCedula("222222222");
     }
 
-    const product = products.find(p => p.id === parseInt(selectedProduct))
-    if (!product) return
-    const existingItem = items.find(item => item.product_id === product.id)
+    const product = products.find((p) => p.id === parseInt(selectedProduct));
+    if (!product) return;
+    const existingItem = items.find((item) => item.product_id === product.id);
     if (existingItem) {
-      setItems(items.map(item =>
-        item.product_id === product.id
-          ? { ...item, quantity: item.quantity + parseInt(quantity) }
-          : item
-      ))
+      setItems(
+        items.map((item) =>
+          item.product_id === product.id
+            ? { ...item, quantity: item.quantity + parseInt(quantity) }
+            : item,
+        ),
+      );
     } else {
-      setItems([...items, {
-        product_id: product.id,
-        product_name: product.descripcion || product.name,
-        unit_price: product.precio_venta || product.price,
-        quantity: parseInt(quantity)
-      }])
+      setItems([
+        ...items,
+        {
+          product_id: product.id,
+          product_name: product.descripcion || product.name,
+          unit_price: product.precio_venta || product.price,
+          quantity: parseInt(quantity),
+        },
+      ]);
     }
-    setSelectedProduct('')
-    setQuantity('')
-    setAutoSetFinalCustomer(true)
-  }
+    setSelectedProduct("");
+    setQuantity("");
+    setAutoSetFinalCustomer(true);
+  };
 
   const removeItem = (productId) => {
-    setItems(items.filter(item => item.product_id !== productId))
-  }
+    setItems(items.filter((item) => item.product_id !== productId));
+  };
 
   const calculateTotal = () => {
-    return items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
-  }
+    return items.reduce(
+      (sum, item) => sum + item.unit_price * item.quantity,
+      0,
+    );
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (items.length === 0) {
-      alert('Agrega al menos un producto')
-      return
+      alert("Agrega al menos un producto");
+      return;
     }
+
+    const medioPagoId = paymentMethod === "cash" ? 1 : 2;
+
     onSubmit({
       cliente_id: customerFound?.id || null,
       fecha: saleDate,
       total: calculateTotal(),
-      customer_name: customer.name || 'N/A',
-      customer_cedula: customer.cedula || 'N/A',
-      customer_phone: customer.phone || 'N/A',
-      items: items.map(item => ({
+      medio_pago_id: medioPagoId, // ✅ enviar FK, no texto
+      customer_name: customer.name || "N/A",
+      customer_cedula: customer.cedula || "N/A",
+      customer_phone: customer.phone || "N/A",
+      items: items.map((item) => ({
         producto_id: item.product_id,
         cantidad: item.quantity,
-        precio: item.unit_price
-      }))
-    })
-    // ✅ CORRECCIÓN: reset también usa getTodayColombia()
-    setSaleDate(getTodayColombia())
-    setCustomer({ name: '', cedula: '', phone: '' })
-    setItems([])
-  }
+        precio: item.unit_price,
+      })),
+    });
+
+    setSaleDate(getTodayColombia());
+    setCustomer({ name: "", cedula: "", phone: "" });
+    setItems([]);
+    setPaymentMethod("cash");
+  };
 
   return (
     <form onSubmit={handleSubmit} className="sales-form-wrapper">
@@ -183,24 +206,12 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
               className="form-input"
             />
           </div>
-          <div className="form-group">
-            <label className="form-label">Forma de Pago</label>
-            <select
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="form-input"
-            >
-              <option value="cash">💵 Efectivo</option>
-              <option value="card">💳 Tarjeta</option>
-              <option value="transfer">🏦 Transferencia</option>
-              <option value="check">✅ Cheque</option>
-            </select>
-          </div>
+          
         </div>
       </div>
 
       <div className="sf-section">
-        <h3 className="form-section-title">👤 Datos del Cliente</h3>
+        <h3 className="form-section-title">Datos del Cliente</h3>
         <div className="form-row-3">
           <div className="form-group">
             <label className="form-label">N° Documento</label>
@@ -228,7 +239,9 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
               type="text"
               placeholder="Nombre del cliente"
               value={customer.name}
-              onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+              onChange={(e) =>
+                setCustomer({ ...customer, name: e.target.value })
+              }
               required
               className="form-input"
             />
@@ -239,7 +252,9 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
               type="tel"
               placeholder="3100000000"
               value={customer.phone}
-              onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+              onChange={(e) =>
+                setCustomer({ ...customer, phone: e.target.value })
+              }
               maxLength="10"
               className="form-input"
             />
@@ -258,12 +273,14 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
                 placeholder="producto"
                 value={selectedProduct}
                 onChange={(e) => {
-                  setSelectedProduct(e.target.value)
+                  setSelectedProduct(e.target.value);
                   if (e.target.value) {
-                    const product = products.find(p => p.id === parseInt(e.target.value))
-                    if (product) setProductSearch(product.descripcion)
+                    const product = products.find(
+                      (p) => p.id === parseInt(e.target.value),
+                    );
+                    if (product) setProductSearch(product.descripcion);
                   } else {
-                    setProductSearch('')
+                    setProductSearch("");
                   }
                 }}
                 maxLength="5"
@@ -281,14 +298,18 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
               />
               {filteredProducts.length > 0 && (
                 <div className="product-dropdown">
-                  {filteredProducts.map(product => (
+                  {filteredProducts.map((product) => (
                     <div
                       key={product.id}
                       className="product-option"
                       onClick={() => selectProductFromSearch(product)}
                     >
-                      <span className="product-option-name">{product.descripcion}</span>
-                      <span className="product-option-price">{formatCOP(product.precio_venta)}</span>
+                      <span className="product-option-name">
+                        {product.descripcion}
+                      </span>
+                      <span className="product-option-price">
+                        {formatCOP(product.precio_venta)}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -302,9 +323,9 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addItem()
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addItem();
                   }
                 }}
                 min="1"
@@ -332,7 +353,9 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
                 <div className="col-number">{index + 1}</div>
                 <div className="col-product">{item.product_name}</div>
                 <div className="col-qty">{item.quantity}</div>
-                <div className="col-total">{formatCOP(item.unit_price * item.quantity)}</div>
+                <div className="col-total">
+                  {formatCOP(item.unit_price * item.quantity)}
+                </div>
                 <div className="col-action">
                   <button
                     type="button"
@@ -352,6 +375,26 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
           </div>
         </div>
       )}
+      <div className="form-group">
+            <label className="form-label">Forma de Pago</label>
+            <div className="form-pago">
+              <button
+                type="button"
+                className={paymentMethod === "cash" ? "active" : ""}
+                onClick={() => setPaymentMethod("cash")}
+              >
+                Efectivo
+              </button>
+
+              <button
+                type="button"
+                className={paymentMethod === "transfer" ? "active" : ""}
+                onClick={() => setPaymentMethod("transfer")}
+              >
+                Transferencia
+              </button>
+            </div>
+          </div>
 
       <div className="form-buttons">
         <button type="submit" className="btn-submit">
@@ -362,7 +405,7 @@ function SalesForm({ products, clients = [], onSubmit, onCancel, finalCustomerId
         </button>
       </div>
     </form>
-  )
+  );
 }
 
-export default SalesForm
+export default SalesForm;

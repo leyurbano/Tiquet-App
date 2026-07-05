@@ -65,7 +65,8 @@ function SalesPage() {
       const newSale = await salesService.createSale({
         cliente_id: saleData.cliente_id,
         fecha: nowColombiaISO,
-        total: saleData.total
+        total: saleData.total,
+        medio_pago_id: saleData.medio_pago_id
       })
 
       if (newSale) {

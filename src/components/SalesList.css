@@ -255,6 +255,67 @@
   color: #16a34a;
 }
 
+.sales-cash-transfer-bar {
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+
+}
+
+/* Barra de efectivo al pie */
+.sales-efectivo-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+}
+
+.sales-efectivo-label {
+  font-size: 0.8125rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.sales-efectivo-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+
+/* Barra de transferencia al pie */
+.sales-transferencia-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+}
+
+.sales-transferencia-label {
+  font-size: 0.8125rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.sales-transferencia-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+
 @media (max-width: 768px) {
   .search-input {
     width: 100%;
