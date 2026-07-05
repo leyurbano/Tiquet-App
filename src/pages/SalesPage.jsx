@@ -16,6 +16,7 @@ function SalesPage() {
   const [lastSale, setLastSale] = useState(null)
   const [showPrintModal, setShowPrintModal] = useState(false)
   const [finalCustomerId, setFinalCustomerId] = useState(null)
+  const [formKey, setFormKey] = useState(0)
 
   // ✅ getTodayColombia() ahora devuelve siempre la fecha correcta en Colombia
   const [selectedDate, setSelectedDate] = useState(getTodayColombia)
@@ -402,6 +403,7 @@ ${itemsHtml}
     printAndCut(printWindow)
 
     setShowPrintModal(false)
+    setFormKey(k => k + 1)
   }
 
   return (
@@ -414,7 +416,7 @@ ${itemsHtml}
               <button onClick={handlePrint} className="btn-print">
                 🖨️ Imprimir
               </button>
-              <button onClick={() => setShowPrintModal(false)} className="btn-skip">
+              <button onClick={() => { setShowPrintModal(false); setFormKey(k => k + 1) }} className="btn-skip">
                 ⏭️ Saltar
               </button>
             </div>
@@ -435,6 +437,7 @@ ${itemsHtml}
         {showForm && (
           <div className="form-section">
             <SalesForm
+              key={formKey}
               products={products}
               clients={clients}
               onSubmit={handleCreateSale}
