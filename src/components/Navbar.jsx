@@ -22,7 +22,8 @@ function Navbar() {
       <div className="navbar-container">
         <div className="navbar-content">
           <div className="navbar-logo">
-            <h1 className="logo-title">FRALUDETALLES</h1>
+            <h1 className="logo-title"> Tiquet-App</h1>
+           
           </div>
 
           <div className="navbar-links">

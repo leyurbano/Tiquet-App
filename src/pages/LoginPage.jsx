@@ -32,8 +32,8 @@ function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-header">
-          <h1 className="login-title">SisVentas</h1>
-          <p className="login-subtitle">Sistema de Posventa</p>
+          <h1 className="login-title">Tiquet-App</h1>
+          <p className="login-subtitle">Sistema Posventa</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
