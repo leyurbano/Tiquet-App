@@ -1,39 +1,58 @@
 import React from 'react'
 import './Navbar.css'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
-function Navbar({ currentPage, setCurrentPage }) {
+function Navbar() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { logout } = useAuth()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/login')
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
+    }
+  }
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-content">
-          {/* Logo */}
           <div className="navbar-logo">
-            <h1 className="logo-title">📊 Tiquet-App</h1>
+            <h1 className="logo-title"> Tiquet-App</h1>
+           
           </div>
 
-          {/* Navigation Links */}
           <div className="navbar-links">
-            <button
-              onClick={() => setCurrentPage('products')}
-              className={`nav-button ${currentPage === 'products' ? 'nav-active' : 'nav-inactive'}`}
+            <button 
+              className={`nav-button ${location.pathname === '/sales' ? 'nav-active' : 'nav-inactive'}`}
+              onClick={() => navigate('/sales')}
             >
-              📦 Productos
+              Ventas
             </button>
-            <button
-              onClick={() => setCurrentPage('sales')}
-              className={`nav-button ${currentPage === 'sales' ? 'nav-active' : 'nav-inactive'}`}
+            <button 
+              className={`nav-button ${location.pathname === '/products' ? 'nav-active' : 'nav-inactive'}`}
+              onClick={() => navigate('/products')}
             >
-              💰 Ventas
+              Productos
             </button>
-            <button
-              onClick={() => setCurrentPage('clients')}
-              className={`nav-button ${currentPage === 'clients' ? 'nav-active' : 'nav-inactive'}`}
+            <button 
+              className={`nav-button ${location.pathname === '/clients' ? 'nav-active' : 'nav-inactive'}`}
+              onClick={() => navigate('/clients')}
             >
-              👥 Clientes
+              Clientes
+            </button>
+            <button 
+              className="nav-button logout-btn"
+              onClick={handleLogout}
+            >
+              Cerrar Sesión
             </button>
           </div>
 
-          {/* Spacer */}
           <div className="navbar-spacer"></div>
         </div>
       </div>
