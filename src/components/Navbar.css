@@ -66,6 +66,26 @@
   width: 5rem;
 }
 
+.logout-btn {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #c82333;
+}
+
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
 @media (max-width: 768px) {
   .navbar-links {
     gap: 1rem;
