@@ -6,6 +6,24 @@
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   padding: 1rem;
 }
+.login-content {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+}
+
+.logo-img {
+  position: absolute;              /* AGREGADO: saca la imagen del flujo normal */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* AGREGADO: centra exacto */
+  width: 240px;
+  height: 240px;
+  object-fit: contain;
+  z-index: 0;                      /* ahora SÍ funciona porque ya tiene position */
+  pointer-events: none;             /* AGREGADO: para que no bloquee clics en el form */
+}
+
 
 .login-card {
   background-color: white;
@@ -14,6 +32,9 @@
   box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 28rem;
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
 }
 
 .login-header {
