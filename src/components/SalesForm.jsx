@@ -26,7 +26,7 @@ function SalesForm({
   const [productSearch, setProductSearch] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [quantity, setQuantity] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState(""); 
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [customerFound, setCustomerFound] = useState(null);
   const [showAddCustomerBtn, setShowAddCustomerBtn] = useState(false);
   const [autoSetFinalCustomer, setAutoSetFinalCustomer] = useState(false);
@@ -167,6 +167,11 @@ function SalesForm({
       return;
     }
 
+    if (!paymentMethod) {
+      alert("Selecciona una forma de pago");
+      return;
+    }
+
     const medioPagoId = paymentMethod === "cash" ? 1 : 2;
 
     onSubmit({
@@ -187,7 +192,7 @@ function SalesForm({
     setSaleDate(getTodayColombia());
     setCustomer({ name: "", cedula: "", phone: "" });
     setItems([]);
-    setPaymentMethod("cash");
+    setPaymentMethod("");
   };
 
   return (
@@ -394,10 +399,13 @@ function SalesForm({
                 Transferencia
               </button>
             </div>
+            {!paymentMethod && (
+              <p style={{ color: "#c0392b", fontSize: "0.85rem", marginTop: "4px" }}>Selecciona una forma de pago</p>
+            )}
           </div>
 
       <div className="form-buttons">
-        <button type="submit" className="btn-submit">
+        <button type="submit" className="btn-submit" disabled={!paymentMethod || items.length === 0}>
           ✅ Registrar Venta
         </button>
         <button type="button" onClick={onCancel} className="btn-cancel">
