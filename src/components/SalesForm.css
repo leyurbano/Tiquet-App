@@ -242,7 +242,7 @@
   margin-bottom: 0.75rem;
   width: 100%;
 }
-
+ /* add fix
 /* 🔧 columnas fijas: #(pequeño) | descripción(flexible) | cantidad(fija) | total(fija) | acción(fija) */
 .table-header-sales {
   display: grid;
