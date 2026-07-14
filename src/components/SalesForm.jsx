@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react"; // 🔧 CAMBIO: se agregó useEffect
+import React, { useState } from "react";
 import "./SalesForm.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import { clientService } from "../services/clientService";
 import { getTodayColombia } from "../utils/dateFormatter";
-import MixedPaymentModal from "./MixedPaymentModal"; // 🆕 NUEVO: modal de pago mixto
-import { salesService } from "../services/salesService"; // 🔧 CAMBIO: se usa el service layer en vez de supabase directo
 
 function SalesForm({
   products,
@@ -32,23 +30,6 @@ function SalesForm({
   const [customerFound, setCustomerFound] = useState(null);
   const [showAddCustomerBtn, setShowAddCustomerBtn] = useState(false);
   const [autoSetFinalCustomer, setAutoSetFinalCustomer] = useState(false);
-
-  // 🆕 NUEVO: estados para medios de pago dinámicos y pago mixto
-  const [mediosPago, setMediosPago] = useState([]);
-  const [showMixedModal, setShowMixedModal] = useState(false);
-  const [pagosMixtos, setPagosMixtos] = useState(null);
-
-  // 🔧 CAMBIO: ahora usa salesService.getMediosPago() en vez de llamar a supabase directo,
-  // manteniendo toda la lógica de acceso a datos dentro de la capa de servicios (igual que clientService).
-  // Reemplaza el hardcodeo antiguo "cash"/"transfer" -> 1/2.
-  useEffect(() => {
-    const cargarMediosPago = async () => {
-      const data = await salesService.getMediosPago();
-      console.log("mediosPago:", data);
-      setMediosPago(data);
-    };
-    cargarMediosPago();
-  }, []);
 
   const handleProductSearch = (searchValue) => {
     setProductSearch(searchValue);
@@ -179,39 +160,25 @@ function SalesForm({
     );
   };
 
-  // 🔧 CAMBIO: handleSubmit ahora es async y espera el resultado de onSubmit.
-  // Antes se llamaba a onSubmit(...) sin esperar nada, y el formulario se limpiaba
-  // de inmediato sin saber si la venta realmente se guardó. Con el trigger de
-  // validación de pagos_venta, un pago mixto que no cuadre puede hacer que
-  // createSale falle y revierta la venta — y el usuario no se enteraba, perdiendo
-  // todos los datos ya digitados.
-  const [isSubmitting, setIsSubmitting] = useState(false); // 🆕 NUEVO: evita doble-click mientras se guarda
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (items.length === 0) {
       alert("Agrega al menos un producto");
       return;
     }
 
-    // 🔧 CAMBIO: ahora valida paymentMethod O pagosMixtos (antes solo validaba paymentMethod)
-    if (!paymentMethod && !pagosMixtos) {
+    if (!paymentMethod) {
       alert("Selecciona una forma de pago");
       return;
     }
 
-    // 🔧 CAMBIO: se eliminó el hardcodeo "cash"/"transfer" -> 1/2.
-    // Ahora paymentMethod YA es el id real de medios_pago (ver botones dinámicos más abajo)
+    const medioPagoId = paymentMethod === "cash" ? 1 : 2;
 
-    setIsSubmitting(true);
-    const resultado = await onSubmit({
+    onSubmit({
       cliente_id: customerFound?.id || null,
       fecha: saleDate,
       total: calculateTotal(),
-      medio_pago_id: pagosMixtos ? null : paymentMethod, // 🔧 CAMBIO: null si es mixto
-      pagos: pagosMixtos || [
-        { medio_pago_id: paymentMethod, monto: calculateTotal() },
-      ], // 🆕 NUEVO: array de pagos, siempre presente (simple = 1 elemento, mixto = varios)
+      medio_pago_id: medioPagoId, // ✅ enviar FK, no texto
       customer_name: customer.name || "N/A",
       customer_cedula: customer.cedula || "N/A",
       customer_phone: customer.phone || "N/A",
@@ -221,21 +188,11 @@ function SalesForm({
         precio: item.unit_price,
       })),
     });
-    setIsSubmitting(false);
-
-    // 🆕 NUEVO: si onSubmit devuelve algo "falsy" (null, false, undefined), la venta
-    // NO se guardó (por ejemplo, el trigger de validar_suma_pagos la rechazó).
-    // En ese caso no se limpia el formulario, para que el usuario no pierda sus datos.
-    if (!resultado) {
-      alert("❌ Error al registrar la venta. Verifica los datos e intenta de nuevo.");
-      return;
-    }
 
     setSaleDate(getTodayColombia());
     setCustomer({ name: "", cedula: "", phone: "" });
     setItems([]);
     setPaymentMethod("");
-    setPagosMixtos(null); // 🆕 NUEVO: limpiar pago mixto tras registrar la venta
   };
 
   return (
@@ -423,73 +380,33 @@ function SalesForm({
           </div>
         </div>
       )}
-
-      {/* 🔧 CAMBIO: bloque completo de "Forma de Pago" reescrito.
-          Antes: 2 botones fijos ("cash"/"transfer") con texto hardcodeado.
-          Ahora: botones generados dinámicamente desde `mediosPago` (tabla real de Supabase)
-          + botón nuevo "Pago Mixto" que abre el modal. */}
       <div className="form-group">
-        <label className="form-label">Forma de Pago</label>
-        <div className="form-pago">
-          {mediosPago.map((medio) => (
-            <button
-              key={medio.id}
-              type="button"
-              className={paymentMethod === medio.id ? "active" : ""}
-              onClick={() => {
-                setPaymentMethod(medio.id);
-                setPagosMixtos(null); // limpia cualquier pago mixto previo al elegir un medio simple
-              }}
-            >
-              {medio.pago}
-            </button>
-          ))}
-          <button
-            type="button"
-            className={pagosMixtos ? "active" : ""}
-            onClick={() => setShowMixedModal(true)}
-          >
-            Pago Mixto
-          </button>
-        </div>
+            <label className="form-label">Forma de Pago</label>
+            <div className="form-pago">
+              <button
+                type="button"
+                className={paymentMethod === "cash" ? "active" : ""}
+                onClick={() => setPaymentMethod("cash")}
+              >
+                Efectivo
+              </button>
 
-        {/* 🆕 NUEVO: feedback visual cuando ya hay un pago mixto configurado */}
-        {pagosMixtos && (
-          <p style={{ color: "#065f46", fontSize: "0.85rem", marginTop: "4px" }}>
-            ✅ Pago mixto configurado ({pagosMixtos.length} medios)
-          </p>
-        )}
-
-        {!paymentMethod && !pagosMixtos && (
-          <p style={{ color: "#c0392b", fontSize: "0.85rem", marginTop: "4px" }}>
-            Selecciona una forma de pago
-          </p>
-        )}
-      </div>
-
-      {/* 🆕 NUEVO: modal de pago mixto, se muestra solo cuando showMixedModal es true */}
-      {showMixedModal && (
-        <MixedPaymentModal
-          total={calculateTotal()}
-          mediosPago={mediosPago}
-          onClose={() => setShowMixedModal(false)}
-          onConfirm={(pagos) => {
-            setPagosMixtos(pagos);
-            setPaymentMethod(null); // invalida el pago simple si había uno
-            setShowMixedModal(false);
-          }}
-        />
-      )}
+              <button
+                type="button"
+                className={paymentMethod === "transfer" ? "active" : ""}
+                onClick={() => setPaymentMethod("transfer")}
+              >
+                Transferencia
+              </button>
+            </div>
+            {!paymentMethod && (
+              <p style={{ color: "#c0392b", fontSize: "0.85rem", marginTop: "4px" }}>Selecciona una forma de pago</p>
+            )}
+          </div>
 
       <div className="form-buttons">
-        {/* 🔧 CAMBIO: disabled ahora considera paymentMethod O pagosMixtos, y también isSubmitting
-            para evitar que el usuario haga doble-click mientras la venta se está guardando */}
-        <button
-          type="submit"
-          className="btn-submit"
-          disabled={(!paymentMethod && !pagosMixtos) || items.length === 0 || isSubmitting}
-        >
-          {isSubmitting ? "⏳ Guardando..." : "✅ Registrar Venta"}
+        <button type="submit" className="btn-submit" disabled={!paymentMethod || items.length === 0}>
+          ✅ Registrar Venta
         </button>
         <button type="button" onClick={onCancel} className="btn-cancel">
           ❌ Cancelar

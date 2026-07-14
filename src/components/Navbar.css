@@ -1,6 +1,4 @@
-/* ============================================
-   NAVBAR BASE (desktop)
-   ============================================ */
+/* Navbar.css */
 
 .navbar {
   position: fixed;
@@ -15,37 +13,33 @@
 .navbar-container {
   max-width: 80rem;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 1rem;
 }
 
 .navbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 4.5rem;
+  height: 5rem;
 }
 
-/* Logo */
 .navbar-logo {
   flex-shrink: 0;
 }
 
+
 .logo-title {
-  font-size: 1.75rem; /* 🔧 reducido de 2.9rem — era demasiado grande en móvil */
+  font-size: 2.9rem;
   font-weight: 700;
   color: white;
   margin: 0;
-  white-space: nowrap;
 }
 
-/* Links en desktop */
 .navbar-links {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  gap: 2rem;
 }
 
-/* Botones de navegación */
 .nav-button {
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -53,8 +47,7 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.95rem;
-  white-space: nowrap;
+  font-size: 1rem;
 }
 
 .nav-active {
@@ -63,12 +56,16 @@
 }
 
 .nav-inactive {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: white;
+  background-color: gray;
+  color: black;
 }
 
 .nav-inactive:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: #1d4ed8;
+}
+
+.navbar-spacer {
+  width: 5rem;
 }
 
 .logout-btn {
@@ -78,10 +75,9 @@
   border-radius: 0.5rem;
   border: none;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 500;
   transition: background-color 0.2s ease, opacity 0.2s ease;
-  white-space: nowrap;
 }
 
 .logout-btn:hover {
@@ -92,126 +88,22 @@
   transform: scale(0.98);
 }
 
-/* ============================================
-   HAMBURGUESA — oculta en desktop
-   ============================================ */
-
-.navbar-hamburger {
-  display: none; /* oculto en desktop */
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  transition: background 0.2s;
-}
-
-.navbar-hamburger:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.hamburger-line {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background-color: white;
-  border-radius: 2px;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-  transform-origin: center;
-}
-
-/* Animación X cuando está abierto */
-.line-top-open {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.line-mid-open {
-  opacity: 0;
-  transform: scaleX(0);
-}
-
-.line-bot-open {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
-/* ============================================
-   RESPONSIVE — tablet y móvil
-   ============================================ */
-
 @media (max-width: 768px) {
-
-  .navbar-container {
-    padding: 0 1rem;
-  }
-
-  .navbar-content {
-    height: 4rem;
-  }
-
-  .logo-title {
-    font-size: 1.4rem;
-  }
-
-  /* Ocultar links y mostrar hamburguesa */
   .navbar-links {
-    display: none; /* ocultos por defecto en móvil */
+    gap: 1rem;
   }
-
-  .navbar-hamburger {
-    display: flex; /* visible en móvil */
+  
+  .nav-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
   }
-
-  /* Menú desplegable cuando está abierto */
-  .navbar-links-open {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-
-    /* Se posiciona debajo del navbar */
-    position: absolute;
-    top: 4rem; /* misma altura que .navbar-content */
-    left: 0;
-    right: 0;
-    background: linear-gradient(to bottom, #1e40af, #1e3a8a);
-    padding: 1rem;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 49;
+  
+  .navbar-spacer {
+    display: none;
   }
-
-  .navbar-links-open .nav-button {
-    width: 100%;
-    text-align: left;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-  }
-
-  .navbar-links-open .nav-active {
-    background-color: white;
-    color: #2563eb;
-  }
-
-  .navbar-links-open .nav-inactive {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-  }
-
-  .navbar-links-open .logout-btn {
-    width: 100%;
-    text-align: left;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    background-color: #dc3545;
-    color: white;
-  }
-}
-
-@media (max-width: 400px) {
-  .logo-title {
-    font-size: 1.2rem;
+  
+  .logo-img {
+    width: 32px;
+    height: 32px;
   }
 }
