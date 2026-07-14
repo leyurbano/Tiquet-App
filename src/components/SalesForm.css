@@ -223,46 +223,33 @@
   background-color: #2563eb;
 }
 
-/* resetea márgenes nativos del navegador en títulos de sección */
-.form-section-title {
-  margin-top: 0;
-  margin-bottom: 0.5rem; /* ya lo tenías, solo asegura que margin-top sea 0 */
-}
-
-/* ============================================
-   TABLA DE PRODUCTOS EN VENTA
-   🔧 Esta es la sección corregida completa
-   ============================================ */
-
+/* Tabla de Productos en Venta */
 .sales-items-table {
   background-color: #f9fafb;
   border-radius: 0.375rem;
   overflow: hidden;
   border: 1px solid #e5e7eb;
   margin-bottom: 0.75rem;
-  width: 100%;
 }
 
-/* 🔧 columnas fijas: #(pequeño) | descripción(flexible) | cantidad(fija) | total(fija) | acción(fija) */
 .table-header-sales {
   display: grid;
-  grid-template-columns: 2rem 1fr 5rem 8rem 3rem;
-  gap: 0.5rem;
+  grid-template-columns: 2rem 2fr 1fr 2fr 1.5rem;
+  gap: 1rem;
   background-color: #f3f4f6;
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 1rem;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: #374151;
   border-bottom: 2px solid #e5e7eb;
-  align-items: center;
 }
 
 .table-row-sales {
   display: grid;
-  grid-template-columns: 2rem 1fr 5rem 8rem 3rem; /* 🔧 mismo grid que el header */
-  gap: 0.5rem;
+  grid-template-columns: 2rem 2fr 1fr 2fr 1.5rem;
+  gap: 1rem;
   align-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 1rem;
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s;
 }
@@ -279,7 +266,6 @@
   text-align: center;
   font-weight: 600;
   color: #6b7280;
-  font-size: 0.8rem;
 }
 
 .col-product {
@@ -288,76 +274,59 @@
   text-transform: capitalize;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  min-width: 0; /* 🔧 necesario para que word-wrap funcione dentro del grid */
-  font-size: 0.85rem;
 }
 
 .col-qty {
   text-align: center;
   font-weight: 600;
-  font-size: 0.85rem;
 }
 
 .col-total {
   text-align: right;
   font-weight: 600;
   color: #059669;
-  font-size: 0.85rem;
-  white-space: nowrap; /* 🔧 evita que el monto se parta en dos líneas */
 }
 
 .col-action {
   text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .btn-remove-item {
-  padding: 0.2rem 0.3rem;
-  background-color: #fee2e2; /* 🔧 fondo rojo suave para que sea visible */
-  border: 1px solid #fecaca;
-  border-radius: 0.25rem;
+  padding: 0.25rem;
+  background-color: transparent;
+  border: none;
   cursor: pointer;
-  font-size: 0.9rem;
-  line-height: 1;
-  transition: transform 0.2s, background-color 0.2s;
+  font-size: 1rem;
+  transition: transform 0.2s;
 }
 
 .btn-remove-item:hover {
-  transform: scale(1.15);
-  background-color: #fecaca;
+  transform: scale(1.3);
 }
 
-/* ============================================
-   TOTAL DEL FORMULARIO
-   🔧 alineado con el borde derecho de la tabla
-   ============================================ */
-
+/* Total del formulario */
 .sf-total {
   display: flex;
-  justify-content: flex-end; /* empuja todo a la derecha */
+  justify-content: flex-end;
   align-items: center;
   gap: 1rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0.75rem 1rem;
   background-color: #ecfdf5;
   border-radius: 0.375rem;
   border: 2px solid #d1fae5;
 }
 
 .total-label {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #065f46;
-  white-space: nowrap;
 }
 
 .total-amount {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #059669;
-  white-space: nowrap;
-  min-width: 7rem;    /* 🔧 alineación consistente del monto */
+  min-width: 200px;
   text-align: right;
 }
 
@@ -373,14 +342,14 @@
 
 .btn-submit,
 .btn-cancel {
-  padding: 0.5rem 0;
+  padding: 0.4rem 0;
   width: 40%;
   border: none;
   border-radius: 0.375rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .btn-submit {
@@ -388,20 +357,13 @@
   color: white;
 }
 
-.btn-submit:hover:not(:disabled) {
+.btn-submit:hover {
   background-color: #1d4ed8;
   transform: translateY(-2px);
 }
 
 .btn-submit:active {
   transform: translateY(0);
-}
-
-/* 🔧 estado deshabilitado — faltaba completamente */
-.btn-submit:disabled {
-  background-color: #93c5fd;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .btn-cancel {
@@ -418,165 +380,71 @@
   transform: translateY(0);
 }
 
-/* Forma de pago */
-.form-pago {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.form-pago > div {
-  display: flex;
-}
-
-.form-pago button {
-  background: #f5f5f5;
-  border: 1px solid #d0d0d0;
-  padding: 8px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-
-.form-pago button:hover {
-  background: rgba(22, 39, 192, 0.1);
-}
-
-.form-pago button.active {
-  background: #0b5fff;
-  color: #fff;
-  border-color: #0b5fff;
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
+/* Responsive */
 @media (max-width: 768px) {
-  .sales-form-wrapper {
-    padding: 0.75rem;
-  }
-
-  /* secciones más compactas */
-  .sf-section {
-    margin-bottom: 0.4rem;
-    padding-bottom: 0.4rem;
-  }
-
-  .form-title {
-    font-size: 1.35rem;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.4rem;
-  }
-
-  .form-section-title {
-    font-size: 0.9rem;
-    margin-bottom: 0.3rem;
-  }
-
-  /* grids apilados con gap reducido */
   .form-row-2,
-  .form-row-3,
-  .form-row-add-item {
+  .form-row-3 {
     grid-template-columns: 1fr;
-    gap: 0.35rem;
-  }
-
-  /* menos espacio entre label e input */
-  .form-label {
-    font-size: 0.8rem;
-    margin-bottom: 0.15rem;
-  }
-
-  /* inputs más compactos */
-  .form-input,
-  .form-select {
-    padding: 0.45rem 0.6rem;
-    font-size: 0.875rem;
   }
 
   .add-product-row {
     grid-template-columns: 1fr;
   }
 
-  /* tabla en móvil */
   .table-header-sales,
   .table-row-sales {
-    grid-template-columns: 1fr 4rem 7rem 2.5rem;
-    gap: 0.35rem;
-    padding: 0.4rem 0.5rem;
+    grid-template-columns: 1fr;
   }
-
-  .col-number  { display: none; }
-  .col-product { font-size: 0.8rem; }
-  .col-qty     { font-size: 0.8rem; }
-  .col-total   { font-size: 0.8rem; }
 
   .sf-total {
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 
-  .total-label  { font-size: 0.85rem; }
-  .total-amount { font-size: 1.1rem; min-width: 5.5rem; }
+  .total-amount {
+    width: 100%;
+    text-align: left;
+  }
 
   .form-buttons {
     flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
   }
 
   .btn-submit,
   .btn-cancel {
     width: 100%;
-    padding: 0.55rem 0;
-    font-size: 0.875rem;
   }
-
-  .form-pago { gap: 8px; }
-
-  .form-pago button {
-    padding: 7px 12px;
-    font-size: 0.8rem;
-  }
-
-  /* elimina margen nativo del h3 que el navegador agrega por defecto (~16px arriba y abajo) */
-.sf-section h3,
-.form-section-title {
-  margin-top: 0;
-  margin-bottom: 0.2rem;
 }
 
-/* reduce el gap entre form-groups apilados */
-.form-row-3,
-.form-row-2,
-.form-row-add-item {
-  gap: 0.25rem; /* antes 0.35rem — reduce el espacio entre campos */
+.form-pago {
+  display: flex;
+  gap: 12px; /* espacio entre botones */
+  align-items: center;
+  flex-wrap: wrap; /* opcional: que se ajusten en pantallas pequeñas */
 }
 
-/* reduce el gap interno de add-product-section */
-.add-product-section {
-  gap: 0.25rem;
+.form-pago > div {
+  display: flex; /* mantiene la estructura actual si cada botón está dentro de un div */
 }
 
-/* el form-group en sí no necesita margen adicional */
-.form-group {
-  margin-bottom: 0;
-}
+.form-pago button {
+  background: #f5f5f5;
+  border: 1px solid #d0d0d0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: small;
+  font-weight: 600;
 }
 
-@media (max-width: 400px) {
-  .form-title {
-    font-size: 1.2rem;
-  }
+.form-pago button:hover {
+  background: #1627c065;
+}
 
-  .table-header-sales,
-  .table-row-sales {
-    grid-template-columns: 1fr 3.5rem 6rem 2rem;
-  }
+.form-pago button.active {
+  background: #0b5fff;
+  color: #fff;
+  border-color: #0b5fff;
+
 }
