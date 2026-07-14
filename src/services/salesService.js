@@ -20,8 +20,13 @@ export const salesService = {
           detalle_ventas (
             *,
             productos (*)
+          ),
+          pagos_venta (
+            *,
+            medios_pago (*)
           )
-        `)
+        `) // 🔧 CAMBIO: se agregó pagos_venta con su join a medios_pago,
+           // así cada venta trae de una vez con qué medio(s) se pagó
 
       if (fecha) {
         const start = dayjs.tz(`${fecha} 00:00:00`, COLOMBIA_TZ).toISOString()
@@ -54,8 +59,12 @@ export const salesService = {
           detalle_ventas (
             *,
             productos (*)
+          ),
+          pagos_venta (
+            *,
+            medios_pago (*)
           )
-        `)
+        `) // 🔧 CAMBIO: mismo join agregado aquí, por consistencia con getAllSales
         .eq('id', id)
         .single()
 
@@ -67,7 +76,9 @@ export const salesService = {
     }
   },
 
-  // Crear venta
+  // 🔧 CAMBIO: createSale ahora recibe también `sale.pagos` (array) y los inserta en pagos_venta.
+  // Ya NO depende únicamente de sale.medio_pago_id — ese campo se mantiene por compatibilidad
+  // pero puede venir null cuando el pago es mixto (ver SalesForm.jsx).
   async createSale(sale) {
     try {
       const { data, error } = await supabase
@@ -76,7 +87,7 @@ export const salesService = {
           cliente_id: sale.cliente_id,
           fecha: sale.fecha || dayjs().tz(COLOMBIA_TZ).toISOString(),
           total: sale.total,
-          medio_pago_id: sale.medio_pago_id
+          medio_pago_id: sale.medio_pago_id // null si es pago mixto, o el id real si es simple
         }])
         .select()
 
@@ -84,10 +95,67 @@ export const salesService = {
         console.error('Error de Supabase:', error)
         throw error
       }
-      return data?.[0]
+
+      const nuevaVenta = data?.[0]
+      if (!nuevaVenta) throw new Error('No se pudo crear la venta')
+
+      // 🆕 NUEVO: insertar los pagos asociados a la venta recién creada
+      if (sale.pagos && sale.pagos.length > 0) {
+        const pagosResult = await this.addSalePayments(nuevaVenta.id, sale.pagos)
+        if (!pagosResult.success) {
+          // Si falla el registro de pagos, revertimos la venta para no dejar datos huérfanos
+          await this.deleteSale(nuevaVenta.id)
+          throw new Error('Error registrando los pagos de la venta: ' + pagosResult.error)
+        }
+      }
+
+      return nuevaVenta
     } catch (error) {
       console.error('Error creating sale:', error.message || error)
       return null
+    }
+  },
+
+  // 🆕 NUEVO: inserta uno o varios pagos asociados a una venta (soporta pago simple y mixto)
+  // sale.pagos siempre llega como array desde SalesForm.jsx, ej:
+  // [{ medio_pago_id: 1, monto: 30000 }, { medio_pago_id: 2, monto: 20000 }]
+  async addSalePayments(saleId, pagos) {
+    try {
+      const registros = pagos.map((pago) => ({
+        venta_id: saleId,
+        medio_pago_id: pago.medio_pago_id,
+        monto: pago.monto
+      }))
+
+      const { data, error } = await supabase
+        .from('pagos_venta')
+        .insert(registros)
+        .select()
+
+      if (error) throw error
+      return { success: true, data }
+    } catch (error) {
+      console.error('Error adding sale payments:', error)
+      return { success: false, error: error.message }
+    }
+  },
+
+  // 🆕 NUEVO: trae los medios de pago disponibles (excluye "Sin definir")
+  // Se usa en SalesForm.jsx para generar los botones dinámicamente
+  async getMediosPago() {
+    try {
+      const { data, error } = await supabase
+        .from('medios_pago')
+        .select('id, pago')
+        .neq('id', 3)
+        .order('id', { ascending: true })
+
+      console.log('medios_pago =>', data, error)
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error fetching medios de pago:', error)
+      return []
     }
   },
 
@@ -114,6 +182,8 @@ export const salesService = {
   },
 
   // Eliminar venta y restaurar stock
+  // 🔧 CAMBIO: no requiere ajustes porque pagos_venta tiene ON DELETE CASCADE
+  // (al borrar la venta, sus filas en pagos_venta se eliminan automáticamente)
   async deleteSaleWithRestore(saleId) {
     try {
       // 1. Obtener los items de la venta antes de eliminar
@@ -135,7 +205,7 @@ export const salesService = {
 
       if (errorDetalle) throw errorDetalle
 
-      // 4. Eliminar la venta
+      // 4. Eliminar la venta (pagos_venta se elimina solo, por el ON DELETE CASCADE)
       const { error: errorVenta } = await supabase
         .from('ventas')
         .delete()
