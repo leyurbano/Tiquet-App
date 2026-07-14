@@ -54,6 +54,12 @@ function SalesPage() {
     setLoading(false)
   }
 
+  // 🔧 CAMBIO: dos ajustes en esta función:
+  // 1. Se agrega "pagos: saleData.pagos" al objeto que se manda a salesService.createSale.
+  //    Antes faltaba, así que pagos_venta nunca se llenaba (ni en pago simple ni mixto).
+  // 2. Ahora hace "return" del resultado (newSale o null) en cada rama, incluida la del catch.
+  //    Antes no retornaba nada -> SalesForm.jsx siempre recibía "undefined" y no podía saber
+  //    si la venta se guardó o falló, así que limpiaba el formulario igual en ambos casos.
   const handleCreateSale = async (saleData) => {
     setLoading(true)
 
@@ -66,7 +72,8 @@ function SalesPage() {
         cliente_id: saleData.cliente_id,
         fecha: nowColombiaISO,
         total: saleData.total,
-        medio_pago_id: saleData.medio_pago_id
+        medio_pago_id: saleData.medio_pago_id,
+        pagos: saleData.pagos // 🔧 CAMBIO: faltaba, necesario para poblar pagos_venta
       })
 
       if (newSale) {
@@ -104,15 +111,19 @@ function SalesPage() {
         await loadSalesByDate(selectedDate)
         setShowForm(true)
         alert('✅ Venta registrada exitosamente')
+        setLoading(false)
+        return newSale // 🔧 CAMBIO: retorno explícito para que SalesForm sepa que sí se guardó
       } else {
         alert('❌ Error al crear la venta')
+        setLoading(false)
+        return null // 🔧 CAMBIO: retorno explícito de fallo
       }
     } catch (error) {
       console.error('Error:', error)
       alert('❌ Error al registrar la venta')
+      setLoading(false)
+      return null // 🔧 CAMBIO: también se retorna null si hubo una excepción
     }
-
-    setLoading(false)
   }
 
   const getReceiptCSS = () => `
