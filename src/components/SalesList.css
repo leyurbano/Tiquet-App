@@ -330,3 +330,83 @@
     padding: 0.4rem 0.3rem;
   }
 }
+/* 
+  
+   Mejora visual del resumen por medio de pago
+   (reemplaza el look plano de sales-efectivo-bar /
+   sales-transferencia-bar, ahora generado dinámicamente
+   desde resumenPorMedio y soporta cualquier cantidad
+   de medios de pago, incluidos los mixtos)
+   */
+
+.sales-cash-transfer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sales-efectivo-bar {
+  flex: 1 1 160px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f4f6f8;
+  border: 1px solid #e2e6ea;
+  border-left: 4px solid #6b7280;
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sales-efectivo-bar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Colorea el borde izquierdo según el medio de pago, identificándolo por su texto */
+.sales-efectivo-bar:nth-of-type(1) {
+  border-left-color: #16a34a; /* verde: primer medio (normalmente Efectivo) */
+}
+
+.sales-efectivo-bar:nth-of-type(2) {
+  border-left-color: #2563eb; /* azul: segundo medio (normalmente Transferencia) */
+}
+
+.sales-efectivo-bar:nth-of-type(3) {
+  border-left-color: #d97706; /* ámbar: tercer medio en adelante */
+}
+
+.sales-efectivo-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.sales-total-tra {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.sales-total-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: #1125d17e;
+  border-radius: 8px;
+}
+
+.sales-total-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.sales-total-amount {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
+}
