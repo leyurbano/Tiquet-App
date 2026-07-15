@@ -18,6 +18,11 @@ function SalesPage() {
   const [finalCustomerId, setFinalCustomerId] = useState(null)
   const [formKey, setFormKey] = useState(0)
 
+  // 🆕 NUEVO: catálogo de medios de pago, necesario para traducir medio_pago_id -> nombre
+  // en el recibo que se imprime justo después de registrar la venta (lastSale no trae el join
+  // de pagos_venta.medios_pago como sí lo trae getAllSales/getSaleById desde Supabase)
+  const [mediosPago, setMediosPago] = useState([])
+
   // ✅ getTodayColombia() ahora devuelve siempre la fecha correcta en Colombia
   const [selectedDate, setSelectedDate] = useState(getTodayColombia)
 
@@ -31,12 +36,14 @@ function SalesPage() {
 
   const loadInitialData = async () => {
     setLoading(true)
-    const [productsData, clientsData] = await Promise.all([
+    const [productsData, clientsData, mediosPagoData] = await Promise.all([
       productService.getAllProducts(),
-      clientService.getAllClients()
+      clientService.getAllClients(),
+      salesService.getMediosPago() // 🆕 NUEVO: se carga junto con productos y clientes
     ])
     setProducts(productsData.data || [])
     setClients(clientsData)
+    setMediosPago(mediosPagoData)
 
     const finalCustomer = clientsData.find(c => c.documento === '222222222')
     if (finalCustomer) {
@@ -95,11 +102,19 @@ function SalesPage() {
           }
         })
 
+        // 🆕 NUEVO: arma el desglose de pagos con el nombre de cada medio,
+        // usando el catálogo mediosPago cargado en loadInitialData
+        const pagosConNombre = (saleData.pagos || []).map(p => ({
+          nombre: mediosPago.find(m => m.id === p.medio_pago_id)?.pago || 'N/A',
+          monto: p.monto
+        }))
+
         setLastSale({
           id: newSale.id,
           fecha: nowColombiaISO,
           total: saleData.total,
           items: itemsWithProductInfo,
+          pagos: pagosConNombre, // 🆕 NUEVO: desglose de pagos para el recibo impreso
           customer: {
             name: saleData.customer_name || 'N/A',
             cedula: saleData.customer_cedula || 'N/A',
@@ -175,6 +190,32 @@ function SalesPage() {
   .total-label { font-size: 8pt; font-weight: bold; }
   .total-amount { font-size: 12pt; font-weight: bold; }
   .footer { text-align: center; font-size: 7pt; margin-top: 2mm; margin-bottom: 0; }
+
+  /* 🆕 NUEVO: estilos propios para la sección "FORMA DE PAGO" (soporta pago simple y mixto) */
+  .payment-section {
+    margin: 1.5mm 0 2mm 0;
+    padding: 1mm 0;
+  }
+  .payment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7.5pt;
+    padding: 0.8mm 2mm;
+  }
+  .payment-row:not(:last-child) {
+    border-bottom: 1px dotted #ddd;
+    padding-bottom: 1.2mm;
+    margin-bottom: 0.8mm;
+  }
+  .payment-method {
+    font-weight: bold;
+    text-align: left;
+  }
+  .payment-amount {
+    text-align: right;
+    white-space: nowrap;
+  }
 `
 
   const printAndCut = (printWindow) => {
@@ -252,6 +293,21 @@ function SalesPage() {
         })
       }
 
+      // 🔧 CORRECCIÓN: pagosHtml se declara y calcula UNA sola vez, fuera del forEach
+      // (antes estaba mal ubicado dentro del forEach de itemsHtml, lo que causaba un
+      // ReferenceError al usarlo más abajo en el template `html`, porque `let` tiene
+      // alcance de bloque y esa variable dejaba de existir al salir del forEach)
+      let pagosHtml = ''
+      if (saleDetails.pagos_venta && saleDetails.pagos_venta.length > 0) {
+        pagosHtml = saleDetails.pagos_venta.map(p => {
+          const montoStr = (p.monto || 0).toLocaleString('es-CO', { minimumFractionDigits: 0 })
+          return `<div class="payment-row">
+            <span class="payment-method">${p.medios_pago?.pago || 'N/A'}</span>
+            <span class="payment-amount">$${montoStr}</span>
+          </div>`
+        }).join('')
+      }
+
       const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -285,6 +341,11 @@ function SalesPage() {
 <div class="divider"></div>
 <div class="items-header">ARTICULOS</div>
 ${itemsHtml}
+<div class="divider"></div>
+<div class="items-header">FORMA DE PAGO</div>
+<div class="payment-section">
+${pagosHtml}
+</div>
 <div class="divider"></div>
 <div class="total-section">
   <div class="total-label">TOTAL</div>
@@ -365,6 +426,19 @@ ${itemsHtml}
       itemNumber++
     })
 
+    // 🆕 NUEVO: arma el desglose de forma de pago a partir de lastSale.pagos,
+    // que ya viene con nombre + monto desde handleCreateSale
+    let pagosHtml = ''
+    if (lastSale.pagos && lastSale.pagos.length > 0) {
+      pagosHtml = lastSale.pagos.map(p => {
+        const montoStr = (p.monto || 0).toLocaleString('es-CO', { minimumFractionDigits: 0 })
+        return `<div class="payment-row">
+          <span class="payment-method">${p.nombre}</span>
+          <span class="payment-amount">$${montoStr}</span>
+        </div>`
+      }).join('')
+    }
+
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -398,6 +472,11 @@ ${itemsHtml}
 <div class="divider"></div>
 <div class="items-header">ARTICULOS</div>
 ${itemsHtml}
+<div class="divider"></div>
+<div class="items-header">FORMA DE PAGO</div>
+<div class="payment-section">
+${pagosHtml}
+</div>
 <div class="divider"></div>
 <div class="total-section">
   <div class="total-label">TOTAL</div>

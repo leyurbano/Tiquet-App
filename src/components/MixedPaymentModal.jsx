@@ -13,32 +13,46 @@ import { formatCOP } from "../utils/currencyFormatter";
  * - onClose: () => void
  */
 function MixedPaymentModal({ total, mediosPago, onConfirm, onClose }) {
+  // 🔧 CAMBIO: montos ahora guarda el valor "limpio" (solo dígitos, sin puntos ni decimales),
+  // ej. "30000". El punto de miles se agrega solo al MOSTRAR el valor en el input.
   const [montos, setMontos] = useState(() =>
     Object.fromEntries(mediosPago.map((m) => [m.id, ""])),
   );
 
   const sumaActual = Object.values(montos).reduce(
-    (sum, val) => sum + (parseFloat(val) || 0),
+    (sum, val) => sum + (parseInt(val, 10) || 0),
     0,
   );
 
   const diferencia = total - sumaActual;
   const cuadra = Math.abs(diferencia) < 0.01 && sumaActual > 0;
 
+  // 🆕 NUEVO: formatea un string de dígitos puros a "30.000" para mostrar en el input
+  const formatearParaInput = (rawValue) => {
+    if (!rawValue) return "";
+    return Number(rawValue).toLocaleString("es-CO");
+  };
+
   const handleMontoChange = (medioId, value) => {
-    // Solo números y punto decimal
-    if (value !== "" && !/^\d*\.?\d*$/.test(value)) return;
-    setMontos((prev) => ({ ...prev, [medioId]: value }));
+    // 🔧 CAMBIO: primero se limpia todo lo que no sea dígito (quita puntos, letras, etc.)
+    // Esto permite que el usuario escriba o pegue "30.000" y solo se quede con "30000".
+    const soloDigitos = value.replace(/\D/g, "");
+
+    // Evita ceros a la izquierda innecesarios (ej. "0030000" -> "30000"), pero permite
+    // que el campo quede vacío mientras el usuario borra todo.
+    const limpio = soloDigitos.replace(/^0+(?=\d)/, "");
+
+    setMontos((prev) => ({ ...prev, [medioId]: limpio }));
   };
 
   const handleConfirm = () => {
     if (!cuadra) return;
 
     const pagos = mediosPago
-      .filter((m) => parseFloat(montos[m.id]) > 0)
+      .filter((m) => parseInt(montos[m.id], 10) > 0)
       .map((m) => ({
         medio_pago_id: m.id,
-        monto: parseFloat(montos[m.id]),
+        monto: parseInt(montos[m.id], 10),
       }));
 
     onConfirm(pagos);
@@ -79,9 +93,9 @@ function MixedPaymentModal({ total, mediosPago, onConfirm, onClose }) {
               <label className="mpm-label">{medio.pago}</label>
               <input
                 type="text"
-                inputMode="decimal"
+                inputMode="numeric"
                 placeholder="0"
-                value={montos[medio.id]}
+                value={formatearParaInput(montos[medio.id])}
                 onChange={(e) => handleMontoChange(medio.id, e.target.value)}
                 className="mpm-input"
               />
