@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/home";
 import { useAuth } from "./contexts/AuthContext";
+import WelcomePage from "./pages/InicioPage"; 
 
 function App() {
   const { user, loading } = useAuth();
@@ -43,13 +44,7 @@ function App() {
       {/* Ruta raíz - va directo a /sales */}
       <Route
         path="/"
-        element={
-          user ? (
-            <Navigate to="/sales" replace />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
+        element={<WelcomePage />}
       />
 
       {/* Dashboard (opcional, para después) */}
