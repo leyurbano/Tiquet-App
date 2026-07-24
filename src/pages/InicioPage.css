@@ -2,49 +2,58 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f0f4ff;
+  min-height: 100vh;
+  background-color: #ffffff;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .welcome-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 48px 40px;
-  border-radius: 16px;
+  padding: 40px 32px;
+  border-radius: 20px;
   background: #ffffff;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
+  width: 100%;
+  max-width: 400px;
 }
 
-.welcome-titulo {
-  font-size: 36px;
-  font-weight: 700;
-  color: #1e3a8a;
-  margin-bottom: 8px;
-}
-
-.welcome-subtitulo {
-  font-size: 15px;
-  color: #6b7280;
-  margin-bottom: 32px;
+.welcome-logo {
+  width: 85%;
+  max-width: 300px;
+  height: auto;
+  margin-bottom: 32px; /* ← espacio entre el texto del logo y el botón */
 }
 
 .welcome-boton {
-  padding: 12px 36px;
+  width: 100%;
+  padding: 14px;
   font-size: 16px;
   font-weight: 600;
   background-color: #2563eb;
-  color: #fff;
+  color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
 .welcome-boton:hover {
   background-color: #1d4ed8;
 }
-.welcome-logo {
-  width: 100%;        /* ajustá el tamaño que quieras */
-  height: auto;
-  margin-bottom: 16px;
-  border-radius: 8px;  /* opcional, si querés bordes redondeados */
+
+.welcome-boton:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 360px) {
+  .welcome-card {
+    padding: 28px 20px;
+  }
+  .welcome-logo {
+    width: 90%;
+  }
 }
