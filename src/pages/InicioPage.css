@@ -13,7 +13,8 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 40px 32px;
+  padding: 20px 15px;
+  padding-top: 10px;
   border-radius: 20px;
   background: #ffffff;
   box-shadow: none;
@@ -25,7 +26,7 @@
   width: 85%;
   max-width: 300px;
   height: auto;
-  margin-bottom: 32px; /* ← espacio entre el texto del logo y el botón */
+  margin-bottom: 2px;
 }
 
 .welcome-boton {
@@ -49,6 +50,72 @@
   transform: scale(0.98);
 }
 
+/* ── Formulario ── */
+.welcome-form {
+  width: 100%;
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  border-color: #2563eb;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.boton-cancelar {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 14px;
+  background-color: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.boton-cancelar:hover {
+  background-color: #f3f4f6;
+}
+
 @media (max-width: 360px) {
   .welcome-card {
     padding: 28px 20px;
@@ -56,4 +123,21 @@
   .welcome-logo {
     width: 90%;
   }
+}
+/* Estado inicial — logo centrado en pantalla */
+.welcome-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;        /* centrado vertical */
+  min-height: 100vh;
+  background-color: #ffffff;
+  padding: 16px;
+  box-sizing: border-box;
+  transition: align-items 0.3s ease; /* no funciona en todos los browsers */
+}
+
+/* Cuando el formulario está activo — sube todo */
+.welcome-container.form-activo {
+  align-items: flex-start;    /* 🔧 pega arriba */
+  padding-top: 40px;          /* pequeño espacio desde el tope */
 }
