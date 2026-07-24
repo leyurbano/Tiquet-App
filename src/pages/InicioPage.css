@@ -42,3 +42,9 @@
 .welcome-boton:hover {
   background-color: #1d4ed8;
 }
+.welcome-logo {
+  width: 100%;        /* ajustá el tamaño que quieras */
+  height: auto;
+  margin-bottom: 16px;
+  border-radius: 8px;  /* opcional, si querés bordes redondeados */
+}

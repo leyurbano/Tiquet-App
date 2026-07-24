@@ -10,6 +10,7 @@ import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/home";
 import { useAuth } from "./contexts/AuthContext";
 import WelcomePage from "./pages/InicioPage"; 
+import InicioPage from "./pages/InicioPage";
 
 function App() {
   const { user, loading } = useAuth();
@@ -44,7 +45,7 @@ function App() {
       {/* Ruta raíz - va directo a /sales */}
       <Route
         path="/"
-        element={<WelcomePage />}
+        element={<InicioPage />}
       />
 
       {/* Dashboard (opcional, para después) */}
