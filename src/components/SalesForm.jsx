@@ -240,6 +240,11 @@ function SalesForm({
 
   return (
     <form onSubmit={handleSubmit} className="sales-form-wrapper">
+       <img
+        src="/Fralu.png"
+        alt=""
+        className="marca-agua-form"
+      />
       <h2 className="form-title">📝 Nueva Venta</h2>
 
       <div className="sf-section">

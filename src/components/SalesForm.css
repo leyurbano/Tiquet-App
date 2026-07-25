@@ -580,3 +580,23 @@
     grid-template-columns: 1fr 3.5rem 6rem 2rem;
   }
 }
+
+/* 🆕 NUEVO — marca de agua de fondo */
+.marca-agua-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: auto;
+  opacity: 15%;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+
+/* contenido del form siempre encima */
+.sales-form-wrapper > *:not(.marca-agua-form) {
+  position: relative;
+  z-index: 1;
+}
