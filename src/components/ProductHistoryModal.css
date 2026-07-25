@@ -1,0 +1,187 @@
+.phm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.phm-box {
+  background: #fff;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 540px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.phm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.phm-eyebrow {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin: 0 0 0.2rem;
+}
+
+.phm-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.2rem;
+}
+
+.phm-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.phm-close {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #6b7280;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.phm-close:hover {
+  background: #e5e7eb;
+}
+
+.phm-body {
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 1.5rem;
+  flex: 1;
+}
+
+.phm-empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem 0;
+}
+
+/* Timeline */
+.phm-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.phm-item {
+  display: flex;
+  gap: 0.875rem;
+  position: relative;
+}
+
+.phm-dot {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.phm-line {
+  position: absolute;
+  left: 1.0625rem;
+  top: 2.25rem;
+  bottom: 0;
+  width: 2px;
+  background: #e5e7eb;
+  z-index: 0;
+}
+
+.phm-card {
+  flex: 1;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.phm-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.4rem;
+}
+
+.phm-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.phm-date {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.phm-desc {
+  font-size: 0.85rem;
+  color: #374151;
+  margin: 0 0 0.6rem;
+}
+
+.phm-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.phm-num {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.phm-num-label {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.phm-num-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.phm-arrow {
+  color: #d1d5db;
+  font-size: 1rem;
+}
+
+.phm-venta-ref {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  margin: 0.4rem 0 0;
+}
