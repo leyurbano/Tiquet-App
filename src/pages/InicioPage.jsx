@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import './InicioPage.css';
+import { Eye, EyeOff } from 'lucide-react';
 
 function InicioPage() {
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -8,6 +9,7 @@ function InicioPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verPassword, setVerPassword] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -19,11 +21,12 @@ function InicioPage() {
       const result = await login(email, password);
 
       if (!result.success) {
-        // 🔧 si falló, muestra el mensaje de error
-        setError(result.error || 'Error al iniciar sesión');
+        if (result.error === 'Invalid login credentials') {
+          setError('Correo o contraseña incorrectos');
+        } else {
+          setError(result.error || 'Error al iniciar sesión');
+        }
       }
-      // si result.success === true, no hace nada —
-      // onAuthStateChange detecta la sesión y App.jsx redirige a /sales automáticamente
 
     } catch {
       setError('Error inesperado, intentá de nuevo');
@@ -33,8 +36,7 @@ function InicioPage() {
   };
 
   return (
-    // 🔧 CAMBIO — la clase del contenedor cambia según el estado
-<div className={`welcome-container ${mostrarForm ? 'form-activo' : ''}`}>
+    <div className={`welcome-container ${mostrarForm ? 'form-activo' : ''}`}>
       <div className="welcome-card">
 
         <img
@@ -70,14 +72,23 @@ function InicioPage() {
 
               <div className="form-group">
                 <label className="form-label">Contraseña</label>
-                <input
-                  type="password"
-                  className="form-input"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className="input-password-wrapper">
+                  <input
+                    type={verPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="boton-ver-password"
+                    onClick={() => setVerPassword(!verPassword)}
+                  >
+                    {verPassword ?   <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               {error && <div className="error-message">{error}</div>}

@@ -9,22 +9,14 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/home";
 import { useAuth } from "./contexts/AuthContext";
-import WelcomePage from "./pages/InicioPage"; 
-import InicioPage from "./pages/InicioPage";
+import InicioPage from "./pages/InicioPage"; // 🔧 CAMBIO — solo un import, eliminé el duplicado
 
 function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         <p>Cargando...</p>
       </div>
     );
@@ -42,25 +34,23 @@ function App() {
         element={user ? <Navigate to="/sales" replace /> : <RegisterPage />}
       />
 
-      {/* Ruta raíz - va directo a /sales */}
+      {/* 🔧 CAMBIO — verifica si hay sesión antes de mostrar inicio */}
       <Route
         path="/"
-        element={<InicioPage />}
+        element={user ? <Navigate to="/sales" replace /> : <InicioPage />}
       />
 
-      {/* Dashboard (opcional, para después) */}
+      {/* Dashboard */}
       <Route
         path="/dashboard"
         element={
           user ? (
             <div className="app-container">
               <Navbar />
-              <div className="app-main">
-                <Dashboard />
-              </div>
+              <div className="app-main"><Dashboard /></div>
             </div>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/" replace />
           )
         }
       />
@@ -72,12 +62,10 @@ function App() {
           user ? (
             <div className="app-container">
               <Navbar />
-              <div className="app-main">
-                <SalesPage />
-              </div>
+              <div className="app-main"><SalesPage /></div>
             </div>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/" replace />
           )
         }
       />
@@ -88,12 +76,10 @@ function App() {
           user ? (
             <div className="app-container">
               <Navbar />
-              <div className="app-main">
-                <ProductsPage />
-              </div>
+              <div className="app-main"><ProductsPage /></div>
             </div>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/" replace />
           )
         }
       />
@@ -104,12 +90,10 @@ function App() {
           user ? (
             <div className="app-container">
               <Navbar />
-              <div className="app-main">
-                <ClientsPage />
-              </div>
+              <div className="app-main"><ClientsPage /></div>
             </div>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/" replace />
           )
         }
       />

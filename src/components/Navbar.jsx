@@ -11,13 +11,9 @@ function Navbar() {
   const menuRef = useRef(null)                     // 🆕 para cerrar al hacer clic afuera
 
   const handleLogout = async () => {
-    try {
-      await logout()
-      navigate('/login')
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error)
-    }
-  }
+  await logout();
+  navigate('/');
+};
 
   // 🆕 Cerrar menú al navegar
   const handleNav = (path) => {

@@ -141,3 +141,26 @@
   align-items: flex-start;    /* 🔧 pega arriba */
   padding-top: 40px;          /* pequeño espacio desde el tope */
 }
+
+.input-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-password-wrapper .form-input {
+  width: 100%;
+  padding-right: 44px; /* espacio para el botón del ojo */
+}
+
+.boton-ver-password {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  line-height: 1;
+  color: #6b7280;
+}
