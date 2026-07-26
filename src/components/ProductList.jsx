@@ -1,24 +1,36 @@
-import React, { useState, useEffect } from 'react'
-import './ProductList.css'
-import { formatCOP } from '../utils/currencyFormatter'
-import ProductHistoryModal from './ProductHistoryModal'
+import React, { useState, useEffect } from "react";
+import "./ProductList.css";
+import { formatCOP } from "../utils/currencyFormatter";
+import ProductHistoryModal from "./ProductHistoryModal";
+import { Pencil, Trash2, History, Package } from "lucide-react";
 
 function ProductList({ products, onEdit, onDelete, loading = false }) {
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredProducts = (products || []).filter(product => {
-    if (!searchTerm.trim()) return true
-    return (product.descripcion || '').toLowerCase().includes(searchTerm.toLowerCase())
-  })
+  const filteredProducts = (products || []).filter((product) => {
+    if (!searchTerm.trim()) return true;
+    return (product.descripcion || "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+  });
 
   // Calcular totales de todos los productos
-  const totalProducts = products.reduce((sum, product) => sum + (product.cantidad || 0), 0)
-  const totalInventoryValue = products.reduce((sum, product) => sum + (product.costo_total || 0), 0)
-  const [historyProduct, setHistoryProduct] = useState(null)
+  const totalProducts = products.reduce(
+    (sum, product) => sum + (product.cantidad || 0),
+    0,
+  );
+  const totalInventoryValue = products.reduce(
+    (sum, product) => sum + (product.costo_total || 0),
+    0,
+  );
+  const [historyProduct, setHistoryProduct] = useState(null);
 
   return (
     <div className="product-list-container">
-      <h2 className="product-list-title">📋 Lista de Productos ({filteredProducts.length})</h2>
+      <h2 className="product-list-title">
+        {" "}
+        <Package size={22} /> Lista de Productos ({filteredProducts.length})
+      </h2>
 
       <div className="search-and-stats-wrapper">
         <input
@@ -64,38 +76,61 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
                 <tr key={product.id} className="table-row">
                   <td className="cell-numeric">{product.id}</td>
                   <td className="cell-description">
-                    {(product.descripcion || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+                    {(product.descripcion || "")
+                      .toLowerCase()
+                      .replace(/\b\w/g, (c) => c.toUpperCase())}
                   </td>
                   <td className="cell-numeric">{product.cantidad || 0}</td>
-                  <td className="cell-numeric">{formatCOP(product.costo || 0)}</td>
-                  <td className="cell-numeric">{formatCOP(product.costo_total || 0)}</td>
-                  <td className="cell-numeric cell-price">
-                    {product.precio_venta
-                      ? formatCOP(product.precio_venta)
-                      : <span style={{ color: '#9ca3af', fontSize: '12px' }}>Sin precio</span>
-                    }
+                  <td className="cell-numeric">
+                    {formatCOP(product.costo || 0)}
                   </td>
-                  
+                  <td className="cell-numeric">
+                    {formatCOP(product.costo_total || 0)}
+                  </td>
+                  <td className="cell-numeric cell-price">
+                    {product.precio_venta ? (
+                      formatCOP(product.precio_venta)
+                    ) : (
+                      <span style={{ color: "#9ca3af", fontSize: "12px" }}>
+                        Sin precio
+                      </span>
+                    )}
+                  </td>
+
                   <td className="cell-actions">
-                    <button onClick={() => onEdit(product)} className="btn-edit">✏️ Editar</button>
-                    <button onClick={() => onDelete(product.id)} className="btn-delete">🗑️ Eliminar</button>
-                    <button onClick={() => setHistoryProduct(product)} className="btn-history"> 📋 Historial</button>
+                    <button
+                      onClick={() => onEdit(product)}
+                      className="btn-edit"
+                    >
+                      <Pencil size={14} /> Editar
+                    </button>
+                    <button
+                      onClick={() => onDelete(product.id)}
+                      className="btn-delete"
+                    >
+                      <Trash2 size={14} /> Eliminar
+                    </button>
+                    <button
+                      onClick={() => setHistoryProduct(product)}
+                      className="btn-history"
+                    >
+                      <History size={14} /> Historial
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
-            
           </table>
         </div>
       )}
       {historyProduct && (
-  <ProductHistoryModal
-    product={historyProduct}
-    onClose={() => setHistoryProduct(null)}
-  />
-)}
+        <ProductHistoryModal
+          product={historyProduct}
+          onClose={() => setHistoryProduct(null)}
+        />
+      )}
     </div>
-  )
+  );
 }
 
-export default ProductList
+export default ProductList;

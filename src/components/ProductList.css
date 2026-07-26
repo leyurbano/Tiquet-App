@@ -327,3 +327,9 @@
   transition: background 0.15s;
 }
 .btn-history:hover { background: #dbeafe; }
+
+.product-list-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

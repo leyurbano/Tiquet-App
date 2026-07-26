@@ -76,3 +76,8 @@
     width: 100%;
   }
 }
+.btn-new-product {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}

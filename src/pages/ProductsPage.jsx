@@ -1,83 +1,87 @@
-import React, { useState, useEffect } from 'react'
-import ProductForm from '../components/ProductForm'
-import ProductList from '../components/ProductList'
-import { productService } from '../services/productService'
-import './ProductsPage.css'
+import React, { useState, useEffect } from "react";
+import ProductForm from "../components/ProductForm";
+import ProductList from "../components/ProductList";
+import { productService } from "../services/productService";
+import "./ProductsPage.css";
+import { PlusCircle } from "lucide-react";
 
 function ProductsPage() {
-  const [products, setProducts] = useState([])
-  const [showForm, setShowForm] = useState(false)
-  const [editingProduct, setEditingProduct] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalProducts, setTotalProducts] = useState(0)
-  const [productsPerPage] = useState(1000)
+  const [products, setProducts] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [productsPerPage] = useState(1000);
 
   useEffect(() => {
-    loadProducts(1)
-  }, [])
+    loadProducts(1);
+  }, []);
 
   const loadProducts = async (page) => {
-    setLoading(true)
-    const result = await productService.getAllProducts(page, productsPerPage)
-    setProducts(result.data)
-    setTotalProducts(result.total)
-    setLoading(false)
-  }
+    setLoading(true);
+    const result = await productService.getAllProducts(page, productsPerPage);
+    setProducts(result.data);
+    setTotalProducts(result.total);
+    setLoading(false);
+  };
 
   const handleCreateProduct = async (formData) => {
-    setLoading(true)
-    const newProduct = await productService.createProduct(formData)
+    setLoading(true);
+    const newProduct = await productService.createProduct(formData);
     if (newProduct) {
-      setShowForm(false)
-      alert('✅ Producto creado exitosamente')
-      loadProducts(1)
+      setShowForm(false);
+      alert("✅ Producto creado exitosamente");
+      loadProducts(1);
     } else {
-      alert('❌ Error al crear el producto')
+      alert("❌ Error al crear el producto");
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleUpdateProduct = async (formData) => {
-    setLoading(true)
-    const updated = await productService.updateProduct(editingProduct.id, formData)
+    setLoading(true);
+    const updated = await productService.updateProduct(
+      editingProduct.id,
+      formData,
+    );
     if (updated) {
-      setEditingProduct(null)
-      setShowForm(false)
-      alert('✅ Producto actualizado exitosamente')
-      loadProducts(currentPage)
+      setEditingProduct(null);
+      setShowForm(false);
+      alert("✅ Producto actualizado exitosamente");
+      loadProducts(currentPage);
     } else {
-      alert('❌ Error al actualizar el producto')
+      alert("❌ Error al actualizar el producto");
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-      setLoading(true)
-      const deleted = await productService.deleteProduct(id)
+    if (window.confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+      setLoading(true);
+      const deleted = await productService.deleteProduct(id);
       if (deleted) {
-        alert('✅ Producto eliminado')
-        loadProducts(currentPage)
+        alert("✅ Producto eliminado");
+        loadProducts(currentPage);
       } else {
-        alert('❌ Error al eliminar el producto')
+        alert("❌ Error al eliminar el producto");
       }
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = (product) => {
-    setEditingProduct(product)
-    setShowForm(true)
-  }
+    setEditingProduct(product);
+    setShowForm(true);
+  };
 
   const handleSubmit = (formData) => {
     if (editingProduct) {
-      handleUpdateProduct(formData)
+      handleUpdateProduct(formData);
     } else {
-      handleCreateProduct(formData)
+      handleCreateProduct(formData);
     }
-  }
+  };
 
   return (
     <div className="products-page">
@@ -85,7 +89,7 @@ function ProductsPage() {
         <h1 className="products-title">📦 Gestión de Productos</h1>
         {!showForm && (
           <button onClick={() => setShowForm(true)} className="btn-new-product">
-            ➕ Nuevo Producto
+            <PlusCircle size={18} /> Nuevo Producto
           </button>
         )}
       </div>
@@ -96,11 +100,16 @@ function ProductsPage() {
             <ProductForm
               initialData={editingProduct}
               onSubmit={handleSubmit}
-              onCancel={() => { setShowForm(false); setEditingProduct(null) }}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingProduct(null);
+              }}
             />
           </div>
         )}
-        <div className={`products-list-section ${showForm ? 'with-form' : 'full-width'}`}>
+        <div
+          className={`products-list-section ${showForm ? "with-form" : "full-width"}`}
+        >
           <ProductList
             products={products}
             onEdit={handleEdit}
@@ -110,7 +119,7 @@ function ProductsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default ProductsPage
+export default ProductsPage;
