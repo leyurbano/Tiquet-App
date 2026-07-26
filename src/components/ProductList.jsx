@@ -6,6 +6,7 @@ import { Pencil, Trash2, History, Package } from "lucide-react";
 
 function ProductList({ products, onEdit, onDelete, loading = false }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [historyProduct, setHistoryProduct] = useState(null);
 
   const filteredProducts = (products || []).filter((product) => {
     if (!searchTerm.trim()) return true;
@@ -14,7 +15,6 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
       .includes(searchTerm.toLowerCase());
   });
 
-  // Calcular totales de todos los productos
   const totalProducts = products.reduce(
     (sum, product) => sum + (product.cantidad || 0),
     0,
@@ -23,12 +23,10 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
     (sum, product) => sum + (product.costo_total || 0),
     0,
   );
-  const [historyProduct, setHistoryProduct] = useState(null);
 
   return (
     <div className="product-list-container">
       <h2 className="product-list-title">
-        {" "}
         <Package size={22} /> Lista de Productos ({filteredProducts.length})
       </h2>
 
@@ -40,7 +38,6 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
         />
-
         <div className="stats-container">
           <div className="stat-label">
             <span className="stat-label-text">Total Productos:</span>
@@ -61,16 +58,16 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
         <div className="table-wrapper">
           <table className="products-table">
             <thead>
-              <tr className="table-header">
-                <th className="header-numeric">#</th>
-                <th className="header-description">Descripción</th>
-                <th className="header-numeric">Stock</th>
-                <th className="header-numeric">Costo Unit.</th>
-                <th className="header-numeric">Costo Total</th>
-                <th className="header-numeric">Precio Venta</th>
-                <th className="header-actions">Acciones</th>
-              </tr>
-            </thead>
+  <tr className="table-header">
+    <th style={{ textAlign: 'right' }}>#</th>
+    <th style={{ textAlign: 'left' }}>Descripción</th>
+    <th style={{ textAlign: 'right' }}>Stock</th>
+    <th style={{ textAlign: 'right' }} className="hide-mobile">Costo Unit.</th>
+    <th style={{ textAlign: 'right' }} className="hide-mobile">Costo Total</th>
+    <th style={{ textAlign: 'right' }}>Precio Venta</th>
+    <th style={{ textAlign: 'center' }}>Acciones</th>
+  </tr>
+</thead>
             <tbody>
               {filteredProducts.map((product) => (
                 <tr key={product.id} className="table-row">
@@ -81,10 +78,10 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
                       .replace(/\b\w/g, (c) => c.toUpperCase())}
                   </td>
                   <td className="cell-numeric">{product.cantidad || 0}</td>
-                  <td className="cell-numeric">
+                  <td className="cell-numeric hide-mobile">
                     {formatCOP(product.costo || 0)}
                   </td>
-                  <td className="cell-numeric">
+                  <td className="cell-numeric hide-mobile">
                     {formatCOP(product.costo_total || 0)}
                   </td>
                   <td className="cell-numeric cell-price">
@@ -96,7 +93,6 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
                       </span>
                     )}
                   </td>
-
                   <td className="cell-actions">
                     <button
                       onClick={() => onEdit(product)}
@@ -123,6 +119,7 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
           </table>
         </div>
       )}
+
       {historyProduct && (
         <ProductHistoryModal
           product={historyProduct}
