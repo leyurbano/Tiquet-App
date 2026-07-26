@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './ProductList.css'
 import { formatCOP } from '../utils/currencyFormatter'
+import ProductHistoryModal from './ProductHistoryModal'
 
 function ProductList({ products, onEdit, onDelete, loading = false }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -13,6 +14,7 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
   // Calcular totales de todos los productos
   const totalProducts = products.reduce((sum, product) => sum + (product.cantidad || 0), 0)
   const totalInventoryValue = products.reduce((sum, product) => sum + (product.costo_total || 0), 0)
+  const [historyProduct, setHistoryProduct] = useState(null)
 
   return (
     <div className="product-list-container">
@@ -77,6 +79,7 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
                   <td className="cell-actions">
                     <button onClick={() => onEdit(product)} className="btn-edit">✏️ Editar</button>
                     <button onClick={() => onDelete(product.id)} className="btn-delete">🗑️ Eliminar</button>
+                    <button onClick={() => setHistoryProduct(product)} className="btn-history"> 📋 Historial</button>
                   </td>
                 </tr>
               ))}
@@ -85,6 +88,12 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
           </table>
         </div>
       )}
+      {historyProduct && (
+  <ProductHistoryModal
+    product={historyProduct}
+    onClose={() => setHistoryProduct(null)}
+  />
+)}
     </div>
   )
 }

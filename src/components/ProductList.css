@@ -315,3 +315,15 @@
     font-size: 0.75rem;
   }
 }
+.btn-history {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.btn-history:hover { background: #dbeafe; }

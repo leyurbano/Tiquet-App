@@ -141,5 +141,21 @@ async updateProduct(id, product) {
       console.error('Error deleting product:', error)
       return false
     }
+  },
+  async getProductHistory(productoId) {
+  try {
+    const { data, error } = await supabase
+      .from('producto_historial')
+      .select('*')
+      .eq('producto_id', productoId)
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error('Error cargando historial:', error)
+    return []
   }
+} 
 }
