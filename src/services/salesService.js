@@ -194,8 +194,29 @@ export const salesService = {
 
       // 2. Restaurar stock de cada producto
       for (const item of items) {
-        await productService.restoreStock(item.producto_id, parseInt(item.cantidad))
-      }
+  // Leer stock antes de restaurar
+  const { data: productoActual } = await supabase
+    .from('productos')
+    .select('cantidad')
+    .eq('id', item.producto_id)
+    .single()
+
+  const stockAntes = productoActual?.cantidad ?? 0
+
+  await productService.restoreStock(item.producto_id, parseInt(item.cantidad))
+
+  // Registrar reversión en historial
+  await supabase
+    .from('producto_historial')
+    .insert([{
+      producto_id: item.producto_id,
+      tipo_evento: 'reversion',
+      cantidad_anterior: stockAntes,
+      cantidad_nueva: stockAntes + parseInt(item.cantidad),
+      descripcion: `Reversión Venta #${saleId} — se devolvieron ${item.cantidad} unidad(es)`,
+      venta_id: saleId
+    }])
+}
 
       // 3. Eliminar los detalles de la venta
       const { error: errorDetalle } = await supabase

@@ -18,6 +18,9 @@
   font-weight: 700;
   margin-bottom: 1rem;
   color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .search-and-stats-wrapper {
@@ -45,15 +48,6 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.search-input:invalid {
-  border-color: #e5e7eb;
-}
-
-.search-input:invalid:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
 .stats-container {
   display: flex;
   gap: 2rem;
@@ -62,13 +56,12 @@
 
 .stat-label {
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   background-color: #f6f4f3;
   border-radius: 0.5rem;
   border: 1px solid #ebe5e5;
   min-width: 200px;
   height: 50px;
-
 }
 
 .stat-label-text {
@@ -84,7 +77,7 @@
   font-size: 1.05rem;
   font-weight: 700;
   color: #111827;
-  text-align: center ;
+  text-align: center;
 }
 
 .empty-message {
@@ -102,10 +95,10 @@
 
 .table-wrapper {
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: auto;
   margin-bottom: 1.5rem;
-  max-height: none;
-  height: auto;
+  max-height: 600px;
+  position: relative;
 }
 
 .products-table {
@@ -117,29 +110,33 @@
   table-layout: auto;
 }
 
+.products-table th,
+.products-table td {
+  font-size: 0.9375rem;
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.products-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f3f4f6;
+}
+
 .table-header {
   background-color: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
   display: table-row;
 }
 
+/* Pon esto en su lugar */
 .table-header th {
   padding: 0.75rem 1rem;
-  text-align: left;
   font-weight: 600;
   color: #374151;
-}
-
-.header-description {
-  max-width: 15rem;
-}
-
-.header-numeric {
+  font-size: 0.9375rem !important;
   text-align: right;
-}
-
-.header-actions {
-  text-align: center;
 }
 
 .table-row {
@@ -155,11 +152,11 @@
 .cell-description {
   padding: 0.5rem 0.75rem;
   font-weight: 500;
-  text-transform: capitalize;
   word-wrap: break-word;
   overflow-wrap: break-word;
   white-space: normal;
   max-width: 15rem;
+  font-size: 0.9375rem;
 }
 
 .cell-numeric {
@@ -180,20 +177,28 @@
   flex-wrap: wrap;
 }
 
+/* Botones */
 .btn-edit,
-.btn-delete {
+.btn-delete,
+.btn-history {
   padding: 0.25rem 0.75rem;
   border: none;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .btn-edit:hover,
-.btn-delete:hover {
+.btn-delete:hover,
+.btn-history:hover {
   transform: translateY(-2px);
 }
 
@@ -201,7 +206,6 @@
   background-color: #eab308;
   color: #111827;
 }
-
 .btn-edit:hover {
   background-color: #ca8a04;
 }
@@ -210,9 +214,17 @@
   background-color: #ef4444;
   color: white;
 }
-
 .btn-delete:hover {
   background-color: #dc2626;
+}
+
+.btn-history {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+.btn-history:hover {
+  background-color: #dbeafe;
 }
 
 /* Pagination */
@@ -251,7 +263,6 @@
 .btn-pagination:hover:not(:disabled) {
   background-color: #1d4ed8;
 }
-
 .btn-pagination:disabled {
   background-color: #d1d5db;
   cursor: not-allowed;
@@ -263,6 +274,7 @@
   color: #111827;
 }
 
+/* Móvil */
 @media (max-width: 768px) {
   .product-list-container {
     padding: 1rem;
@@ -280,12 +292,51 @@
   }
 
   .stats-container {
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: row;
+    gap: 0.75rem;
   }
 
   .stat-label {
-    width: 100%;
+    flex: 1;
+    min-width: unset;
+    width: auto;
+  }
+
+  .hide-mobile {
+    display: none;
+  }
+
+  .products-table th,
+  .products-table td {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.78rem;
+  }
+
+  .cell-description,
+  .cell-numeric {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.78rem;
+  }
+
+  .cell-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+
+  .btn-edit span,
+  .btn-delete span,
+  .btn-history span {
+    display: none;
+  }
+
+  .btn-edit,
+  .btn-delete,
+  .btn-history {
+    padding: 0.35rem 0.5rem;
+    min-width: unset;
+    font-size: 0.72rem;
   }
 
   .pagination-container {
@@ -298,20 +349,7 @@
   .pagination-buttons {
     width: 100%;
   }
-
   .pagination-buttons {
     justify-content: center;
-  }
-
-  .cell-description,
-  .cell-numeric {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-  }
-
-  .btn-edit,
-  .btn-delete {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
   }
 }

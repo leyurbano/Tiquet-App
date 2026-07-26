@@ -1,0 +1,142 @@
+.phm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.phm-box {
+  background: #fff;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.phm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.phm-eyebrow {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin: 0 0 0.2rem;
+}
+
+.phm-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.2rem;
+}
+
+.phm-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.phm-close {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.phm-close:hover { background: #e5e7eb; }
+
+.phm-body {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.phm-empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem 0;
+}
+
+/* Tabla */
+.phm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.phm-table thead tr {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.phm-table th {
+  padding: 0.65rem 1rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.phm-th-num { text-align: center !important; }
+
+.phm-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.1s;
+}
+
+.phm-table tbody tr:hover { background: #f9fafb; }
+
+.phm-table td {
+  padding: 0.65rem 1rem;
+  color: #374151;
+}
+
+.phm-td-fecha {
+  font-size: 0.78rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.phm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.phm-td-num {
+  text-align: center;
+  font-weight: 600;
+  color: #111827;
+}
+
+.phm-td-ref {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}

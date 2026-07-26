@@ -59,27 +59,46 @@ export const productService = {
   },
 
   // Actualizar producto
-  async updateProduct(id, product) {
-    try {
-      const { data, error } = await supabase
-        .from('productos')
-        .update({
-          descripcion: product.descripcion,
-          cantidad: product.cantidad,
-          costo: product.costo,
-          costo_total: product.costo_total,
-          precio_venta: product.precio_venta
-        })
-        .eq('id', id)
-        .select()
+async updateProduct(id, product) {
+  try {
+    // 🆕 Leer cantidad actual antes de actualizar
+    const productoActual = await this.getProductById(id)
+    const cantidadAnterior = productoActual?.cantidad ?? 0
 
-      if (error) throw error
-      return data?.[0]
-    } catch (error) {
-      console.error('Error updating product:', error)
-      return null
+    const { data, error } = await supabase
+      .from('productos')
+      .update({
+        descripcion: product.descripcion,
+        cantidad: product.cantidad,
+        costo: product.costo,
+        costo_total: product.costo_total,
+        precio_venta: product.precio_venta
+      })
+      .eq('id', id)
+      .select()
+
+    if (error) throw error
+
+    // 🆕 Registrar en historial solo si la cantidad cambió
+    const cantidadNueva = Number(product.cantidad)
+    if (cantidadAnterior !== cantidadNueva) {
+      await supabase
+        .from('producto_historial')
+        .insert([{
+          producto_id: id,
+          tipo_evento: 'actualizacion',
+          cantidad_anterior: cantidadAnterior,
+          cantidad_nueva: cantidadNueva,
+          descripcion: 'Edición manual desde módulo de productos'
+        }])
     }
-  },
+
+    return data?.[0]
+  } catch (error) {
+    console.error('Error updating product:', error)
+    return null
+  }
+},
 
   // Restaurar stock: suma la cantidad devuelta al inventario
   async restoreStock(productId, cantidadDevuelta) {
@@ -122,5 +141,21 @@ export const productService = {
       console.error('Error deleting product:', error)
       return false
     }
+  },
+  async getProductHistory(productoId) {
+  try {
+    const { data, error } = await supabase
+      .from('producto_historial')
+      .select('*')
+      .eq('producto_id', productoId)
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error('Error cargando historial:', error)
+    return []
   }
+} 
 }
