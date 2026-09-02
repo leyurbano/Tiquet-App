@@ -84,3 +84,29 @@
     grid-template-columns: 1fr;
   }
 }
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.form-input-money {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-input-money .money-symbol {
+  position: absolute;
+  left: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.form-input-money .form-input {
+  padding-left: 1.75rem;
+}
