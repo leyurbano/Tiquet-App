@@ -56,19 +56,25 @@ function ProductsPage() {
     setLoading(false);
   };
 
-  const handleDeleteProduct = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este producto?")) {
-      setLoading(true);
-      const deleted = await productService.deleteProduct(id);
-      if (deleted) {
-        alert("✅ Producto eliminado");
-        loadProducts(currentPage);
-      } else {
-        alert("❌ Error al eliminar el producto");
-      }
-      setLoading(false);
-    }
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingProduct(null);
   };
+
+  useEffect(() => {
+    if (!showForm) return;
+
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") closeForm();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showForm]);
 
   const handleEdit = (product) => {
     setEditingProduct(product);
@@ -93,31 +99,27 @@ function ProductsPage() {
           </button>
         )}
       </div>
-
       <div className="products-grid">
-        {showForm && (
-          <div className="products-form-section">
-            <ProductForm
-              initialData={editingProduct}
-              onSubmit={handleSubmit}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingProduct(null);
-              }}
-            />
-          </div>
-        )}
-        <div
-          className={`products-list-section ${showForm ? "with-form" : "full-width"}`}
-        >
+        <div className="products-list-section full-width">
           <ProductList
             products={products}
             onEdit={handleEdit}
-            onDelete={handleDeleteProduct}
             loading={loading}
           />
         </div>
       </div>
+
+      {showForm && (
+        <div className="pf-overlay" onClick={closeForm}>
+          <div className="pf-box" onClick={(e) => e.stopPropagation()}>
+            <ProductForm
+              initialData={editingProduct}
+              onSubmit={handleSubmit}
+              onCancel={closeForm}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

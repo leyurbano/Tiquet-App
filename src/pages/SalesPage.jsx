@@ -176,7 +176,7 @@ function SalesPage() {
   .info-value { width: 70%; text-align: left; padding-left: 2mm; word-break: break-word; }
   .items-header { font-size: 7pt; font-weight: bold; text-align: center; margin-bottom: 1mm; }
   .item-block { font-size: 6.5pt; margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 1px dotted #ddd; }
-  .item-headers { display: flex; margin-bottom: 0.8mm; font-weight: bold; }
+  .item-headers { display: flex; font-size: 6.5pt; font-weight: bold; margin-bottom: 0.8mm; padding-bottom: 0.8mm; border-bottom: 1px solid #000; }
   .item-values { display: flex; }
   .header-no { width: 5%; text-align: center; }
   .header-desc { width: 43%; text-align: left; }
@@ -275,12 +275,6 @@ function SalesPage() {
 
           itemsHtml += `
             <div class="item-block">
-              <div class="item-headers">
-                <span class="header-no"><b>#</b></span>
-                <span class="header-desc"><b>DESCRIPCION</b></span>
-                <span class="header-qty"><b>CANT</b></span>
-                <span class="header-subtotal"><b>SUBTOTAL</b></span>
-              </div>
               <div class="item-values">
                 <span class="value-no">${itemNumber}</span>
                 <span class="value-desc">${productName}</span>
@@ -340,6 +334,12 @@ function SalesPage() {
 </div>
 <div class="divider"></div>
 <div class="items-header">ARTICULOS</div>
+<div class="item-headers">
+  <span class="header-no"><b>#</b></span>
+  <span class="header-desc"><b>DESCRIPCION</b></span>
+  <span class="header-qty"><b>CANT</b></span>
+  <span class="header-subtotal"><b>SUBTOTAL</b></span>
+</div>
 ${itemsHtml}
 <div class="divider"></div>
 <div class="items-header">FORMA DE PAGO</div>
@@ -409,12 +409,6 @@ ${pagosHtml}
 
       itemsHtml += `
         <div class="item-block">
-          <div class="item-headers">
-            <span class="header-no"><b>#</b></span>
-            <span class="header-desc"><b>DESCRIPCION</b></span>
-            <span class="header-qty"><b>CANT</b></span>
-            <span class="header-subtotal"><b>SUBTOTAL</b></span>
-          </div>
           <div class="item-values">
             <span class="value-no">${itemNumber}</span>
             <span class="value-desc">${productName}</span>
@@ -471,6 +465,12 @@ ${pagosHtml}
 </div>
 <div class="divider"></div>
 <div class="items-header">ARTICULOS</div>
+<div class="item-headers">
+  <span class="header-no"><b>#</b></span>
+  <span class="header-desc"><b>DESCRIPCION</b></span>
+  <span class="header-qty"><b>CANT</b></span>
+  <span class="header-subtotal"><b>SUBTOTAL</b></span>
+</div>
 ${itemsHtml}
 <div class="divider"></div>
 <div class="items-header">FORMA DE PAGO</div>

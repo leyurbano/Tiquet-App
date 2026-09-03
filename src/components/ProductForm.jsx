@@ -9,10 +9,23 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
     costo_total: '',
     precio_venta: ''
   })
+  const parseCOP = (value) => {
+    return value.toString().replace(/\./g, '').replace(/[^0-9]/g, '')
+  }
+
+  const formatDisplay = (value) => {
+    if (!value && value !== 0) return ''
+    return new Intl.NumberFormat('es-CO').format(parseFloat(value) || 0)
+  }
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData)
+      // costo es un peso colombiano sin decimales: se redondea para que
+      // el parseo de miles (parseCOP) no confunda un punto decimal existente
+      setFormData({
+        ...initialData,
+        costo: Math.round(parseFloat(initialData.costo) || 0).toString()
+      })
     }
   }, [initialData])
 
@@ -56,7 +69,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
       <h2 className="product-form-title">
         {initialData ? 'Editar Producto' : 'Nuevo Producto'}
       </h2>
-      
+      <label className="form-label">Descripción</label>
       <textarea
         name="descripcion"
         placeholder="Descripción del producto"
@@ -67,67 +80,68 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
         className="form-input"
       />
 
-      <div className="form-grid-2">
-        <input
-          type="number"
-          name="cantidad"
-          placeholder="Cantidad"
-          value={formData.cantidad}
-          onChange={handleChange}
-          required
-          className="form-input"
-        />
-
-        <input
-          type="number"
-          name="costo"
-          placeholder="Costo unitario"
-          value={formData.costo}
-          onChange={handleChange}
-          step="0.01"
-          required
-          className="form-input"
-        />
-      </div>
-
+        <div className="form-grid-2">
+    <div>
+      <label className="form-label">Cantidad</label>
       <input
         type="number"
-        name="costo_total"
-        placeholder="Costo total (calculado automáticamente)"
-        value={formData.costo_total}
-        readOnly
-        className="form-input form-input-readonly"
-      />
-
-      <input
-        type="number"
-        name="precio_venta"
-        placeholder="Precio de venta"
-        value={formData.precio_venta}
+        name="cantidad"
+        placeholder="Cantidad"
+        value={formData.cantidad}
         onChange={handleChange}
-        step="0.01"
         required
         className="form-input"
       />
+    </div>
+    <div className="form-input-money">
+  <span className="money-symbol">$</span>
+  <input
+    type="text"
+    name="costo"
+    placeholder="0"
+    value={formatDisplay(formData.costo)}
+    onChange={(e) => handleChange({
+      target: { name: 'costo', value: parseCOP(e.target.value) }
+    })}
+    required
+    className="form-input"
+  />
+</div>
+  </div>
 
-      <div className="form-buttons">
-        <button
-          type="submit"
-          className="btn-submit"
-        >
-          {initialData ? 'Actualizar' : 'Crear Producto'}
-        </button>
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn-cancel"
-          >
-            Cancelar
-          </button>
-        )}
-      </div>
-    </form>
+  <label className="form-label">Costo total</label>
+  <input
+    type="number"
+    name="costo_total"
+    placeholder="Calculado automáticamente"
+    value={formData.costo_total}
+    readOnly
+    className="form-input form-input-readonly"
+  />
+
+  <label className="form-label">Precio de venta</label>
+  <input
+    type="number"
+    name="precio_venta"
+    placeholder="Precio de venta"
+    value={formData.precio_venta}
+    onChange={handleChange}
+    step="0.01"
+    required
+    className="form-input"
+  />
+
+  <div className="form-buttons">
+    <button type="submit" className="btn-submit">
+      {initialData ? 'Actualizar' : 'Crear Producto'}
+    </button>
+    {onCancel && (
+      <button type="button" onClick={onCancel} className="btn-cancel">
+        Cancelar
+      </button>
+    )}
+  </div>
+</form>
   )
 }
 
