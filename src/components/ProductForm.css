@@ -93,20 +93,26 @@
   margin-top: 0.5rem;
 }
 
+/* El wrapper lleva el margen inferior y el input lo pierde, para que el
+   símbolo $ quede centrado sobre la caja real del input y no sobre su margen */
 .form-input-money {
   position: relative;
-  display: flex;
-  align-items: center;
+  display: block;
+  margin-bottom: 1rem;
 }
 
 .form-input-money .money-symbol {
   position: absolute;
   left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
   color: #6b7280;
   font-weight: 600;
   pointer-events: none;
 }
 
 .form-input-money .form-input {
+  width: 100%;
   padding-left: 1.75rem;
+  margin-bottom: 0;
 }

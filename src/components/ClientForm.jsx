@@ -74,7 +74,7 @@ function ClientForm({ onSubmit, initialData = null, onCancel }) {
         >
           {initialData ? 'Actualizar' : 'Crear Cliente'}
         </button>
-        {initialData && (
+        {onCancel && (
           <button
             type="button"
             onClick={onCancel}
