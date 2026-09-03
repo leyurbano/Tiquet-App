@@ -9,30 +9,30 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
     costo_total: '',
     precio_venta: ''
   })
+
+  // Deja solo los dígitos de lo que escribe el usuario (quita puntos de miles y símbolos)
   const parseCOP = (value) => {
     return value.toString().replace(/\./g, '').replace(/[^0-9]/g, '')
   }
 
+  // Formato de presentación únicamente: nunca modifica el valor guardado en el estado
   const formatDisplay = (value) => {
-    if (!value && value !== 0) return ''
-    return new Intl.NumberFormat('es-CO').format(parseFloat(value) || 0)
+    if (value === '' || value === null || value === undefined) return ''
+    const numero = parseFloat(value)
+    if (isNaN(numero)) return ''
+    return new Intl.NumberFormat('es-CO').format(numero)
   }
 
   useEffect(() => {
     if (initialData) {
-      // costo es un peso colombiano sin decimales: se redondea para que
-      // el parseo de miles (parseCOP) no confunda un punto decimal existente
-      setFormData({
-        ...initialData,
-        costo: Math.round(parseFloat(initialData.costo) || 0).toString()
-      })
+      setFormData(initialData)
     }
   }, [initialData])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     let newValue = value
-    
+
     // Calcular costo_total automáticamente cuando cambia cantidad o costo
     if (name === 'cantidad' || name === 'costo') {
       const cantidad = name === 'cantidad' ? parseFloat(value) || 0 : parseFloat(formData.cantidad) || 0
@@ -45,7 +45,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
       setFormData(nuevoFormData)
       return
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: newValue
@@ -69,6 +69,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
       <h2 className="product-form-title">
         {initialData ? 'Editar Producto' : 'Nuevo Producto'}
       </h2>
+
       <label className="form-label">Descripción</label>
       <textarea
         name="descripcion"
@@ -80,68 +81,82 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
         className="form-input"
       />
 
-        <div className="form-grid-2">
-    <div>
-      <label className="form-label">Cantidad</label>
-      <input
-        type="number"
-        name="cantidad"
-        placeholder="Cantidad"
-        value={formData.cantidad}
-        onChange={handleChange}
-        required
-        className="form-input"
-      />
-    </div>
-    <div className="form-input-money">
-  <span className="money-symbol">$</span>
-  <input
-    type="text"
-    name="costo"
-    placeholder="0"
-    value={formatDisplay(formData.costo)}
-    onChange={(e) => handleChange({
-      target: { name: 'costo', value: parseCOP(e.target.value) }
-    })}
-    required
-    className="form-input"
-  />
-</div>
-  </div>
+      <div className="form-grid-2">
+        <div>
+          <label className="form-label">Cantidad en stock</label>
+          <input
+            type="number"
+            name="cantidad"
+            placeholder="0"
+            value={formData.cantidad}
+            onChange={handleChange}
+            min="0"
+            required
+            className="form-input"
+          />
+        </div>
 
-  <label className="form-label">Costo total</label>
-  <input
-    type="number"
-    name="costo_total"
-    placeholder="Calculado automáticamente"
-    value={formData.costo_total}
-    readOnly
-    className="form-input form-input-readonly"
-  />
+        <div>
+          <label className="form-label">Costo unitario</label>
+          <div className="form-input-money">
+            <span className="money-symbol">$</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              name="costo"
+              placeholder="0"
+              value={formatDisplay(formData.costo)}
+              onChange={(e) => handleChange({
+                target: { name: 'costo', value: parseCOP(e.target.value) }
+              })}
+              required
+              className="form-input"
+            />
+          </div>
+        </div>
+      </div>
 
-  <label className="form-label">Precio de venta</label>
-  <input
-    type="number"
-    name="precio_venta"
-    placeholder="Precio de venta"
-    value={formData.precio_venta}
-    onChange={handleChange}
-    step="0.01"
-    required
-    className="form-input"
-  />
+      <label className="form-label">Costo total</label>
+      <div className="form-input-money">
+        <span className="money-symbol">$</span>
+        <input
+          type="text"
+          name="costo_total"
+          placeholder="Calculado automáticamente"
+          value={formatDisplay(formData.costo_total)}
+          readOnly
+          className="form-input form-input-readonly"
+        />
+      </div>
 
-  <div className="form-buttons">
-    <button type="submit" className="btn-submit">
-      {initialData ? 'Actualizar' : 'Crear Producto'}
-    </button>
-    {onCancel && (
-      <button type="button" onClick={onCancel} className="btn-cancel">
-        Cancelar
-      </button>
-    )}
-  </div>
-</form>
+      <label className="form-label">Precio de venta</label>
+      <div className="form-input-money">
+        <span className="money-symbol">$</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          name="precio_venta"
+          placeholder="0"
+          value={formatDisplay(formData.precio_venta)}
+          onChange={(e) => handleChange({
+            target: { name: 'precio_venta', value: parseCOP(e.target.value) }
+          })}
+          required
+          className="form-input"
+        />
+      </div>
+
+      <div className="form-buttons">
+        <button type="submit" className="btn-submit">
+          {initialData ? 'Actualizar' : 'Crear Producto'}
+        </button>
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="btn-cancel">
+            Cancelar
+          </button>
+        )}
+      </div>
+    </form>
   )
 }
 
