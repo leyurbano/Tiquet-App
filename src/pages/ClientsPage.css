@@ -4,30 +4,65 @@
   padding: 2rem 1rem;
 }
 
+.clients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.clients-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.btn-new-client {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #16a34a;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.btn-new-client:hover {
+  background-color: #15803d;
+}
+
 .clients-grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
+  display: flex;
+  flex-direction: column;
   gap: 2rem;
 }
 
-@media (max-width: 1024px) {
-  .clients-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-.clients-form-column {
-  flex-shrink: 0;
-}
-
 .clients-list-column {
-  flex: 1;
+  width: 100%;
+  min-width: 0;
 }
 
-@media (max-width: 1024px) {
-  .clients-form-column,
-  .clients-list-column {
-    width: 100%;
-  }
+.cf-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.cf-box {
+  background: #fff;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
