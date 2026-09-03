@@ -42,34 +42,18 @@
   gap: 2rem;
 }
 
-.products-form-section {
-  width: 100%;
-}
-
 .products-list-section {
   width: 100%;
   min-width: 0;
 }
 
-/* Desktop: flex row cuando hay formulario */
+/* Desktop */
 @media (min-width: 1024px) {
   .products-grid {
     flex-direction: row;
     align-items: flex-start;
   }
 
-  .products-form-section {
-    width: 380px;
-    flex-shrink: 0;
-  }
-
-  /* Con formulario: lista toma el espacio restante */
-  .products-list-section.with-form {
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* Sin formulario: lista ocupa todo el ancho */
   .products-list-section.full-width {
     flex: 1;
     min-width: 0;
@@ -80,4 +64,24 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.pf-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.pf-box {
+  background: #fff;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  overflow: hidden;
 }

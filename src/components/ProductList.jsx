@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import "./ProductList.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import ProductHistoryModal from "./ProductHistoryModal";
-import { Pencil, Trash2, History, Package } from "lucide-react";
+import { Pencil, History, Package } from "lucide-react";
 
-function ProductList({ products, onEdit, onDelete, loading = false }) {
+function ProductList({ products, onEdit, loading = false }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [historyProduct, setHistoryProduct] = useState(null);
 
@@ -100,12 +100,7 @@ function ProductList({ products, onEdit, onDelete, loading = false }) {
                     >
                       <Pencil size={14} /> Editar
                     </button>
-                    <button
-                      onClick={() => onDelete(product.id)}
-                      className="btn-delete"
-                    >
-                      <Trash2 size={14} /> Eliminar
-                    </button>
+                    {/* Botón eliminar deshabilitado: evita romper el historial de productos con ventas asociadas */}
                     <button
                       onClick={() => setHistoryProduct(product)}
                       className="btn-history"
