@@ -222,12 +222,17 @@ function SalesPage() {
     const img = printWindow.document.querySelector('img')
 
     printWindow.onafterprint = async () => {
+      // Vite expone las variables de entorno por import.meta.env (con prefijo VITE_).
+      // Antes se leía process.env, que no existe en el navegador: lanzaba
+      // ReferenceError y el catch lo silenciaba, así que el corte de papel y la
+      // apertura del cajón nunca se llegaban a ejecutar.
+      const printerServerUrl = import.meta.env.VITE_PRINTER_SERVER_URL || 'http://localhost:3001'
+
       try {
-        const printerServerUrl = process.env.REACT_APP_PRINTER_SERVER_URL || 'http://localhost:3001'
         await fetch(printerServerUrl + '/api/cut-paper', { method: 'POST' })
         await fetch(printerServerUrl + '/api/open-drawer', { method: 'POST' })
       } catch (error) {
-        console.log('Servidor no disponible')
+        console.warn(`No se pudo contactar el servidor de impresora en ${printerServerUrl}:`, error.message)
       }
     }
 
