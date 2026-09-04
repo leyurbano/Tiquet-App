@@ -8,6 +8,7 @@ import ClientsPage from "./pages/ClientsPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/home";
+import CierreCajaPage from "./pages/CierreCajaPage";
 import { useAuth } from "./contexts/AuthContext";
 import InicioPage from "./pages/InicioPage"; // 🔧 CAMBIO — solo un import, eliminé el duplicado
 
@@ -91,6 +92,20 @@ function App() {
             <div className="app-container">
               <Navbar />
               <div className="app-main"><ClientsPage /></div>
+            </div>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/cierre"
+        element={
+          user ? (
+            <div className="app-container">
+              <Navbar />
+              <div className="app-main"><CierreCajaPage /></div>
             </div>
           ) : (
             <Navigate to="/" replace />

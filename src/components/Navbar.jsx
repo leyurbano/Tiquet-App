@@ -68,6 +68,12 @@ function Navbar() {
               Clientes
             </button>
             <button
+              className={`nav-button ${location.pathname === '/cierre' ? 'nav-active' : 'nav-inactive'}`}
+              onClick={() => handleNav('/cierre')}
+            >
+              Cierre
+            </button>
+            <button
               className="nav-button logout-btn"
               onClick={() => { handleLogout(); setMenuOpen(false) }}
             >
