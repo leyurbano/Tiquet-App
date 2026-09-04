@@ -2,18 +2,33 @@ import React, { useState, useEffect, useRef } from 'react'
 import './Navbar.css'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useCashSession } from '../contexts/CashSessionContext'
+import CierreCajaModal from './CierreCajaModal'
 
 function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { logout } = useAuth()
+  const { session } = useCashSession()
   const [menuOpen, setMenuOpen] = useState(false) // 🆕 estado del menú hamburguesa
+  const [showCierre, setShowCierre] = useState(false) // 🆕 arqueo antes de salir
   const menuRef = useRef(null)                     // 🆕 para cerrar al hacer clic afuera
 
-  const handleLogout = async () => {
-  await logout();
-  navigate('/');
-};
+  const salir = async () => {
+    await logout()
+    navigate('/')
+  }
+
+  // 🆕 Con caja abierta, primero se hace el arqueo del turno; sin caja abierta
+  // (por ejemplo si se omitió la apertura) se cierra sesión directamente.
+  const handleLogout = () => {
+    setMenuOpen(false)
+    if (session) {
+      setShowCierre(true)
+    } else {
+      salir()
+    }
+  }
 
   // 🆕 Cerrar menú al navegar
   const handleNav = (path) => {
@@ -38,6 +53,7 @@ function Navbar() {
   }, [location.pathname])
 
   return (
+    <>
     <nav className="navbar" ref={menuRef}>
       <div className="navbar-container">
         <div className="navbar-content">
@@ -75,7 +91,7 @@ function Navbar() {
             </button>
             <button
               className="nav-button logout-btn"
-              onClick={() => { handleLogout(); setMenuOpen(false) }}
+              onClick={handleLogout}
             >
               Cerrar Sesión
             </button>
@@ -96,6 +112,15 @@ function Navbar() {
         </div>
       </div>
     </nav>
+
+    {/* Fuera del <nav> a propósito: dentro heredaría su contexto de apilamiento */}
+    {showCierre && (
+      <CierreCajaModal
+        onCancel={() => setShowCierre(false)}
+        onDone={salir}
+      />
+    )}
+    </>
   )
 }
 

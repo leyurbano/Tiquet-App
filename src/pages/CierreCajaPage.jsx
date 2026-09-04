@@ -1,28 +1,21 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { salesService } from '../services/salesService'
+import { buildCashSummary } from '../utils/cashSummary'
 import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
 import './CierreCajaPage.css'
 import { Wallet, TrendingUp, Receipt, AlertTriangle } from 'lucide-react'
 
-// Deja solo dígitos de lo que escribe el usuario (quita puntos de miles y símbolos)
-const parseCOP = (value) => value.toString().replace(/\./g, '').replace(/[^0-9]/g, '')
-
-// Formato de presentación para los inputs de dinero
-const formatInput = (value) => {
-  if (value === '' || value === null || value === undefined) return ''
-  const numero = parseFloat(value)
-  if (isNaN(numero)) return ''
-  return new Intl.NumberFormat('es-CO').format(numero)
-}
-
+/**
+ * Consulta histórica: cuánto se vendió un día y cómo se repartió por medio de
+ * pago. El arqueo de efectivo no vive aquí, sino en los modales de apertura y
+ * cierre de caja, que están atados al turno del usuario.
+ */
 function CierreCajaPage() {
   const [sales, setSales] = useState([])
   const [mediosPago, setMediosPago] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(getTodayColombia)
-  const [baseInicial, setBaseInicial] = useState('')
-  const [conteoFisico, setConteoFisico] = useState('')
   const dateInputRef = useRef(null)
 
   useEffect(() => {
@@ -40,56 +33,7 @@ function CierreCajaPage() {
     setLoading(false)
   }
 
-  const resumen = useMemo(() => {
-    const porMedio = {}
-    let totalVendido = 0
-    let totalSinMedio = 0
-
-    const sumar = (nombre, monto) => {
-      if (!porMedio[nombre]) porMedio[nombre] = { count: 0, total: 0 }
-      porMedio[nombre].total += monto
-    }
-
-    sales.forEach((sale) => {
-      totalVendido += sale.total || 0
-      const pagos = sale.pagos_venta || []
-
-      if (pagos.length > 0) {
-        pagos.forEach((pago) => {
-          sumar(pago.medios_pago?.pago || 'Sin definir', pago.monto || 0)
-        })
-        // Una venta mixta cuenta una vez por cada medio distinto que usó
-        const mediosUnicos = new Set(pagos.map((p) => p.medios_pago?.pago || 'Sin definir'))
-        mediosUnicos.forEach((nombre) => { porMedio[nombre].count += 1 })
-      } else if (sale.medio_pago_id) {
-        // Ventas registradas antes de que existiera pagos_venta: el medio vive en la venta
-        const nombre = mediosPago.find((m) => m.id === sale.medio_pago_id)?.pago || 'Sin definir'
-        sumar(nombre, sale.total || 0)
-        porMedio[nombre].count += 1
-      } else {
-        totalSinMedio += sale.total || 0
-      }
-    })
-
-    const totalDesglosado = Object.values(porMedio).reduce((s, m) => s + m.total, 0) + totalSinMedio
-    const claveEfectivo = Object.keys(porMedio).find((n) => /efectivo/i.test(n))
-
-    return {
-      porMedio,
-      totalVendido,
-      totalSinMedio,
-      cantidadVentas: sales.length,
-      ticketPromedio: sales.length > 0 ? totalVendido / sales.length : 0,
-      efectivoVentas: claveEfectivo ? porMedio[claveEfectivo].total : 0,
-      // Si no cuadra, es señal de datos inconsistentes y hay que avisarlo
-      descuadre: totalVendido - totalDesglosado
-    }
-  }, [sales, mediosPago])
-
-  const base = parseFloat(baseInicial) || 0
-  const efectivoEsperado = base + resumen.efectivoVentas
-  const hayConteo = conteoFisico !== ''
-  const diferencia = hayConteo ? (parseFloat(conteoFisico) || 0) - efectivoEsperado : 0
+  const resumen = useMemo(() => buildCashSummary(sales, mediosPago), [sales, mediosPago])
 
   const formatDateLabel = (dateStr) => {
     if (dateStr === getTodayColombia()) return 'Hoy'
@@ -100,7 +44,7 @@ function CierreCajaPage() {
   return (
     <div className="cierre-page">
       <div className="cierre-header">
-        <h1 className="cierre-title">🧾 Cierre de Caja</h1>
+        <h1 className="cierre-title">📊 Resumen de ventas</h1>
         <div className="date-picker-wrapper">
           <button
             className="btn-date"
@@ -177,64 +121,6 @@ function CierreCajaPage() {
                   El desglose no coincide con el total vendido: faltan{' '}
                   {formatCOP(Math.abs(resumen.descuadre))} por clasificar. Revisa las ventas del día.
                 </span>
-              </div>
-            )}
-          </div>
-
-          <div className="cierre-card">
-            <h2 className="cierre-card-title">Arqueo de efectivo</h2>
-
-            <div className="cierre-field">
-              <label className="cierre-label">Base inicial en caja</label>
-              <div className="cierre-money">
-                <span className="cierre-money-symbol">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatInput(baseInicial)}
-                  onChange={(e) => setBaseInicial(parseCOP(e.target.value))}
-                  className="cierre-input"
-                />
-              </div>
-            </div>
-
-            <div className="cierre-row">
-              <span>Ventas en efectivo</span>
-              <span className="cierre-row-value">{formatCOP(resumen.efectivoVentas)}</span>
-            </div>
-
-            <div className="cierre-row cierre-row-strong">
-              <span>Efectivo esperado en caja</span>
-              <span className="cierre-row-value">{formatCOP(efectivoEsperado)}</span>
-            </div>
-
-            <div className="cierre-field">
-              <label className="cierre-label">Efectivo contado</label>
-              <div className="cierre-money">
-                <span className="cierre-money-symbol">$</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatInput(conteoFisico)}
-                  onChange={(e) => setConteoFisico(parseCOP(e.target.value))}
-                  className="cierre-input"
-                />
-              </div>
-            </div>
-
-            {hayConteo && (
-              <div
-                className={`cierre-diferencia ${
-                  diferencia === 0 ? 'dif-ok' : diferencia > 0 ? 'dif-sobra' : 'dif-falta'
-                }`}
-              >
-                {diferencia === 0
-                  ? '✅ La caja cuadra exactamente'
-                  : diferencia > 0
-                    ? `⬆️ Sobran ${formatCOP(diferencia)} en caja`
-                    : `⬇️ Faltan ${formatCOP(Math.abs(diferencia))} en caja`}
               </div>
             )}
           </div>

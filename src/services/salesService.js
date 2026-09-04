@@ -49,6 +49,36 @@ export const salesService = {
     }
   },
 
+  /**
+   * Obtiene las ventas entre dos instantes exactos (ISO con offset).
+   * A diferencia de getAllSales, que filtra por día calendario, esta sirve
+   * para el arqueo de un turno: puede empezar a las 8 AM y cerrar a las 9 PM,
+   * o incluso cruzar la medianoche sin partir el conteo en dos días.
+   */
+  async getSalesBetween(startISO, endISO = null) {
+    try {
+      let query = supabase
+        .from('ventas')
+        .select(`
+          *,
+          pagos_venta (
+            *,
+            medios_pago (*)
+          )
+        `)
+        .gte('fecha', startISO)
+
+      if (endISO) query = query.lte('fecha', endISO)
+
+      const { data, error } = await query.order('id', { ascending: false })
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error fetching sales by range:', error)
+      return []
+    }
+  },
+
   // Obtener venta por ID
   async getSaleById(id) {
     try {
