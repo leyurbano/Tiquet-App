@@ -551,15 +551,14 @@ ${pagosHtml}
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             onViewInvoice={handleViewInvoice}
-            onDelete={async (id) => {
-              if (window.confirm('¿Eliminar esta venta y restaurar el stock?')) {
-                const result = await salesService.deleteSaleWithRestore(id)
-                if (result.success) {
-                  alert(`✅ Venta eliminada y ${result.itemsRestored} producto(s) restaurado(s)`)
-                  await loadSalesByDate(selectedDate)
-                } else {
-                  alert(`❌ Error al eliminar la venta: ${result.error}`)
-                }
+            onDelete={async (id, motivo) => {
+              // La confirmación y el motivo se piden en AnularVentaModal
+              const result = await salesService.annulSale(id, motivo)
+              if (result.success) {
+                alert(`✅ Venta anulada y ${result.itemsRestored} producto(s) restaurado(s)`)
+                await loadSalesByDate(selectedDate)
+              } else {
+                alert(`❌ Error al anular la venta: ${result.error}`)
               }
             }}
           />

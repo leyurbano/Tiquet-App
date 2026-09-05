@@ -8,11 +8,15 @@ import ClientsPage from "./pages/ClientsPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/home";
+import CierreCajaPage from "./pages/CierreCajaPage";
 import { useAuth } from "./contexts/AuthContext";
+import { useCashSession } from "./contexts/CashSessionContext";
+import AperturaCajaModal from "./components/AperturaCajaModal";
 import InicioPage from "./pages/InicioPage"; // 🔧 CAMBIO — solo un import, eliminé el duplicado
 
 function App() {
   const { user, loading } = useAuth();
+  const { necesitaApertura } = useCashSession();
 
   if (loading) {
     return (
@@ -23,8 +27,12 @@ function App() {
   }
 
   return (
-    <Routes>
-      {/* Rutas públicas */}
+    <>
+      {/* Bloquea la operación hasta que se registre la base del turno */}
+      {necesitaApertura && <AperturaCajaModal />}
+
+      <Routes>
+        {/* Rutas públicas */}
       <Route
         path="/login"
         element={user ? <Navigate to="/sales" replace /> : <LoginPage />}
@@ -98,9 +106,24 @@ function App() {
         }
       />
 
-      {/* Ruta 404 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      <Route
+        path="/cierre"
+        element={
+          user ? (
+            <div className="app-container">
+              <Navbar />
+              <div className="app-main"><CierreCajaPage /></div>
+            </div>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+        {/* Ruta 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 
