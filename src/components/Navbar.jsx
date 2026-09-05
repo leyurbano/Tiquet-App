@@ -87,7 +87,7 @@ function Navbar() {
               className={`nav-button ${location.pathname === '/cierre' ? 'nav-active' : 'nav-inactive'}`}
               onClick={() => handleNav('/cierre')}
             >
-              Cierre
+              Resumen
             </button>
             <button
               className="nav-button logout-btn"

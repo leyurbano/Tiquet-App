@@ -56,6 +56,7 @@ export const cashSessionService = {
           total_vendido: arqueo.totalVendido,
           cantidad_ventas: arqueo.cantidadVentas,
           diferencia: arqueo.diferencia,
+          detalle_arqueo: arqueo.detalle || null,
           arqueo_omitido: arqueo.omitido || false
         })
         .eq('id', sessionId)

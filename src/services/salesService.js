@@ -55,7 +55,7 @@ export const salesService = {
    * para el arqueo de un turno: puede empezar a las 8 AM y cerrar a las 9 PM,
    * o incluso cruzar la medianoche sin partir el conteo en dos días.
    */
-  async getSalesBetween(startISO, endISO = null) {
+  async getSalesBetween(startISO, endISO = null, userId = null) {
     try {
       let query = supabase
         .from('ventas')
@@ -70,12 +70,21 @@ export const salesService = {
 
       if (endISO) query = query.lte('fecha', endISO)
 
+      // Al acotar por cajero se incluyen también las ventas con user_id null:
+      // son las registradas antes de que existiera la columna, y excluirlas
+      // dejaría dinero real fuera del arqueo.
+      if (userId) query = query.or(`user_id.eq.${userId},user_id.is.null`)
+
       const { data, error } = await query.order('id', { ascending: false })
       if (error) throw error
       return data || []
     } catch (error) {
-      console.error('Error fetching sales by range:', error)
-      return []
+      // Devuelve null (no []) a propósito: quien llama debe poder distinguir
+      // "no hubo ventas" de "no se pudieron leer las ventas". En un arqueo,
+      // mostrar cero por un fallo de consulta llevaría a cerrar caja con
+      // dinero real sin contar.
+      console.error('Error fetching sales by range:', error.message || error)
+      return null
     }
   },
 
@@ -111,13 +120,18 @@ export const salesService = {
   // pero puede venir null cuando el pago es mixto (ver SalesForm.jsx).
   async createSale(sale) {
     try {
+      // 🆕 Quién registra la venta. Se lee de la sesión local (sin ir a la red)
+      // para que el arqueo pueda separar las ventas por cajero.
+      const { data: { session } } = await supabase.auth.getSession()
+
       const { data, error } = await supabase
         .from('ventas')
         .insert([{
           cliente_id: sale.cliente_id,
           fecha: sale.fecha || dayjs().tz(COLOMBIA_TZ).toISOString(),
           total: sale.total,
-          medio_pago_id: sale.medio_pago_id // null si es pago mixto, o el id real si es simple
+          medio_pago_id: sale.medio_pago_id, // null si es pago mixto, o el id real si es simple
+          user_id: session?.user?.id || null
         }])
         .select()
 
