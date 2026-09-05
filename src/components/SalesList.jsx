@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
+import AnularVentaModal from './AnularVentaModal'
 
 function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredSales, setFilteredSales] = useState(sales)
+  const [anulando, setAnulando] = useState(null) // 🆕 venta pendiente de anular
   const dateInputRef = useRef(null)
 
   const getClientName = (clienteId) => {
@@ -57,13 +59,9 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
     dateInputRef.current?.showPicker()
   }
 
-  const handleDelete = (sale) => {
-    const clientName = getClientName(sale.cliente_id)
-    const confirmMsg = `¿Eliminar la venta #${sale.id} de ${clientName} por ${formatCOP(sale.total)}?\n\nEsto restaurará el stock de los productos.`
-    if (window.confirm(confirmMsg)) {
-      onDelete && onDelete(sale.id)
-    }
-  }
+  // 🔧 CAMBIO: antes era un window.confirm. Ahora se pide el motivo, porque
+  // anular ya no borra la venta sino que la deja registrada para auditoría.
+  const handleDelete = (sale) => setAnulando(sale)
 
   if (loading) {
     return <div className="loading-text">⏳ Cargando ventas...</div>
@@ -133,7 +131,7 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
                         <button
                           onClick={() => handleDelete(sale)}
                           className="btn-delete-sale"
-                          title="Eliminar venta y restaurar stock"
+                          title="Anular venta y restaurar stock"
                         >
                           🗑️
                         </button>
@@ -162,6 +160,18 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
             <span className="sales-total-amount">{formatCOP(totalDia)}</span>
           </div>
         </>
+      )}
+
+      {anulando && (
+        <AnularVentaModal
+          sale={anulando}
+          clientName={getClientName(anulando.cliente_id)}
+          onCancel={() => setAnulando(null)}
+          onConfirm={async (motivo) => {
+            if (onDelete) await onDelete(anulando.id, motivo)
+            setAnulando(null)
+          }}
+        />
       )}
     </div>
   )

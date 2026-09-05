@@ -27,6 +27,7 @@ export const salesService = {
           )
         `) // 🔧 CAMBIO: se agregó pagos_venta con su join a medios_pago,
            // así cada venta trae de una vez con qué medio(s) se pagó
+        .is('anulada_en', null) // 🆕 las anuladas no suman dinero
 
       if (fecha) {
         const start = dayjs.tz(`${fecha} 00:00:00`, COLOMBIA_TZ).toISOString()
@@ -66,6 +67,7 @@ export const salesService = {
             medios_pago (*)
           )
         `)
+        .is('anulada_en', null) // 🆕 las anuladas no entran en el arqueo
         .gte('fecha', startISO)
 
       if (endISO) query = query.lte('fecha', endISO)
@@ -225,18 +227,23 @@ export const salesService = {
     }
   },
 
-  // Eliminar venta y restaurar stock
-  // 🔧 CAMBIO: no requiere ajustes porque pagos_venta tiene ON DELETE CASCADE
-  // (al borrar la venta, sus filas en pagos_venta se eliminan automáticamente)
-  async deleteSaleWithRestore(saleId) {
+  /**
+   * Anula una venta y devuelve el stock.
+   *
+   * 🔧 CAMBIO: antes borraba físicamente la venta y su detalle. Ahora la marca
+   * como anulada y conserva la fila. Borrarla dejaba el cierre de caja ciego:
+   * una venta en efectivo cobrada y luego borrada hacía cuadrar el arqueo sin
+   * dejar ningún rastro del dinero.
+   */
+  async annulSale(saleId, motivo) {
     try {
-      // 1. Obtener los items de la venta antes de eliminar
       const sale = await this.getSaleById(saleId)
       if (!sale) throw new Error('Venta no encontrada')
+      if (sale.anulada_en) throw new Error('Esta venta ya estaba anulada')
 
       const items = sale.detalle_ventas || []
 
-      // 2. Restaurar stock de cada producto
+      // Restaurar stock de cada producto
       for (const item of items) {
   // Leer stock antes de restaurar
   const { data: productoActual } = await supabase
@@ -257,31 +264,50 @@ export const salesService = {
       tipo_evento: 'reversion',
       cantidad_anterior: stockAntes,
       cantidad_nueva: stockAntes + parseInt(item.cantidad),
-      descripcion: `Reversión Venta #${saleId} — se devolvieron ${item.cantidad} unidad(es)`,
+      descripcion: `Anulación Venta #${saleId} — se devolvieron ${item.cantidad} unidad(es)`,
       venta_id: saleId
     }])
 }
 
-      // 3. Eliminar los detalles de la venta
-      const { error: errorDetalle } = await supabase
-        .from('detalle_ventas')
-        .delete()
-        .eq('venta_id', saleId)
+      // Marcar la venta como anulada. El detalle y los pagos se conservan:
+      // son la evidencia de qué se había cobrado y cómo.
+      const { data: { session } } = await supabase.auth.getSession()
 
-      if (errorDetalle) throw errorDetalle
-
-      // 4. Eliminar la venta (pagos_venta se elimina solo, por el ON DELETE CASCADE)
       const { error: errorVenta } = await supabase
         .from('ventas')
-        .delete()
+        .update({
+          anulada_en: new Date().toISOString(),
+          anulada_por: session?.user?.id || null,
+          motivo_anulacion: motivo
+        })
         .eq('id', saleId)
 
       if (errorVenta) throw errorVenta
 
       return { success: true, itemsRestored: items.length }
     } catch (error) {
-      console.error('Error eliminando venta y restaurando stock:', error)
+      console.error('Error anulando la venta:', error.message || error)
       return { success: false, error: error.message }
+    }
+  },
+
+  // Ventas anuladas en un rango, para el control del turno y los reportes
+  async getAnnulledSales(startISO, endISO = null) {
+    try {
+      let query = supabase
+        .from('ventas')
+        .select('*')
+        .not('anulada_en', 'is', null)
+        .gte('anulada_en', startISO)
+
+      if (endISO) query = query.lte('anulada_en', endISO)
+
+      const { data, error } = await query.order('anulada_en', { ascending: false })
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error fetching annulled sales:', error.message || error)
+      return []
     }
   },
 

@@ -3,6 +3,8 @@ import { salesService } from '../services/salesService'
 import { buildCashSummary } from '../utils/cashSummary'
 import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
+import { etiquetaMotivo } from '../utils/motivosAnulacion'
+import dayjs from 'dayjs'
 import './CierreCajaPage.css'
 import { Wallet, TrendingUp, Receipt, AlertTriangle } from 'lucide-react'
 
@@ -14,6 +16,7 @@ import { Wallet, TrendingUp, Receipt, AlertTriangle } from 'lucide-react'
 function CierreCajaPage() {
   const [sales, setSales] = useState([])
   const [mediosPago, setMediosPago] = useState([])
+  const [anuladas, setAnuladas] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(getTodayColombia)
   const dateInputRef = useRef(null)
@@ -28,8 +31,16 @@ function CierreCajaPage() {
 
   const loadSales = async (fecha) => {
     setLoading(true)
-    const data = await salesService.getAllSales(false, fecha)
+    // Los límites del día en hora Colombia, para las anulaciones del rango
+    const inicio = dayjs.tz(`${fecha} 00:00:00`, 'America/Bogota').toISOString()
+    const fin = dayjs.tz(`${fecha} 23:59:59`, 'America/Bogota').toISOString()
+
+    const [data, canceladas] = await Promise.all([
+      salesService.getAllSales(false, fecha),
+      salesService.getAnnulledSales(inicio, fin)
+    ])
     setSales(data)
+    setAnuladas(canceladas)
     setLoading(false)
   }
 
@@ -65,7 +76,7 @@ function CierreCajaPage() {
 
       {loading ? (
         <div className="cierre-loading">⏳ Cargando ventas...</div>
-      ) : resumen.cantidadVentas === 0 ? (
+      ) : resumen.cantidadVentas === 0 && anuladas.length === 0 ? (
         <p className="cierre-empty">
           📭 No hay ventas registradas el {formatDateLabel(selectedDate) === 'Hoy' ? 'día de hoy' : formatDateLabel(selectedDate)}
         </p>
@@ -124,6 +135,32 @@ function CierreCajaPage() {
               </div>
             )}
           </div>
+
+          {anuladas.length > 0 && (
+            <div className="cierre-card">
+              <h2 className="cierre-card-title">
+                Ventas anuladas ({anuladas.length})
+              </h2>
+              <p className="cierre-hint">
+                No están incluidas en los totales de arriba. Se listan como control.
+              </p>
+              <table className="cierre-table">
+                <tbody>
+                  {anuladas.map((v) => (
+                    <tr key={v.id}>
+                      <td className="cierre-medio">Venta #{v.id}</td>
+                      <td className="cierre-medio-count">
+                        {etiquetaMotivo(v.motivo_anulacion)}
+                      </td>
+                      <td className="cierre-medio-total cierre-anulada-monto">
+                        −{formatCOP(v.total || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
     </div>

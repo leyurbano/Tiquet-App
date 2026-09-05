@@ -9,6 +9,7 @@ import {
 } from '../utils/cashSummary'
 import { formatCOP } from '../utils/currencyFormatter'
 import { formatToColombia } from '../utils/dateFormatter'
+import { etiquetaMotivo } from '../utils/motivosAnulacion'
 import './CajaModal.css'
 import { AlertTriangle } from 'lucide-react'
 
@@ -26,6 +27,7 @@ import { AlertTriangle } from 'lucide-react'
 function CierreCajaModal({ onCancel, onDone }) {
   const { session, closeSession } = useCashSession()
   const [sales, setSales] = useState([])
+  const [anuladas, setAnuladas] = useState([])
   const [mediosPago, setMediosPago] = useState([])
   const [cargando, setCargando] = useState(true)
   const [errorCarga, setErrorCarga] = useState(false)
@@ -39,14 +41,16 @@ function CierreCajaModal({ onCancel, onDone }) {
 
     const load = async () => {
       setCargando(true)
-      const [ventas, medios] = await Promise.all([
+      const [ventas, medios, canceladas] = await Promise.all([
         // Acotado al cajero dueño del turno, no solo al rango de tiempo
         salesService.getSalesBetween(session.abierta_en, null, session.user_id),
-        salesService.getMediosPago()
+        salesService.getMediosPago(),
+        salesService.getAnnulledSales(session.abierta_en)
       ])
       // null = la consulta falló. Distinto de [] , que sí significa "sin ventas".
       setErrorCarga(ventas === null)
       setSales(ventas || [])
+      setAnuladas(canceladas)
       setMediosPago(medios)
       setCargando(false)
     }
@@ -130,6 +134,11 @@ function CierreCajaModal({ onCancel, onDone }) {
               monto: i.monto,
               confirmado: !!confirmados[i.key]
             }))
+          })),
+          anuladas: anuladas.map((v) => ({
+            venta_id: v.id,
+            monto: v.total || 0,
+            motivo: v.motivo_anulacion
           }))
         }
 
@@ -301,6 +310,33 @@ function CierreCajaModal({ onCancel, onDone }) {
                     </span>
                   </div>
                 )}
+              </>
+            )}
+
+            {/* ---------- Control: qué se anuló durante el turno ---------- */}
+            {anuladas.length > 0 && (
+              <>
+                <h3 className="caja-section">Ventas anuladas en el turno</h3>
+                <p className="caja-hint">
+                  No suman al total ni al efectivo esperado. Se listan como control de
+                  lo que se deshizo durante tu turno.
+                </p>
+                <div className="caja-anuladas-box">
+                  {anuladas.map((v) => (
+                    <div className="caja-anulada" key={v.id}>
+                      <span>
+                        Venta #{v.id}
+                        <br />
+                        <span className="caja-anulada-motivo">
+                          {etiquetaMotivo(v.motivo_anulacion)}
+                        </span>
+                      </span>
+                      <span className="caja-anulada-monto">
+                        −{formatCOP(v.total || 0)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </>
             )}
 

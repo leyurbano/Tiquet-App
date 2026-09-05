@@ -137,6 +137,16 @@
   white-space: nowrap;
 }
 
+.cierre-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+}
+
+.cierre-anulada-monto {
+  color: #991b1b;
+}
+
 .cierre-alert {
   display: flex;
   align-items: flex-start;
