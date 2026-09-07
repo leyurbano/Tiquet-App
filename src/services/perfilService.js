@@ -27,5 +27,65 @@ export const perfilService = {
       console.error('Error obteniendo el perfil:', error.message || error)
       return null
     }
+  },
+
+  // Todos los perfiles. La RLS decide cuántos devuelve: el administrador ve
+  // los de su negocio, el super admin ve todos.
+  async getPerfiles() {
+    try {
+      const { data, error } = await supabase
+        .from('perfiles')
+        .select('*')
+        .order('nombre')
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error listando perfiles:', error.message || error)
+      return []
+    }
+  },
+
+  // Usuarios de Auth que aún no tienen perfil (solo responde a super admins)
+  async getUsuariosSinPerfil() {
+    try {
+      const { data, error } = await supabase.rpc('usuarios_sin_perfil')
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error listando usuarios sin perfil:', error.message || error)
+      return []
+    }
+  },
+
+  async crearPerfil(perfil) {
+    try {
+      const { data, error } = await supabase
+        .from('perfiles')
+        .insert([perfil])
+        .select()
+
+      if (error) throw error
+      return { perfil: data?.[0] || null }
+    } catch (error) {
+      console.error('Error creando el perfil:', error.message || error)
+      return { error: error.message }
+    }
+  },
+
+  async actualizarPerfil(id, cambios) {
+    try {
+      const { data, error } = await supabase
+        .from('perfiles')
+        .update(cambios)
+        .eq('id', id)
+        .select()
+
+      if (error) throw error
+      return { perfil: data?.[0] || null }
+    } catch (error) {
+      console.error('Error actualizando el perfil:', error.message || error)
+      return { error: error.message }
+    }
   }
 }

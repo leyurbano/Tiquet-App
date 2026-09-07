@@ -97,6 +97,22 @@ export const negocioService = {
     }
   },
 
+  // Crear un negocio. La política solo lo permite a un super admin.
+  async crearNegocio(datos) {
+    try {
+      const { data, error } = await supabase
+        .from('negocios')
+        .insert([datos])
+        .select()
+
+      if (error) throw error
+      return { negocio: data?.[0] || null }
+    } catch (error) {
+      console.error('Error creando el negocio:', error.message || error)
+      return { error: error.message }
+    }
+  },
+
   async updateNegocio(id, cambios) {
     try {
       const { data, error } = await supabase
