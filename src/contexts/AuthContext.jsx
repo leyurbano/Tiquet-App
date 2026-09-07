@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
+import { perfilService } from '../services/perfilService'
 
 const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  // 🆕 Perfil: rol dentro del negocio, negocio_id y si es super admin
+  const [perfil, setPerfil] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -68,14 +71,37 @@ export function AuthProvider({ children }) {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       setUser(null)
+      setPerfil(null)
       return { success: true }
     } catch (error) {
       return { success: false, error: error.message }
     }
   }
 
+  // Carga el perfil cada vez que cambia el usuario
+  useEffect(() => {
+    let cancelado = false
+    if (!user) {
+      setPerfil(null)
+      return
+    }
+    perfilService.getMiPerfil().then(p => { if (!cancelado) setPerfil(p) })
+    return () => { cancelado = true }
+  }, [user])
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        perfil,
+        esAdministrador: perfil?.rol === 'administrador',
+        esSuperAdmin: !!perfil?.es_super_admin,
+        loading,
+        login,
+        register,
+        logout
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

@@ -1,0 +1,51 @@
+# Migraciones de base de datos
+
+Scripts SQL para Supabase (PostgreSQL), en el orden en que deben ejecutarse.
+Cada uno se corre desde el **SQL Editor** del dashboard: New query → pegar el
+archivo completo → Run.
+
+> **Pega siempre el archivo entero.** Un pegado incompleto da el error
+> `syntax error at end of input`.
+
+| # | Archivo | Qué hace |
+|---|---------|----------|
+| 01 | `01_sesiones_caja.sql` | Turnos de caja: apertura con base y cierre con arqueo. |
+| 02 | `02_ventas_user_id.sql` | `ventas.user_id`: quién registró cada venta. Sin esto el arqueo no puede separar por cajero. |
+| 03 | `03_sesiones_caja_detalle_arqueo.sql` | `detalle_arqueo` (jsonb): validación de cada transacción del cierre. |
+| 04 | `04_ventas_fecha_timestamptz.sql` | Convierte `ventas.fecha` a `timestamptz`. Corrige el desfase de 5 h que dejaba ventas fuera del arqueo y las de 00:00–05:00 en el día equivocado. |
+| 05 | `05_ventas_anulacion.sql` | Anulación en vez de borrado: `anulada_en`, `anulada_por`, `motivo_anulacion`. |
+| 06 | `06_multi_negocio.sql` | Multi-negocio: tabla `negocios`, `negocio_id` en todas las tablas, funciones de contexto y políticas de RLS por negocio. |
+| 07 | `07_super_admin_flag.sql` | Separa el permiso de plataforma (`es_super_admin`) del rol dentro del negocio. |
+| 08 | `08_storage_logos.sql` | Bucket `logos` para el logo de cada negocio. |
+| 09 | `09_mensaje_pie_unico.sql` | Unifica el pie del tiquete en un solo campo. |
+
+## El orden importa
+
+No son independientes. Por ejemplo, `06` crea la función `resumen_negocios()`
+que consulta `anulada_en`, columna que agrega `05`; corriendo `06` primero,
+falla.
+
+## Cómo verificar qué está aplicado
+
+```sql
+select table_name, column_name
+from information_schema.columns
+where table_schema = 'public'
+  and column_name in ('negocio_id', 'anulada_en', 'user_id', 'es_super_admin', 'detalle_arqueo')
+order by table_name, column_name;
+```
+
+## Sobre el aislamiento entre negocios
+
+A partir de `06`, cada negocio solo ve sus propios datos, y el filtro vive en
+la base de datos (políticas de RLS), no en la aplicación. El navegador nunca
+envía a qué negocio pertenece: Postgres lo deduce del token de sesión con
+`mi_negocio()`.
+
+Al modificar políticas, ten presente que **se suman entre sí**: dejar una sola
+política con condición `true` anula el aislamiento de esa tabla.
+
+## Lo que NO va en este repositorio
+
+Los volcados de la base (`backup_*.sql`) están en `.gitignore`. Contienen
+hashes de contraseña, tokens de sesión activos y datos personales de clientes.
