@@ -8,7 +8,7 @@ import CierreCajaModal from './CierreCajaModal'
 function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { logout, esAdministrador } = useAuth()
+  const { logout, esAdministrador, esSuperAdmin } = useAuth()
   const { session } = useCashSession()
   const [menuOpen, setMenuOpen] = useState(false) // 🆕 estado del menú hamburguesa
   const [showCierre, setShowCierre] = useState(false) // 🆕 arqueo antes de salir
@@ -95,6 +95,14 @@ function Navbar() {
                 onClick={() => handleNav('/configuracion')}
               >
                 Configuración
+              </button>
+            )}
+            {esSuperAdmin && (
+              <button
+                className={`nav-button ${location.pathname === '/plataforma' ? 'nav-active' : 'nav-inactive'}`}
+                onClick={() => handleNav('/plataforma')}
+              >
+                Plataforma
               </button>
             )}
             <button

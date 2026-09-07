@@ -1,0 +1,258 @@
+.plat-page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.plat-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.plat-loading,
+.plat-error {
+  text-align: center;
+  color: #6b7280;
+  padding: 3rem 1rem;
+}
+
+.plat-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.plat-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.plat-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+
+.plat-mensaje {
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.msg-ok { background: #dcfce7; color: #166534; }
+.msg-error { background: #fee2e2; color: #991b1b; }
+
+/* ---- Tablas ---- */
+
+.plat-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.plat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.plat-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.plat-table td {
+  padding: 0.65rem 0.6rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.plat-table .num { text-align: right; }
+.plat-table th.num { text-align: right; }
+
+.plat-email {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.plat-fecha {
+  font-size: 0.8rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.plat-badge {
+  display: inline-block;
+  margin-top: 0.2rem;
+  background: #ede9fe;
+  color: #5b21b6;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.plat-inactivo {
+  margin-left: 0.4rem;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+/* ---- Formularios ---- */
+
+/* Anidado: styles.css define input[type="text"] con especificidad de
+   atributo (0,1,1) y le ganaría a una sola clase */
+.plat-card .plat-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fff;
+  color: #111827;
+  width: auto;
+}
+
+.plat-card .plat-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.plat-card .plat-input-sm {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.plat-form-inline {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 1rem;
+}
+
+.plat-form-inline .plat-input { flex: 1; min-width: 12rem; }
+
+.plat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.plat-btn:hover:not(:disabled) { background: #1d4ed8; }
+.plat-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+/* ---- Usuarios pendientes ---- */
+
+.plat-pendiente {
+  border: 1px solid #fde68a;
+  background: #fffbeb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.plat-pendiente-email {
+  font-weight: 700;
+  color: #92400e;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.plat-pendiente-campos {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.plat-pendiente-campos .plat-input { flex: 1; min-width: 9rem; }
+
+@media (max-width: 640px) {
+  .plat-title { font-size: 1.5rem; }
+  .plat-pendiente-campos { flex-direction: column; }
+  .plat-pendiente-campos .plat-input { width: 100%; }
+}
+
+/* ---- Formulario de alta ---- */
+
+.plat-opciones {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.plat-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.plat-radio input { cursor: pointer; accent-color: #2563eb; }
+
+.plat-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.plat-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.plat-campo > span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.plat-campo > small {
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+.plat-campo .plat-input { width: 100%; }

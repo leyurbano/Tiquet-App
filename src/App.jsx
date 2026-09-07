@@ -10,6 +10,7 @@ import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/home";
 import CierreCajaPage from "./pages/CierreCajaPage";
 import ConfiguracionPage from "./pages/ConfiguracionPage";
+import PlataformaPage from "./pages/PlataformaPage";
 import { useAuth } from "./contexts/AuthContext";
 import { useCashSession } from "./contexts/CashSessionContext";
 import AperturaCajaModal from "./components/AperturaCajaModal";
@@ -128,6 +129,20 @@ function App() {
             <div className="app-container">
               <Navbar />
               <div className="app-main"><ConfiguracionPage /></div>
+            </div>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/plataforma"
+        element={
+          user ? (
+            <div className="app-container">
+              <Navbar />
+              <div className="app-main"><PlataformaPage /></div>
             </div>
           ) : (
             <Navigate to="/" replace />

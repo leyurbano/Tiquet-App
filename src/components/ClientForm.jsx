@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import './ClientForm.css'
 
-function ClientForm({ onSubmit, initialData = null, onCancel }) {
+function ClientForm({ onSubmit, initialData = null, onCancel, onDirtyChange }) {
   const [formData, setFormData] = useState({
     documento: '',
     nombre: '',
     telefono: ''
   })
+  // Evita el doble envío por doble clic y bloquea el botón mientras guarda
+  const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
     if (initialData) {
@@ -16,20 +18,28 @@ function ClientForm({ onSubmit, initialData = null, onCancel }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    // Avisa al contenedor que hay cambios sin guardar
+    onDirtyChange?.(true)
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    onSubmit(formData)
-    setFormData({
-      documento: '',
-      nombre: '',
-      telefono: ''
-    })
+    if (enviando) return
+
+    setEnviando(true)
+    const guardado = await onSubmit(formData)
+    setEnviando(false)
+
+    // 🔧 Solo se limpia si el guardado fue exitoso: antes un fallo dejaba
+    // el formulario en blanco y había que reescribir todo
+    if (guardado === true) {
+      setFormData({ documento: '', nombre: '', telefono: '' })
+      onDirtyChange?.(false)
+    }
   }
 
   return (
@@ -71,14 +81,16 @@ function ClientForm({ onSubmit, initialData = null, onCancel }) {
         <button
           type="submit"
           className="btn-submit"
+          disabled={enviando}
         >
-          {initialData ? 'Actualizar' : 'Crear Cliente'}
+          {enviando ? 'Guardando...' : initialData ? 'Actualizar' : 'Crear Cliente'}
         </button>
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
             className="btn-cancel"
+            disabled={enviando}
           >
             Cancelar
           </button>
