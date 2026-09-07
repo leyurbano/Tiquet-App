@@ -5,9 +5,6 @@ import Navbar from "./components/Navbar";
 import ProductsPage from "./pages/ProductsPage";
 import SalesPage from "./pages/SalesPage";
 import ClientsPage from "./pages/ClientsPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import Dashboard from "./pages/home";
 import CierreCajaPage from "./pages/CierreCajaPage";
 import ConfiguracionPage from "./pages/ConfiguracionPage";
 import PlataformaPage from "./pages/PlataformaPage";
@@ -34,35 +31,10 @@ function App() {
       {necesitaApertura && <AperturaCajaModal />}
 
       <Routes>
-        {/* Rutas públicas */}
-      <Route
-        path="/login"
-        element={user ? <Navigate to="/sales" replace /> : <LoginPage />}
-      />
-      <Route
-        path="/register"
-        element={user ? <Navigate to="/sales" replace /> : <RegisterPage />}
-      />
-
-      {/* 🔧 CAMBIO — verifica si hay sesión antes de mostrar inicio */}
+        {/* 🔧 CAMBIO — verifica si hay sesión antes de mostrar inicio */}
       <Route
         path="/"
         element={user ? <Navigate to="/sales" replace /> : <InicioPage />}
-      />
-
-      {/* Dashboard */}
-      <Route
-        path="/dashboard"
-        element={
-          user ? (
-            <div className="app-container">
-              <Navbar />
-              <div className="app-main"><Dashboard /></div>
-            </div>
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
       />
 
       {/* Rutas protegidas */}

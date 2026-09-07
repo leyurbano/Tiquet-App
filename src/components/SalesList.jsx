@@ -128,13 +128,15 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
                         >
                           📄
                         </button>
-                        <button
-                          onClick={() => handleDelete(sale)}
-                          className="btn-delete-sale"
-                          title="Anular venta y restaurar stock"
-                        >
-                          🗑️
-                        </button>
+                        {onDelete && (
+                          <button
+                            onClick={() => handleDelete(sale)}
+                            className="btn-delete-sale"
+                            title="Anular venta y restaurar stock"
+                          >
+                            🗑️
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

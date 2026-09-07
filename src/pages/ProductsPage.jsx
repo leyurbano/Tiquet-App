@@ -4,8 +4,11 @@ import ProductList from "../components/ProductList";
 import { productService } from "../services/productService";
 import "./ProductsPage.css";
 import { PlusCircle } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 function ProductsPage() {
+  // La RLS es quien realmente lo impide; esto evita mostrar acciones que fallarían
+  const { esAdministrador } = useAuth();
   const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -106,7 +109,7 @@ function ProductsPage() {
     <div className="products-page">
       <div className="products-header">
         <h1 className="products-title">📦 Gestión de Productos</h1>
-        {!showForm && (
+        {esAdministrador && !showForm && (
           <button onClick={() => setShowForm(true)} className="btn-new-product">
             <PlusCircle size={18} /> Nuevo Producto
           </button>
@@ -116,7 +119,7 @@ function ProductsPage() {
         <div className="products-list-section full-width">
           <ProductList
             products={products}
-            onEdit={handleEdit}
+            onEdit={esAdministrador ? handleEdit : null}
             loading={loading}
           />
         </div>
