@@ -17,8 +17,14 @@ function PlataformaPage() {
   const [cargando, setCargando] = useState(true)
   const [mensaje, setMensaje] = useState(null)
 
-  const [nuevoNegocio, setNuevoNegocio] = useState('')
   const [creando, setCreando] = useState(false)
+
+  // Alta completa: usuario + (opcionalmente) su negocio, en un solo paso
+  const VACIO = {
+    email: '', password: '', nombre: '', rol: 'administrador',
+    negocio_id: '', nombre_negocio_nuevo: '', negocioNuevo: true
+  }
+  const [alta, setAlta] = useState(VACIO)
   // Asignación en curso por usuario: { [userId]: { nombre, negocio_id, rol } }
   const [asignacion, setAsignacion] = useState({})
 
@@ -39,28 +45,34 @@ function PlataformaPage() {
 
   useEffect(() => { cargar() }, [])
 
-  const crearNegocio = async (e) => {
+  const crearUsuario = async (e) => {
     e.preventDefault()
-    if (!nuevoNegocio.trim()) return
     setCreando(true)
     setMensaje(null)
 
-    const { error } = await negocioService.crearNegocio({
-      nombre_comercial: nuevoNegocio.trim()
+    const { error } = await perfilService.crearUsuario({
+      email: alta.email,
+      password: alta.password,
+      nombre: alta.nombre,
+      rol: alta.rol,
+      negocio_id: alta.negocioNuevo ? null : alta.negocio_id,
+      nombre_negocio_nuevo: alta.negocioNuevo ? alta.nombre_negocio_nuevo : null
     })
 
     if (error) {
-      setMensaje({ tipo: 'error', texto: 'No se pudo crear el negocio: ' + error })
+      setMensaje({ tipo: 'error', texto: error })
     } else {
       setMensaje({
         tipo: 'ok',
-        texto: 'Negocio creado. Su administrador podrá completar los datos en Configuración.'
+        texto: `Usuario ${alta.email} creado. Entrégale la contraseña para que pueda entrar.`
       })
-      setNuevoNegocio('')
+      setAlta(VACIO)
       await cargar()
     }
     setCreando(false)
   }
+
+  const editarAlta = (campo, valor) => setAlta((p) => ({ ...p, [campo]: valor }))
 
   const asignar = async (usuario) => {
     const datos = asignacion[usuario.id] || {}
@@ -166,17 +178,122 @@ function PlataformaPage() {
           </table>
         </div>
 
-        <form onSubmit={crearNegocio} className="plat-form-inline">
-          <input
-            type="text"
-            value={nuevoNegocio}
-            onChange={(e) => setNuevoNegocio(e.target.value)}
-            placeholder="Nombre del negocio nuevo"
-            disabled={creando}
-            className="plat-input"
-          />
-          <button type="submit" className="plat-btn" disabled={creando || !nuevoNegocio.trim()}>
-            <PlusCircle size={16} /> {creando ? 'Creando...' : 'Crear negocio'}
+      </div>
+
+      {/* ---------- Alta de usuario (y negocio) ---------- */}
+      <div className="plat-card">
+        <h2 className="plat-subtitle"><PlusCircle size={18} /> Crear usuario</h2>
+        <p className="plat-hint">
+          Crea la cuenta y su perfil de una vez. Si es un cliente nuevo, se crea
+          también su negocio y esta persona queda como su administrador.
+        </p>
+
+        <form onSubmit={crearUsuario} className="plat-form">
+          <div className="plat-opciones">
+            <label className="plat-radio">
+              <input
+                type="radio"
+                checked={alta.negocioNuevo}
+                onChange={() => editarAlta('negocioNuevo', true)}
+                disabled={creando}
+              />
+              <span>Negocio nuevo</span>
+            </label>
+            <label className="plat-radio">
+              <input
+                type="radio"
+                checked={!alta.negocioNuevo}
+                onChange={() => editarAlta('negocioNuevo', false)}
+                disabled={creando}
+              />
+              <span>Negocio existente</span>
+            </label>
+          </div>
+
+          <div className="plat-form-grid">
+            {alta.negocioNuevo ? (
+              <label className="plat-campo">
+                <span>Nombre del negocio</span>
+                <input
+                  type="text"
+                  value={alta.nombre_negocio_nuevo}
+                  onChange={(e) => editarAlta('nombre_negocio_nuevo', e.target.value)}
+                  required
+                  disabled={creando}
+                  className="plat-input"
+                />
+              </label>
+            ) : (
+              <label className="plat-campo">
+                <span>Negocio</span>
+                <select
+                  value={alta.negocio_id}
+                  onChange={(e) => editarAlta('negocio_id', e.target.value)}
+                  required
+                  disabled={creando}
+                  className="plat-input"
+                >
+                  <option value="" disabled hidden>Selecciona…</option>
+                  {negocios.map((n) => (
+                    <option key={n.id} value={n.id}>{n.nombre_comercial}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <label className="plat-campo">
+              <span>Rol</span>
+              <select
+                value={alta.rol}
+                onChange={(e) => editarAlta('rol', e.target.value)}
+                disabled={creando}
+                className="plat-input"
+              >
+                <option value="administrador">Administrador</option>
+                <option value="vendedor">Vendedor</option>
+              </select>
+            </label>
+
+            <label className="plat-campo">
+              <span>Nombre de la persona</span>
+              <input
+                type="text"
+                value={alta.nombre}
+                onChange={(e) => editarAlta('nombre', e.target.value)}
+                disabled={creando}
+                className="plat-input"
+              />
+            </label>
+
+            <label className="plat-campo">
+              <span>Correo</span>
+              <input
+                type="email"
+                value={alta.email}
+                onChange={(e) => editarAlta('email', e.target.value)}
+                required
+                disabled={creando}
+                className="plat-input"
+              />
+            </label>
+
+            <label className="plat-campo">
+              <span>Contraseña inicial</span>
+              <input
+                type="text"
+                value={alta.password}
+                onChange={(e) => editarAlta('password', e.target.value)}
+                minLength={8}
+                required
+                disabled={creando}
+                className="plat-input"
+              />
+              <small>Mínimo 8 caracteres. Se la entregas al usuario.</small>
+            </label>
+          </div>
+
+          <button type="submit" className="plat-btn" disabled={creando}>
+            <PlusCircle size={16} /> {creando ? 'Creando...' : 'Crear usuario'}
           </button>
         </form>
       </div>
@@ -208,7 +325,7 @@ function PlataformaPage() {
                   onChange={(e) => editarAsignacion(u.id, 'negocio_id', e.target.value)}
                   className="plat-input"
                 >
-                  <option value="">Negocio…</option>
+                  <option value="" disabled hidden>Negocio…</option>
                   {negocios.map((n) => (
                     <option key={n.id} value={n.id}>{n.nombre_comercial}</option>
                   ))}

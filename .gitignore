@@ -43,3 +43,8 @@ backup_*.sql
 
 # Temporales del CLI de Supabase
 supabase/.temp/
+
+# Configuracion del entorno local de Supabase. Se regenera con
+# 'supabase init'; no hace falta para correr la app, solo para
+# desplegar Edge Functions desde el CLI.
+supabase/config.toml

@@ -73,6 +73,59 @@ export const perfilService = {
     }
   },
 
+  /**
+   * Crea un usuario completo (Auth + perfil), opcionalmente con un negocio
+   * nuevo, a través de la Edge Function `crear-usuario`.
+   *
+   * No se puede hacer desde el navegador con supabase-js: crear usuarios
+   * exige la service_role key, que ignora la RLS y jamás debe salir del
+   * servidor. La función verifica por su cuenta que quien llama sea super
+   * admin, así que el permiso no depende de esta pantalla.
+   */
+  async crearUsuario({ email, password, nombre, rol, negocio_id, nombre_negocio_nuevo }) {
+    try {
+      const { data, error } = await supabase.functions.invoke('crear-usuario', {
+        body: { email, password, nombre, rol, negocio_id, nombre_negocio_nuevo }
+      })
+
+      if (error) {
+        console.error('crear-usuario falló:', error.name, error)
+
+        // No se pudo llegar a la función: casi siempre es que no está desplegada
+        if (error.name === 'FunctionsFetchError' || error.name === 'FunctionsRelayError') {
+          return {
+            error: 'No se pudo contactar la función `crear-usuario`. ' +
+                   'Verifica que esté desplegada (supabase functions deploy crear-usuario).'
+          }
+        }
+
+        // La función respondió con un código de error: el motivo va en el cuerpo
+        const status = error.context?.status
+        let detalle = null
+        try {
+          detalle = await error.context.json()
+        } catch {
+          try { detalle = { error: await error.context.text() } } catch { /* sin cuerpo */ }
+        }
+
+        if (detalle?.error) return { error: detalle.error }
+        if (status === 404) {
+          return { error: 'La función `crear-usuario` no existe en el proyecto. Falta desplegarla.' }
+        }
+        if (status === 401) {
+          return { error: 'Sesión no válida para la función. Vuelve a iniciar sesión.' }
+        }
+        return { error: `La función respondió con error ${status || 'desconocido'}. Revisa sus logs en Supabase.` }
+      }
+
+      if (data?.error) return { error: data.error }
+      return { data }
+    } catch (error) {
+      console.error('Error creando usuario:', error)
+      return { error: 'Error inesperado: ' + (error.message || error) }
+    }
+  },
+
   async actualizarPerfil(id, cambios) {
     try {
       const { data, error } = await supabase
