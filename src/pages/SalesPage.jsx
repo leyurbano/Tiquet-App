@@ -7,9 +7,12 @@ import { buildReceiptHTML } from '../utils/receipt'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
 import { getNowColombia, getTodayColombia, formatToColombia } from '../utils/dateFormatter'
+import { useAuth } from '../contexts/AuthContext'
 import './SalesPage.css'
 
 function SalesPage() {
+  // Anular mueve stock y dinero: la RLS lo restringe a administradores
+  const { esAdministrador } = useAuth()
   const [sales, setSales] = useState([])
   const [products, setProducts] = useState([])
   const [clients, setClients] = useState([])
@@ -320,7 +323,7 @@ function SalesPage() {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             onViewInvoice={handleViewInvoice}
-            onDelete={async (id, motivo) => {
+            onDelete={!esAdministrador ? null : async (id, motivo) => {
               // La confirmación y el motivo se piden en AnularVentaModal
               const result = await salesService.annulSale(id, motivo)
               if (result.success) {

@@ -48,24 +48,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function register(email, password, fullName) {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName
-          }
-        }
-      })
-      if (error) throw error
-      return { success: true, data }
-    } catch (error) {
-      return { success: false, error: error.message }
-    }
-  }
-
   async function logout() {
     try {
       const { error } = await supabase.auth.signOut()
@@ -98,7 +80,6 @@ export function AuthProvider({ children }) {
         esSuperAdmin: !!perfil?.es_super_admin,
         loading,
         login,
-        register,
         logout
       }}
     >

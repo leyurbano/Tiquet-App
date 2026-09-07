@@ -94,12 +94,14 @@ function ProductList({ products, onEdit, loading = false }) {
                     )}
                   </td>
                   <td className="cell-actions">
-                    <button
-                      onClick={() => onEdit(product)}
-                      className="btn-edit"
-                    >
-                      <Pencil size={14} /> Editar
-                    </button>
+                    {onEdit && (
+                      <button
+                        onClick={() => onEdit(product)}
+                        className="btn-edit"
+                      >
+                        <Pencil size={14} /> Editar
+                      </button>
+                    )}
                     {/* Botón eliminar deshabilitado: evita romper el historial de productos con ventas asociadas */}
                     <button
                       onClick={() => setHistoryProduct(product)}
