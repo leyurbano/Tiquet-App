@@ -228,8 +228,9 @@ function SalesForm({
     });
     setIsSubmitting(false);
 
+    // El motivo exacto ya lo informa SalesPage; aquí solo se evita limpiar
+    // el formulario, para que el usuario no pierda lo que había cargado
     if (!resultado) {
-      alert("❌ Error al registrar la venta. Verifica los datos e intenta de nuevo.");
       return;
     }
 

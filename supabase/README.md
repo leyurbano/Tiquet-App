@@ -23,6 +23,7 @@ archivo completo → Run.
 | 12 | `12_stock_minimo.sql` | Umbral de stock bajo por negocio y por producto. |
 | 13 | `13_costo_en_venta.sql` | Congela el costo del producto en cada línea de venta, para el margen. |
 | 14 | `14_endurecimiento_seguridad.sql` | Cierra la escalada a super admin, protege pagos/detalle y cierres de caja, y permite suspender negocios. |
+| 15 | `15_ventas_atomicas.sql` | Venta y anulación en una sola transacción: sin ventas a medias ni stock devuelto dos veces. |
 
 ## El orden importa
 

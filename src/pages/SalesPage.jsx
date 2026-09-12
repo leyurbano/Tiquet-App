@@ -6,7 +6,7 @@ import { negocioService } from '../services/negocioService'
 import { buildReceiptHTML } from '../utils/receipt'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
-import { getNowColombia, getTodayColombia, formatToColombia } from '../utils/dateFormatter'
+import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
 import { useAuth } from '../contexts/AuthContext'
 import './SalesPage.css'
 
@@ -71,37 +71,22 @@ function SalesPage() {
     setLoading(false)
   }
 
-  // 🔧 CAMBIO: dos ajustes en esta función:
-  // 1. Se agrega "pagos: saleData.pagos" al objeto que se manda a salesService.createSale.
-  //    Antes faltaba, así que pagos_venta nunca se llenaba (ni en pago simple ni mixto).
-  // 2. Ahora hace "return" del resultado (newSale o null) en cada rama, incluida la del catch.
-  //    Antes no retornaba nada -> SalesForm.jsx siempre recibía "undefined" y no podía saber
-  //    si la venta se guardó o falló, así que limpiaba el formulario igual en ambos casos.
+  // Registra la venta y devuelve el resultado (la venta o null) para que
+  // SalesForm sepa si puede limpiar el formulario.
   const handleCreateSale = async (saleData) => {
     setLoading(true)
 
     try {
-      // getNowColombia() ahora devuelve ISO con offset colombiano real,
-      // no UTC puro — Supabase almacena y filtra el día correcto.
-      const nowColombiaISO = getNowColombia()
-
-      const newSale = await salesService.createSale({
+      // 🔧 Una sola llamada: la base de datos registra venta, pagos y
+      // productos en una transacción. Si algo falla, no queda nada a medias.
+      const { venta: newSale, error: errorVenta } = await salesService.registrarVenta({
         cliente_id: saleData.cliente_id,
-        fecha: nowColombiaISO,
-        total: saleData.total,
         medio_pago_id: saleData.medio_pago_id,
-        pagos: saleData.pagos // 🔧 CAMBIO: faltaba, necesario para poblar pagos_venta
+        items: saleData.items,
+        pagos: saleData.pagos
       })
 
       if (newSale) {
-        for (const item of saleData.items) {
-          await salesService.addSaleItem(newSale.id, {
-            producto_id: item.producto_id,
-            cantidad: item.cantidad,
-            precio: item.precio,
-            costo_unitario: products.find(p => p.id === item.producto_id)?.costo ?? null
-          })
-        }
 
         const itemsWithProductInfo = saleData.items.map(item => {
           const product = products.find(p => p.id === item.producto_id)
@@ -122,7 +107,7 @@ function SalesPage() {
 
         setLastSale({
           id: newSale.id,
-          fecha: nowColombiaISO,
+          fecha: newSale.fecha,
           total: saleData.total,
           items: itemsWithProductInfo,
           pagos: pagosConNombre, // 🆕 NUEVO: desglose de pagos para el recibo impreso
@@ -140,7 +125,7 @@ function SalesPage() {
         setLoading(false)
         return newSale // 🔧 CAMBIO: retorno explícito para que SalesForm sepa que sí se guardó
       } else {
-        alert('❌ Error al crear la venta')
+        alert('❌ No se pudo registrar la venta: ' + (errorVenta || 'error desconocido'))
         setLoading(false)
         return null // 🔧 CAMBIO: retorno explícito de fallo
       }
