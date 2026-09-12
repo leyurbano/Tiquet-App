@@ -26,6 +26,7 @@ archivo completo → Run.
 | 14 | `14_endurecimiento_seguridad.sql` | Cierra la escalada a super admin, protege pagos/detalle y cierres de caja, y permite suspender negocios. |
 | 15 | `15_ventas_atomicas.sql` | Venta y anulación en una sola transacción: sin ventas a medias ni stock devuelto dos veces. |
 | 16 | `16_venta_requiere_caja.sql` | `registrar_venta` exige una caja abierta: ninguna venta queda fuera de un arqueo. |
+| 17 | `17_proteger_clientes.sql` | Un cliente con ventas no se borra; solo administradores borran clientes; el Consumidor final queda protegido. |
 
 ## Lo que todavía no está aquí
 

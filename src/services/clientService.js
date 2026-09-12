@@ -93,18 +93,43 @@ export const clientService = {
   },
 
   // Eliminar cliente
+  /**
+   * Elimina un cliente. Devuelve { ok: true } o { ok: false, error } con un
+   * motivo que se puede mostrar tal cual.
+   *
+   * 🔧 Antes devolvía true/false y la pantalla ignoraba el false: el usuario
+   * confirmaba el borrado y no pasaba nada, sin ninguna explicación.
+   */
   async deleteClient(id) {
     try {
-      const { error } = await supabase
+      // .select() devuelve las filas borradas. Hace falta porque cuando la
+      // RLS no deja borrar, Supabase no da error: simplemente borra cero
+      // filas, y sin esto se informaría "eliminado" sin haber borrado nada.
+      const { data, error } = await supabase
         .from('clientes')
         .delete()
         .eq('id', id)
-      
-      if (error) throw error
-      return true
+        .select('id')
+
+      if (error) {
+        // 23503: el cliente tiene ventas (lo lanza el trigger de la migración 17)
+        if (error.code === '23503') {
+          return {
+            ok: false,
+            error: 'No se puede eliminar: el cliente tiene ventas registradas. ' +
+                   'Se conserva para no dañar el historial de facturas.'
+          }
+        }
+        throw error
+      }
+
+      if (!data || data.length === 0) {
+        return { ok: false, error: 'No tienes permiso para eliminar este cliente.' }
+      }
+      return { ok: true }
     } catch (error) {
-      console.error('Error deleting client:', error)
-      return false
+      console.error('Error deleting client:', error.message || error)
+      return { ok: false, error: 'No se pudo eliminar el cliente. Revisa tu conexión.' }
     }
   }
 }

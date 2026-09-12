@@ -180,3 +180,15 @@
     font-size: 0.75rem;
   }
 }
+
+/* Etiqueta del Consumidor final, en lugar del botón de eliminar */
+.cliente-fijo {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6b7280;
+  background: #f3f4f6;
+  border-radius: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  white-space: nowrap;
+}

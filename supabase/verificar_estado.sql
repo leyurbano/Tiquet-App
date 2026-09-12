@@ -28,7 +28,9 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('14_endurecimiento',       'ventas.creado_en',               'columna',  'ventas.creado_en'),
   ('14_endurecimiento',       'función estado_mi_cuenta()',     'funcion',  'estado_mi_cuenta'),
   ('15_ventas_atomicas',      'función registrar_venta()',      'funcion',  'registrar_venta'),
-  ('15_ventas_atomicas',      'función anular_venta()',         'funcion',  'anular_venta')
+  ('15_ventas_atomicas',      'función anular_venta()',         'funcion',  'anular_venta'),
+  ('17_proteger_clientes',    'trigger cliente con ventas',     'trigger',  'impedir_borrar_cliente_con_ventas'),
+  ('17_proteger_clientes',    'trigger consumidor final',       'trigger',  'proteger_consumidor_final')
 )
 select
   migracion,
