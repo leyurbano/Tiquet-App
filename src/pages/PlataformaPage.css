@@ -256,3 +256,27 @@
 }
 
 .plat-campo .plat-input { width: 100%; }
+
+/* ---- Suspender / reactivar negocio ---- */
+
+.plat-btn-sm {
+  background: #fff;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.plat-btn-sm:hover { background: #f0fdf4; }
+
+.plat-btn-peligro {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.plat-btn-peligro:hover { background: #fef2f2; }

@@ -29,6 +29,22 @@ export const perfilService = {
     }
   },
 
+  /**
+   * Por qué el usuario puede o no operar: 'activo', 'sin_perfil',
+   * 'sin_negocio', 'usuario_inactivo' o 'negocio_suspendido'.
+   */
+  async getEstadoCuenta() {
+    try {
+      const { data, error } = await supabase.rpc('estado_mi_cuenta')
+      if (error) throw error
+      return data || 'sin_perfil'
+    } catch (error) {
+      console.error('Error obteniendo el estado de la cuenta:', error.message || error)
+      // Ante un fallo de red no se bloquea al usuario: la RLS sigue protegiendo
+      return 'activo'
+    }
+  },
+
   // Todos los perfiles. La RLS decide cuántos devuelve: el administrador ve
   // los de su negocio, el super admin ve todos.
   async getPerfiles() {

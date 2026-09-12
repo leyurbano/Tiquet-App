@@ -8,7 +8,7 @@ import './PlataformaPage.css'
 import { Building2, Users, PlusCircle, UserPlus } from 'lucide-react'
 
 function PlataformaPage() {
-  const { esSuperAdmin, loading: cargandoAuth } = useAuth()
+  const { esSuperAdmin, perfil, loading: cargandoAuth } = useAuth()
 
   const [resumen, setResumen] = useState([])
   const [negocios, setNegocios] = useState([])
@@ -116,6 +116,26 @@ function PlataformaPage() {
       [userId]: { ...prev[userId], [campo]: valor }
     }))
 
+  const cambiarEstadoNegocio = async (n) => {
+    const suspender = n.activo
+    const aviso = suspender
+      ? `¿Suspender "${n.nombre_comercial}"? Sus usuarios perderán el acceso de inmediato.`
+      : `¿Reactivar "${n.nombre_comercial}"?`
+    if (!window.confirm(aviso)) return
+
+    setMensaje(null)
+    const actualizado = await negocioService.updateNegocio(n.negocio_id, { activo: !suspender })
+    if (!actualizado) {
+      setMensaje({ tipo: 'error', texto: 'No se pudo cambiar el estado del negocio.' })
+      return
+    }
+    setMensaje({
+      tipo: 'ok',
+      texto: `"${n.nombre_comercial}" ${suspender ? 'suspendido' : 'reactivado'}.`
+    })
+    await cargar()
+  }
+
   const nombreNegocio = (id) =>
     negocios.find((n) => n.id === id)?.nombre_comercial || 'Sin negocio'
 
@@ -156,6 +176,7 @@ function PlataformaPage() {
                 <th className="num">Ventas</th>
                 <th className="num">Vendido</th>
                 <th>Última venta</th>
+                <th>Acceso</th>
               </tr>
             </thead>
             <tbody>
@@ -171,6 +192,21 @@ function PlataformaPage() {
                   <td className="num">{formatCOP(n.monto_vendido)}</td>
                   <td className="plat-fecha">
                     {n.ultima_venta ? formatToColombiaShort(n.ultima_venta) : 'Sin ventas'}
+                  </td>
+                  <td>
+                    {/* No se permite suspender el propio negocio: te dejaría
+                        sin acceso a la plataforma desde la que se reactiva */}
+                    {n.negocio_id === perfil?.negocio_id ? (
+                      <span className="plat-email">Tu negocio</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => cambiarEstadoNegocio(n)}
+                        className={`plat-btn-sm ${n.activo ? 'plat-btn-peligro' : ''}`}
+                      >
+                        {n.activo ? 'Suspender' : 'Reactivar'}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
