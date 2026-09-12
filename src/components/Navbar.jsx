@@ -87,7 +87,7 @@ function Navbar() {
               className={`nav-button ${location.pathname === '/cierre' ? 'nav-active' : 'nav-inactive'}`}
               onClick={() => handleNav('/cierre')}
             >
-              Resumen
+              Reportes
             </button>
             {esAdministrador && (
               <button

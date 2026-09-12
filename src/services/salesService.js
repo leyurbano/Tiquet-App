@@ -90,6 +90,36 @@ export const salesService = {
     }
   },
 
+  /**
+   * Ventas de un rango de días (hora Colombia) con su detalle, para reportes.
+   * Incluye costo_unitario y el producto, que es lo que permite calcular el
+   * margen sin consultar productos aparte.
+   */
+  async getSalesForReport(desde, hasta) {
+    try {
+      const inicio = dayjs.tz(`${desde} 00:00:00`, COLOMBIA_TZ).toISOString()
+      const fin    = dayjs.tz(`${hasta} 23:59:59`, COLOMBIA_TZ).toISOString()
+
+      const { data, error } = await supabase
+        .from('ventas')
+        .select(`
+          id, fecha, total,
+          detalle_ventas ( producto_id, cantidad, precio, costo_unitario, productos ( descripcion ) ),
+          pagos_venta ( monto, medios_pago ( pago ) )
+        `)
+        .is('anulada_en', null)
+        .gte('fecha', inicio)
+        .lte('fecha', fin)
+        .order('fecha', { ascending: false })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error fetching report sales:', error.message || error)
+      return null
+    }
+  },
+
   // Obtener venta por ID
   async getSaleById(id) {
     try {
@@ -215,6 +245,9 @@ export const salesService = {
           producto_id: item.producto_id,
           cantidad: item.cantidad,
           precio: item.precio,
+          // 🆕 Se congela el costo del momento: sin esto el margen histórico
+          // se calcularía con el costo actual y quedaría distorsionado
+          costo_unitario: item.costo_unitario ?? null,
           total: item.cantidad * item.precio
         }])
         .select()

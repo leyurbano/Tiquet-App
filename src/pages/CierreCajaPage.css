@@ -1,5 +1,5 @@
 .cierre-page {
-  max-width: 48rem;
+  max-width: 64rem;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
@@ -58,7 +58,9 @@
 /* Tarjetas de resumen */
 .cierre-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* auto-fit en vez de un número fijo: así no hay que tocar el CSS cada vez
+     que se agrega o quita una tarjeta */
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -259,3 +261,92 @@
     font-size: 1.5rem;
   }
 }
+
+/* ---- Selector de período ---- */
+
+.rango-barra {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.rango-botones { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.rango-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.rango-btn:hover { background: #e5e7eb; }
+
+.rango-activo {
+  background: #2563eb;
+  color: #fff;
+}
+
+.rango-fechas {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rango-barra .rango-input {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: #111827;
+  background: #fff;
+}
+
+.rango-sep { color: #9ca3af; font-size: 0.85rem; }
+
+/* ---- Rentabilidad ---- */
+
+.stat-ganancia { color: #16a34a; }
+
+.cierre-stat-extra {
+  font-size: 0.72rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.fila-total td {
+  border-top: 2px solid #e5e7eb;
+  border-bottom: none;
+  font-weight: 700;
+  padding-top: 0.8rem;
+}
+
+.margen-negativo { color: #991b1b; }
+
+.tabla-scroll { overflow-x: auto; }
+
+.cierre-table thead th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.cierre-table thead th.num { text-align: right; }
