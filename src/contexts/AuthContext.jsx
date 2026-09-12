@@ -8,6 +8,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   // 🆕 Perfil: rol dentro del negocio, negocio_id y si es super admin
   const [perfil, setPerfil] = useState(null)
+  // 🆕 Si puede operar, o por qué no (negocio suspendido, usuario inactivo...)
+  const [estadoCuenta, setEstadoCuenta] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export function AuthProvider({ children }) {
       if (error) throw error
       setUser(null)
       setPerfil(null)
+      setEstadoCuenta(null)
       return { success: true }
     } catch (error) {
       return { success: false, error: error.message }
@@ -65,9 +68,15 @@ export function AuthProvider({ children }) {
     let cancelado = false
     if (!user) {
       setPerfil(null)
+      setEstadoCuenta(null)
       return
     }
-    perfilService.getMiPerfil().then(p => { if (!cancelado) setPerfil(p) })
+    Promise.all([perfilService.getMiPerfil(), perfilService.getEstadoCuenta()])
+      .then(([p, estado]) => {
+        if (cancelado) return
+        setPerfil(p)
+        setEstadoCuenta(estado)
+      })
     return () => { cancelado = true }
   }, [user])
 
@@ -76,6 +85,7 @@ export function AuthProvider({ children }) {
       value={{
         user,
         perfil,
+        estadoCuenta,
         esAdministrador: perfil?.rol === 'administrador',
         esSuperAdmin: !!perfil?.es_super_admin,
         loading,

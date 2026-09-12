@@ -19,7 +19,12 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('11_permisos_vendedor',    'función es_administrador()',     'funcion',  'es_administrador'),
   ('11_permisos_vendedor',    'trigger de columnas',            'trigger',  'proteger_campos_producto'),
   ('12_stock_minimo',         'negocios.stock_minimo_defecto',  'columna',  'negocios.stock_minimo_defecto'),
-  ('12_stock_minimo',         'productos.stock_minimo',         'columna',  'productos.stock_minimo')
+  ('12_stock_minimo',         'productos.stock_minimo',         'columna',  'productos.stock_minimo'),
+  ('13_costo_en_venta',       'detalle_ventas.costo_unitario',  'columna',  'detalle_ventas.costo_unitario'),
+  ('14_endurecimiento',       'trigger proteger_perfil',        'trigger',  'proteger_perfil'),
+  ('14_endurecimiento',       'trigger proteger_sesion_caja',   'trigger',  'proteger_sesion_caja'),
+  ('14_endurecimiento',       'ventas.creado_en',               'columna',  'ventas.creado_en'),
+  ('14_endurecimiento',       'función estado_mi_cuenta()',     'funcion',  'estado_mi_cuenta')
 )
 select
   migracion,
