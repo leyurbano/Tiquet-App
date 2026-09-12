@@ -72,3 +72,16 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   margin: auto;
 }
+
+/* ---- Resultado de acciones ---- */
+
+.clients-mensaje {
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+.clients-msg-ok { background: #dcfce7; color: #166534; }
+.clients-msg-error { background: #fee2e2; color: #991b1b; }
