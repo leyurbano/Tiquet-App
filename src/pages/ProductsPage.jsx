@@ -5,6 +5,7 @@ import { productService } from "../services/productService";
 import "./ProductsPage.css";
 import { PlusCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { negocioService } from "../services/negocioService";
 
 function ProductsPage() {
   // La RLS es quien realmente lo impide; esto evita mostrar acciones que fallarían
@@ -18,9 +19,14 @@ function ProductsPage() {
   const [productsPerPage] = useState(1000);
   // Hay cambios escritos sin guardar en el modal
   const [formSucio, setFormSucio] = useState(false);
+  // Umbral general del negocio para las alertas de stock bajo
+  const [minimoNegocio, setMinimoNegocio] = useState(0);
 
   useEffect(() => {
     loadProducts(1);
+    negocioService.getMiNegocio().then((n) =>
+      setMinimoNegocio(n?.stock_minimo_defecto ?? 0)
+    );
   }, []);
 
   const loadProducts = async (page) => {
@@ -121,6 +127,7 @@ function ProductsPage() {
             products={products}
             onEdit={esAdministrador ? handleEdit : null}
             loading={loading}
+            minimoNegocio={minimoNegocio}
           />
         </div>
       </div>
@@ -133,6 +140,7 @@ function ProductsPage() {
               onSubmit={handleSubmit}
               onCancel={() => closeForm()}
               onDirtyChange={setFormSucio}
+              minimoNegocio={minimoNegocio}
             />
           </div>
         </div>
