@@ -146,6 +146,48 @@ function SalesPage() {
     }
   }
 
+  /**
+   * Abre el documento del tiquete para imprimir.
+   *
+   * 🔧 Antes solo usaba window.open. Si el navegador bloqueaba la ventana
+   * emergente, window.open devolvía null, el código fallaba al escribir en
+   * ella y el cliente se quedaba sin tiquete, sin ningún aviso.
+   *
+   * Ahora intenta la ventana emergente, como siempre, y si el navegador la
+   * bloquea imprime desde un iframe oculto dentro de la misma página, que los
+   * bloqueadores de ventanas no afectan.
+   *
+   * Devuelve la ventana (o la del iframe) sobre la que se imprime.
+   */
+  const abrirDocumentoImpresion = (html, opcionesVentana) => {
+    const ventana = window.open('', '_blank', opcionesVentana)
+    if (ventana) {
+      ventana.document.write(html)
+      ventana.document.close()
+      return ventana
+    }
+
+    const iframe = document.createElement('iframe')
+    iframe.setAttribute('aria-hidden', 'true')
+    Object.assign(iframe.style, {
+      position: 'fixed', right: '0', bottom: '0',
+      width: '0', height: '0', border: '0'
+    })
+    document.body.appendChild(iframe)
+
+    const doc = iframe.contentWindow.document
+    doc.open()
+    doc.write(html)
+    doc.close()
+
+    // Se retira al terminar la impresión, o al minuto si el navegador no avisa
+    const retirar = () => iframe.remove()
+    iframe.contentWindow.addEventListener('afterprint', () => setTimeout(retirar, 500))
+    setTimeout(retirar, 60000)
+
+    return iframe.contentWindow
+  }
+
   const printAndCut = (printWindow) => {
     const img = printWindow.document.querySelector('img')
 
@@ -164,13 +206,24 @@ function SalesPage() {
       }
     }
 
-    setTimeout(() => {
+    // 🔧 Antes se asignaba img.onload DESPUÉS de la espera: si el logo ya
+    // había cargado para entonces (lo normal si está en caché), ese evento no
+    // se volvía a disparar y el tiquete nunca se mandaba a imprimir.
+    // Ahora se revisa img.complete; `impreso` evita imprimir dos veces.
+    let impreso = false
+    const imprimir = () => {
+      if (impreso) return
+      impreso = true
       printWindow.focus()
-      if (img) {
-        img.onload = () => printWindow.print()
-        img.onerror = () => printWindow.print()
+      printWindow.print()
+    }
+
+    setTimeout(() => {
+      if (img && !img.complete) {
+        img.onload = imprimir
+        img.onerror = imprimir
       } else {
-        printWindow.print()
+        imprimir()
       }
     }, 500)
   }
@@ -211,9 +264,10 @@ function SalesPage() {
         pagos
       })
 
-      const printWindow = window.open('', '_blank', 'height=900,width=800,top=50,left=50,scrollbars=yes')
-      printWindow.document.write(html)
-      printWindow.document.close()
+      // Esta ventana se abre después de un `await`: es justo el caso en que
+      // los navegadores más bloquean ventanas emergentes. El helper cae al
+      // iframe si pasa.
+      const printWindow = abrirDocumentoImpresion(html, 'height=900,width=800,top=50,left=50,scrollbars=yes')
       printAndCut(printWindow)
 
     } catch (error) {
@@ -227,8 +281,6 @@ function SalesPage() {
       alert('No hay items para imprimir')
       return
     }
-
-    const printWindow = window.open('', '_blank', 'height=600,width=400')
 
     const total = lastSale.items.reduce((sum, item) => {
       const qty = parseInt(item.quantity) || 0
@@ -261,9 +313,15 @@ function SalesPage() {
       pagos: lastSale.pagos || []
     })
 
-    printWindow.document.write(html)
-    printWindow.document.close()
-    printAndCut(printWindow)
+    try {
+      const printWindow = abrirDocumentoImpresion(html, 'height=600,width=400')
+      printAndCut(printWindow)
+    } catch (error) {
+      // El modal queda abierto para que se pueda reintentar
+      console.error('Error preparando la impresión:', error)
+      alert('No se pudo preparar el tiquete para imprimir. Intenta de nuevo.')
+      return
+    }
 
     setShowPrintModal(false)
     setFormKey(k => k + 1)
