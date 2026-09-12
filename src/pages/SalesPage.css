@@ -175,3 +175,25 @@ html, body {
     display: none !important;
   }
 }
+/* ---- Caja cerrada: reemplaza el formulario de venta ---- */
+
+.caja-cerrada-aviso {
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 0.75rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.caja-cerrada-titulo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.35rem;
+}
+
+.caja-cerrada-aviso .btn-new-sale {
+  margin-top: 1rem;
+}

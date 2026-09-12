@@ -8,11 +8,20 @@ import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
 import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
 import { useAuth } from '../contexts/AuthContext'
+import { useCashSession } from '../contexts/CashSessionContext'
+import AperturaCajaModal from '../components/AperturaCajaModal'
 import './SalesPage.css'
 
 function SalesPage() {
   // Anular mueve stock y dinero: la RLS lo restringe a administradores
-  const { esAdministrador } = useAuth()
+  const { esAdministrador, esSuperAdmin, estadoCuenta } = useAuth()
+
+  // 🆕 La caja se abre al venir a vender, no al iniciar sesión
+  const { session, loading: cargandoCaja } = useCashSession()
+  const [aperturaOmitida, setAperturaOmitida] = useState(false)
+  const puedeOmitirApertura = esAdministrador || esSuperAdmin
+  const mostrarApertura =
+    !cargandoCaja && !session && estadoCuenta === 'activo' && !aperturaOmitida
   const [sales, setSales] = useState([])
   const [products, setProducts] = useState([])
   const [clients, setClients] = useState([])
@@ -262,6 +271,12 @@ function SalesPage() {
 
   return (
     <div className="sales-page">
+      {mostrarApertura && (
+        <AperturaCajaModal
+          onOmitir={puedeOmitirApertura ? () => setAperturaOmitida(true) : undefined}
+        />
+      )}
+
       {showPrintModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -290,14 +305,30 @@ function SalesPage() {
       <div className="sales-grid">
         {showForm && (
           <div className="form-section">
-            <SalesForm
-              key={formKey}
-              products={products}
-              clients={clients}
-              onSubmit={handleCreateSale}
-              onCancel={() => setShowForm(false)}
-              finalCustomerId={finalCustomerId}
-            />
+            {/* Sin caja abierta no se vende: la venta no entraría en ningún
+                arqueo. La base de datos también lo impide (migración 16). */}
+            {cargandoCaja ? null : session ? (
+              <SalesForm
+                key={formKey}
+                products={products}
+                clients={clients}
+                onSubmit={handleCreateSale}
+                onCancel={() => setShowForm(false)}
+                finalCustomerId={finalCustomerId}
+              />
+            ) : (
+              <div className="caja-cerrada-aviso">
+                <p className="caja-cerrada-titulo">🔒 Caja cerrada</p>
+                <p>Para registrar ventas, abre la caja con la base del turno.</p>
+                <button
+                  type="button"
+                  className="btn-new-sale"
+                  onClick={() => setAperturaOmitida(false)}
+                >
+                  Abrir caja
+                </button>
+              </div>
+            )}
           </div>
         )}
 

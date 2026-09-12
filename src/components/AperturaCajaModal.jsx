@@ -5,12 +5,16 @@ import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import './CajaModal.css'
 
 /**
- * Se muestra al iniciar sesión, antes de poder operar: pide la base con la
- * que arranca la caja. No se puede descartar con Escape ni con clic afuera,
- * porque sin base el arqueo del cierre no tendría contra qué comparar.
- * La salida disponible es cerrar sesión.
+ * Pide la base con la que arranca la caja. Se muestra al entrar a Ventas,
+ * no al iniciar sesión: quien solo consulta reportes o configura no mueve
+ * efectivo y no tiene por qué abrir un turno.
+ *
+ * No se descarta con Escape ni con clic afuera. Si llega `onOmitir`
+ * (administradores y super admin), aparece "No voy a vender ahora"; el
+ * vendedor no tiene esa opción, porque vender es su trabajo. Sin caja
+ * abierta la venta igual queda bloqueada, también en la base de datos.
  */
-function AperturaCajaModal() {
+function AperturaCajaModal({ onOmitir }) {
   const { openSession } = useCashSession()
   const { logout } = useAuth()
   const [base, setBase] = useState('')
@@ -62,6 +66,16 @@ function AperturaCajaModal() {
             <button type="submit" className="caja-btn-primary" disabled={guardando}>
               {guardando ? 'Abriendo caja...' : 'Abrir caja y continuar'}
             </button>
+            {onOmitir && (
+              <button
+                type="button"
+                className="caja-btn-secondary"
+                onClick={onOmitir}
+                disabled={guardando}
+              >
+                No voy a vender ahora
+              </button>
+            )}
             <button
               type="button"
               className="caja-btn-ghost"
