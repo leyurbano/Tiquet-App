@@ -4,6 +4,8 @@
 -- =====================================================================
 
 with esperado(migracion, objeto, tipo, nombre) as (values
+  ('00_triggers_existentes',  'trigger descontar_inventario',   'trigger',  'descontar_inventario'),
+  ('00_triggers_existentes',  'trigger trg_validar_pagos',      'trigger',  'trg_validar_pagos'),
   ('01_sesiones_caja',        'tabla sesiones_caja',            'tabla',    'sesiones_caja'),
   ('02_ventas_user_id',       'ventas.user_id',                 'columna',  'ventas.user_id'),
   ('03_detalle_arqueo',       'sesiones_caja.detalle_arqueo',   'columna',  'sesiones_caja.detalle_arqueo'),

@@ -9,6 +9,7 @@ archivo completo → Run.
 
 | # | Archivo | Qué hace |
 |---|---------|----------|
+| 00 | `00_triggers_existentes.sql` | Triggers de inventario y pagos que ya existían en la base antes de versionar migraciones. Copia fiel, sin cambios. |
 | 01 | `01_sesiones_caja.sql` | Turnos de caja: apertura con base y cierre con arqueo. |
 | 02 | `02_ventas_user_id.sql` | `ventas.user_id`: quién registró cada venta. Sin esto el arqueo no puede separar por cajero. |
 | 03 | `03_sesiones_caja_detalle_arqueo.sql` | `detalle_arqueo` (jsonb): validación de cada transacción del cierre. |
@@ -26,6 +27,32 @@ archivo completo → Run.
 | 15 | `15_ventas_atomicas.sql` | Venta y anulación en una sola transacción: sin ventas a medias ni stock devuelto dos veces. |
 | 16 | `16_venta_requiere_caja.sql` | `registrar_venta` exige una caja abierta: ninguna venta queda fuera de un arqueo. |
 
+## Lo que todavía no está aquí
+
+Las tablas originales (`productos`, `ventas`, `clientes`, `detalle_ventas`,
+`pagos_venta`, `medios_pago`, `producto_historial`, `perfiles`) se crearon
+antes de versionar y no tienen script. Estas migraciones las **modifican**,
+pero no las **crean**: con solo este repositorio no se puede reconstruir la
+base desde cero. Para eso hace falta un volcado del esquema (sin datos).
+
+`supabase db dump` necesita Docker. Sin Docker se usa `pg_dump`, que viene
+con PostgreSQL (en este equipo: `C:\Program Files\PostgreSQL\17\bin`, fuera
+del PATH). Desde PowerShell, en la raíz del proyecto:
+
+```powershell
+& "C:\Program Files\PostgreSQL\17\bin\pg_dump.exe" `
+  --schema-only --no-owner --no-privileges --schema=public `
+  --dbname "PEGA_AQUI_LA_CADENA_DE_CONEXION" `
+  -f supabase/schema_base.sql
+```
+
+La cadena de conexión se copia del dashboard: **Connect → Session pooler**
+(puerto 5432), reemplazando `[YOUR-PASSWORD]` por la contraseña de la base.
+
+- `--schema-only` vuelca la estructura (tablas, funciones, triggers,
+  políticas) **sin datos**, así que `schema_base.sql` sí se puede versionar.
+- El comando con la contraseña **no** se guarda en ningún archivo.
+
 ## El orden importa
 
 No son independientes. Por ejemplo, `06` crea la función `resumen_negocios()`
@@ -34,13 +61,9 @@ falla.
 
 ## Cómo verificar qué está aplicado
 
-```sql
-select table_name, column_name
-from information_schema.columns
-where table_schema = 'public'
-  and column_name in ('negocio_id', 'anulada_en', 'user_id', 'es_super_admin', 'detalle_arqueo')
-order by table_name, column_name;
-```
+Corre `verificar_estado.sql` completo en el SQL Editor. No modifica nada:
+devuelve una fila por cada objeto que deberían haber creado las migraciones,
+con **OK** o **FALTA**.
 
 ## Sobre el aislamiento entre negocios
 
