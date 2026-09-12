@@ -46,7 +46,10 @@ export const productService = {
           cantidad: product.cantidad,
           costo: product.costo,
           costo_total: product.costo_total,
-          precio_venta: product.precio_venta
+          precio_venta: product.precio_venta,
+          // vacío = usa el umbral del negocio; 0 = sin alertas
+          stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
+            ? null : Number(product.stock_minimo)
         }])
         .select()
 
@@ -72,7 +75,9 @@ async updateProduct(id, product) {
         cantidad: product.cantidad,
         costo: product.costo,
         costo_total: product.costo_total,
-        precio_venta: product.precio_venta
+        precio_venta: product.precio_venta,
+        stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
+          ? null : Number(product.stock_minimo)
       })
       .eq('id', id)
       .select()

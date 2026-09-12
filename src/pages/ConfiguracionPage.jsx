@@ -90,6 +90,7 @@ function ConfiguracionPage() {
     CAMPOS.forEach((c) => { cambios[c.name] = form[c.name] || null })
     cambios.ancho_papel = form.ancho_papel || '55mm'
     cambios.mensaje_pie = form.mensaje_pie || null
+    cambios.stock_minimo_defecto = Number(form.stock_minimo_defecto) || 0
 
     const actualizado = await negocioService.updateNegocio(negocio.id, cambios)
 
@@ -205,6 +206,23 @@ function ConfiguracionPage() {
             <p className="config-ayuda">
               PNG, JPG, WEBP o SVG, máximo 1 MB. Para impresora térmica funciona
               mejor un PNG en blanco y negro con fondo transparente.
+            </p>
+          </div>
+
+          <div className="config-field">
+            <label className="config-label">Alerta de stock bajo</label>
+            <input
+              type="number"
+              min="0"
+              value={form.stock_minimo_defecto ?? 5}
+              onChange={(e) => cambiar('stock_minimo_defecto', e.target.value)}
+              disabled={!puedeEditar || guardando}
+              className="config-input"
+            />
+            <p className="config-ayuda">
+              Avisa cuando a un producto le queden estas unidades o menos.
+              Aplica a todo el catálogo; puedes ajustar productos concretos
+              desde su ficha. Pon 0 para desactivar las alertas.
             </p>
           </div>
 
