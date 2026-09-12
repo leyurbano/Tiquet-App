@@ -18,6 +18,11 @@ archivo completo → Run.
 | 07 | `07_super_admin_flag.sql` | Separa el permiso de plataforma (`es_super_admin`) del rol dentro del negocio. |
 | 08 | `08_storage_logos.sql` | Bucket `logos` para el logo de cada negocio. |
 | 09 | `09_mensaje_pie_unico.sql` | Unifica el pie del tiquete en un solo campo. |
+| 10 | `10_usuarios_sin_perfil.sql` | Lista usuarios de Auth sin perfil para el panel de plataforma. |
+| 11 | `11_permisos_vendedor.sql` | Restringe al vendedor: no anula ventas ni cambia costos/precios. |
+| 12 | `12_stock_minimo.sql` | Umbral de stock bajo por negocio y por producto. |
+| 13 | `13_costo_en_venta.sql` | Congela el costo del producto en cada línea de venta, para el margen. |
+| 14 | `14_endurecimiento_seguridad.sql` | Cierra la escalada a super admin, protege pagos/detalle y cierres de caja, y permite suspender negocios. |
 
 ## El orden importa
 
