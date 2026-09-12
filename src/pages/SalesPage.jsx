@@ -98,7 +98,8 @@ function SalesPage() {
           await salesService.addSaleItem(newSale.id, {
             producto_id: item.producto_id,
             cantidad: item.cantidad,
-            precio: item.precio
+            precio: item.precio,
+            costo_unitario: products.find(p => p.id === item.producto_id)?.costo ?? null
           })
         }
 
