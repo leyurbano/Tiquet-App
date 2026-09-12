@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import './ClientList.css'
+import { esConsumidorFinal } from '../utils/clientes'
 
 function ClientList({ clients, onEdit, onDelete, loading = false }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -56,12 +57,20 @@ function ClientList({ clients, onEdit, onDelete, loading = false }) {
                     >
                       ✏️ Editar
                     </button>
-                    <button
-                      onClick={() => onDelete(client.id)}
-                      className="btn-delete"
-                    >
-                      🗑️ Eliminar
-                    </button>
+                    {/* onDelete llega null si el usuario no es administrador */}
+                    {onDelete && !esConsumidorFinal(client) && (
+                      <button
+                        onClick={() => onDelete(client)}
+                        className="btn-delete"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    )}
+                    {esConsumidorFinal(client) && (
+                      <span className="cliente-fijo" title="Lo usa la venta rápida: no se puede eliminar">
+                        Venta rápida
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -9,14 +9,11 @@ import CierreCajaPage from "./pages/CierreCajaPage";
 import ConfiguracionPage from "./pages/ConfiguracionPage";
 import PlataformaPage from "./pages/PlataformaPage";
 import { useAuth } from "./contexts/AuthContext";
-import { useCashSession } from "./contexts/CashSessionContext";
-import AperturaCajaModal from "./components/AperturaCajaModal";
 import CuentaBloqueada from "./components/CuentaBloqueada";
 import InicioPage from "./pages/InicioPage"; // 🔧 CAMBIO — solo un import, eliminé el duplicado
 
 function App() {
   const { user, loading, estadoCuenta, esSuperAdmin } = useAuth();
-  const { necesitaApertura } = useCashSession();
 
   // Usuario autenticado que no puede operar. La excepción es el super admin
   // de plataforma sin negocio propio, que solo administra la plataforma.
@@ -36,10 +33,6 @@ function App() {
 
   return (
     <>
-      {/* Bloquea la operación hasta que se registre la base del turno.
-          Solo con cuenta activa: antes de conocer el estado no se muestra */}
-      {necesitaApertura && estadoCuenta === "activo" && <AperturaCajaModal />}
-
       <Routes>
         {/* 🔧 CAMBIO — verifica si hay sesión antes de mostrar inicio */}
       <Route

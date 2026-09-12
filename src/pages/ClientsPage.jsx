@@ -4,9 +4,14 @@ import ClientList from '../components/ClientList'
 import { clientService } from '../services/clientService'
 import './ClientsPage.css'
 import { PlusCircle } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 function ClientsPage() {
+  // Borrar clientes es solo de administradores (la RLS lo exige igual)
+  const { esAdministrador } = useAuth()
   const [clients, setClients] = useState([])
+  // Resultado de la última acción, visible en pantalla en vez de un alert
+  const [mensaje, setMensaje] = useState(null)
   const [loading, setLoading] = useState(true)
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
@@ -70,12 +75,18 @@ function ClientsPage() {
     return !!updated
   }
 
-  const handleDeleteClient = async (id) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
-      const success = await clientService.deleteClient(id)
-      if (success) {
-        setClients(clients.filter(c => c.id !== id))
-      }
+  const handleDeleteClient = async (client) => {
+    if (!window.confirm(`¿Eliminar a ${client.nombre}?`)) return
+
+    setMensaje(null)
+    const { ok, error } = await clientService.deleteClient(client.id)
+
+    if (ok) {
+      setClients(clients.filter(c => c.id !== client.id))
+      setMensaje({ tipo: 'ok', texto: `${client.nombre} fue eliminado.` })
+    } else {
+      // 🔧 Antes un fallo no mostraba nada: ahora se dice por qué
+      setMensaje({ tipo: 'error', texto: error })
     }
   }
 
@@ -95,12 +106,18 @@ function ClientsPage() {
         )}
       </div>
 
+      {mensaje && (
+        <div className={`clients-mensaje ${mensaje.tipo === 'ok' ? 'clients-msg-ok' : 'clients-msg-error'}`}>
+          {mensaje.texto}
+        </div>
+      )}
+
       <div className="clients-grid">
         <div className="clients-list-column">
           <ClientList
             clients={clients}
             onEdit={handleEdit}
-            onDelete={handleDeleteClient}
+            onDelete={esAdministrador ? handleDeleteClient : null}
             loading={loading}
           />
         </div>
