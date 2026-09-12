@@ -1,5 +1,4 @@
 import { supabase } from './supabaseClient'
-import { productService } from './productService'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
@@ -147,72 +146,41 @@ export const salesService = {
     }
   },
 
-  // 🔧 CAMBIO: createSale ahora recibe también `sale.pagos` (array) y los inserta en pagos_venta.
-  // Ya NO depende únicamente de sale.medio_pago_id — ese campo se mantiene por compatibilidad
-  // pero puede venir null cuando el pago es mixto (ver SalesForm.jsx).
-  async createSale(sale) {
+  /**
+   * Registra una venta completa —venta, pagos y productos— en UNA sola
+   * transacción, mediante la función registrar_venta de la base de datos.
+   *
+   * 🔧 Antes eran pasos sueltos desde el navegador (crear venta, luego
+   * pagos, luego cada producto) sin revisar si cada uno funcionaba: un fallo
+   * a mitad dejaba una venta con total pero sin productos, sin descontar
+   * stock, y la pantalla decía que se había registrado bien.
+   *
+   * Ahora la base de datos calcula el total, valida que los pagos cuadren,
+   * revisa el stock y congela el costo. Si algo falla, no queda nada.
+   *
+   * Devuelve { venta } o { error } con el motivo legible.
+   */
+  async registrarVenta({ cliente_id, medio_pago_id, items, pagos }) {
     try {
-      // 🆕 Quién registra la venta. Se lee de la sesión local (sin ir a la red)
-      // para que el arqueo pueda separar las ventas por cajero.
-      const { data: { session } } = await supabase.auth.getSession()
-
-      const { data, error } = await supabase
-        .from('ventas')
-        .insert([{
-          cliente_id: sale.cliente_id,
-          fecha: sale.fecha || dayjs().tz(COLOMBIA_TZ).toISOString(),
-          total: sale.total,
-          medio_pago_id: sale.medio_pago_id, // null si es pago mixto, o el id real si es simple
-          user_id: session?.user?.id || null
-        }])
-        .select()
-
-      if (error) {
-        console.error('Error de Supabase:', error)
-        throw error
-      }
-
-      const nuevaVenta = data?.[0]
-      if (!nuevaVenta) throw new Error('No se pudo crear la venta')
-
-      // 🆕 NUEVO: insertar los pagos asociados a la venta recién creada
-      if (sale.pagos && sale.pagos.length > 0) {
-        const pagosResult = await this.addSalePayments(nuevaVenta.id, sale.pagos)
-        if (!pagosResult.success) {
-          // Si falla el registro de pagos, revertimos la venta para no dejar datos huérfanos
-          await this.deleteSale(nuevaVenta.id)
-          throw new Error('Error registrando los pagos de la venta: ' + pagosResult.error)
-        }
-      }
-
-      return nuevaVenta
-    } catch (error) {
-      console.error('Error creating sale:', error.message || error)
-      return null
-    }
-  },
-
-  // 🆕 NUEVO: inserta uno o varios pagos asociados a una venta (soporta pago simple y mixto)
-  // sale.pagos siempre llega como array desde SalesForm.jsx, ej:
-  // [{ medio_pago_id: 1, monto: 30000 }, { medio_pago_id: 2, monto: 20000 }]
-  async addSalePayments(saleId, pagos) {
-    try {
-      const registros = pagos.map((pago) => ({
-        venta_id: saleId,
-        medio_pago_id: pago.medio_pago_id,
-        monto: pago.monto
-      }))
-
-      const { data, error } = await supabase
-        .from('pagos_venta')
-        .insert(registros)
-        .select()
+      const { data, error } = await supabase.rpc('registrar_venta', {
+        p_cliente_id: cliente_id ?? null,
+        p_medio_pago_id: medio_pago_id ?? null,
+        p_items: (items || []).map((i) => ({
+          producto_id: i.producto_id,
+          cantidad: Number(i.cantidad),
+          precio: Number(i.precio)
+        })),
+        p_pagos: (pagos || []).map((pg) => ({
+          medio_pago_id: pg.medio_pago_id,
+          monto: Number(pg.monto)
+        }))
+      })
 
       if (error) throw error
-      return { success: true, data }
+      return { venta: data }
     } catch (error) {
-      console.error('Error adding sale payments:', error)
-      return { success: false, error: error.message }
+      console.error('Error registrando la venta:', error.message || error)
+      return { error: error.message || 'Error desconocido' }
     }
   },
 
@@ -235,89 +203,24 @@ export const salesService = {
     }
   },
 
-  // Agregar items a venta
-  async addSaleItem(saleId, item) {
-    try {
-      const { data, error } = await supabase
-        .from('detalle_ventas')
-        .insert([{
-          venta_id: saleId,
-          producto_id: item.producto_id,
-          cantidad: item.cantidad,
-          precio: item.precio,
-          // 🆕 Se congela el costo del momento: sin esto el margen histórico
-          // se calcularía con el costo actual y quedaría distorsionado
-          costo_unitario: item.costo_unitario ?? null,
-          total: item.cantidad * item.precio
-        }])
-        .select()
-
-      if (error) throw error
-      return data?.[0]
-    } catch (error) {
-      console.error('Error adding sale item:', error)
-      return null
-    }
-  },
-
   /**
-   * Anula una venta y devuelve el stock.
+   * Anula una venta y devuelve el stock, en UNA transacción, mediante la
+   * función anular_venta de la base de datos.
    *
-   * 🔧 CAMBIO: antes borraba físicamente la venta y su detalle. Ahora la marca
-   * como anulada y conserva la fila. Borrarla dejaba el cierre de caja ciego:
-   * una venta en efectivo cobrada y luego borrada hacía cuadrar el arqueo sin
-   * dejar ningún rastro del dinero.
+   * 🔧 Antes leía el stock, sumaba y escribía desde el navegador: una venta
+   * que entrara en medio perdía su descuento, y un fallo a mitad seguido de
+   * un reintento devolvía el stock dos veces. Ahora el incremento es atómico
+   * y la venta queda bloqueada mientras se anula.
    */
   async annulSale(saleId, motivo) {
     try {
-      const sale = await this.getSaleById(saleId)
-      if (!sale) throw new Error('Venta no encontrada')
-      if (sale.anulada_en) throw new Error('Esta venta ya estaba anulada')
+      const { data, error } = await supabase.rpc('anular_venta', {
+        p_venta_id: saleId,
+        p_motivo: motivo
+      })
 
-      const items = sale.detalle_ventas || []
-
-      // Restaurar stock de cada producto
-      for (const item of items) {
-  // Leer stock antes de restaurar
-  const { data: productoActual } = await supabase
-    .from('productos')
-    .select('cantidad')
-    .eq('id', item.producto_id)
-    .single()
-
-  const stockAntes = productoActual?.cantidad ?? 0
-
-  await productService.restoreStock(item.producto_id, parseInt(item.cantidad))
-
-  // Registrar reversión en historial
-  await supabase
-    .from('producto_historial')
-    .insert([{
-      producto_id: item.producto_id,
-      tipo_evento: 'reversion',
-      cantidad_anterior: stockAntes,
-      cantidad_nueva: stockAntes + parseInt(item.cantidad),
-      descripcion: `Anulación Venta #${saleId} — se devolvieron ${item.cantidad} unidad(es)`,
-      venta_id: saleId
-    }])
-}
-
-      // Marcar la venta como anulada. El detalle y los pagos se conservan:
-      // son la evidencia de qué se había cobrado y cómo.
-      const { data: { session } } = await supabase.auth.getSession()
-
-      const { error: errorVenta } = await supabase
-        .from('ventas')
-        .update({
-          anulada_en: new Date().toISOString(),
-          anulada_por: session?.user?.id || null,
-          motivo_anulacion: motivo
-        })
-        .eq('id', saleId)
-
-      if (errorVenta) throw errorVenta
-
-      return { success: true, itemsRestored: items.length }
+      if (error) throw error
+      return { success: true, itemsRestored: data?.itemsRestored ?? 0 }
     } catch (error) {
       console.error('Error anulando la venta:', error.message || error)
       return { success: false, error: error.message }
@@ -343,20 +246,4 @@ export const salesService = {
       return []
     }
   },
-
-  // Eliminar venta simple (sin restaurar stock)
-  async deleteSale(id) {
-    try {
-      const { error } = await supabase
-        .from('ventas')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-      return true
-    } catch (error) {
-      console.error('Error deleting sale:', error)
-      return false
-    }
-  }
 }

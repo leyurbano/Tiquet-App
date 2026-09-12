@@ -105,33 +105,6 @@ async updateProduct(id, product) {
   }
 },
 
-  // Restaurar stock: suma la cantidad devuelta al inventario
-  async restoreStock(productId, cantidadDevuelta) {
-    try {
-      // Primero obtener el stock actual
-      const product = await this.getProductById(productId)
-      if (!product) throw new Error(`Producto ${productId} no encontrado`)
-
-      const nuevaCantidad = (product.cantidad || 0) + cantidadDevuelta
-      const nuevoCostoTotal = nuevaCantidad * (product.costo || 0)
-
-      const { data, error } = await supabase
-        .from('productos')
-        .update({
-          cantidad: nuevaCantidad,
-          costo_total: nuevoCostoTotal
-        })
-        .eq('id', productId)
-        .select()
-
-      if (error) throw error
-      return data?.[0]
-    } catch (error) {
-      console.error(`Error restaurando stock del producto ${productId}:`, error)
-      return null
-    }
-  },
-
   // Eliminar producto
   async deleteProduct(id) {
     try {
