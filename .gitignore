@@ -35,3 +35,16 @@ lerna-debug.log*
 
 # Env file ( nunca subir claves)
 .env
+# Volcados de base de datos: contienen datos reales, hashes de contraseña
+# y tokens de sesión. Nunca deben entrar al repositorio.
+*_backup.sql
+backup_*.sql
+*.dump
+
+# Temporales del CLI de Supabase
+supabase/.temp/
+
+# Configuracion del entorno local de Supabase. Se regenera con
+# 'supabase init'; no hace falta para correr la app, solo para
+# desplegar Edge Functions desde el CLI.
+supabase/config.toml

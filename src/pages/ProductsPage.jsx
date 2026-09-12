@@ -4,8 +4,12 @@ import ProductList from "../components/ProductList";
 import { productService } from "../services/productService";
 import "./ProductsPage.css";
 import { PlusCircle } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { negocioService } from "../services/negocioService";
 
 function ProductsPage() {
+  // La RLS es quien realmente lo impide; esto evita mostrar acciones que fallarían
+  const { esAdministrador } = useAuth();
   const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -13,9 +17,16 @@ function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [productsPerPage] = useState(1000);
+  // Hay cambios escritos sin guardar en el modal
+  const [formSucio, setFormSucio] = useState(false);
+  // Umbral general del negocio para las alertas de stock bajo
+  const [minimoNegocio, setMinimoNegocio] = useState(0);
 
   useEffect(() => {
     loadProducts(1);
+    negocioService.getMiNegocio().then((n) =>
+      setMinimoNegocio(n?.stock_minimo_defecto ?? 0)
+    );
   }, []);
 
   const loadProducts = async (page) => {
@@ -31,12 +42,15 @@ function ProductsPage() {
     const newProduct = await productService.createProduct(formData);
     if (newProduct) {
       setShowForm(false);
+      setFormSucio(false);
       alert("✅ Producto creado exitosamente");
       loadProducts(1);
     } else {
       alert("❌ Error al crear el producto");
     }
     setLoading(false);
+    // El formulario necesita saber si guardó para decidir si se limpia
+    return !!newProduct;
   };
 
   const handleUpdateProduct = async (formData) => {
@@ -48,17 +62,25 @@ function ProductsPage() {
     if (updated) {
       setEditingProduct(null);
       setShowForm(false);
+      setFormSucio(false);
       alert("✅ Producto actualizado exitosamente");
       loadProducts(currentPage);
     } else {
       alert("❌ Error al actualizar el producto");
     }
     setLoading(false);
+    return !!updated;
   };
 
-  const closeForm = () => {
+  const closeForm = ({ forzar = false } = {}) => {
+    // Un clic en el fondo o un Escape no deberían borrar lo escrito sin avisar
+    if (!forzar && formSucio &&
+        !window.confirm("Hay cambios sin guardar. ¿Descartarlos?")) {
+      return;
+    }
     setShowForm(false);
     setEditingProduct(null);
+    setFormSucio(false);
   };
 
   useEffect(() => {
@@ -74,7 +96,9 @@ function ProductsPage() {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showForm]);
+    // formSucio va en las dependencias a propósito: sin él, el manejador de
+    // Escape se quedaría con el valor inicial (false) y saltaría la confirmación
+  }, [showForm, formSucio]);
 
   const handleEdit = (product) => {
     setEditingProduct(product);
@@ -82,18 +106,16 @@ function ProductsPage() {
   };
 
   const handleSubmit = (formData) => {
-    if (editingProduct) {
-      handleUpdateProduct(formData);
-    } else {
-      handleCreateProduct(formData);
-    }
+    return editingProduct
+      ? handleUpdateProduct(formData)
+      : handleCreateProduct(formData);
   };
 
   return (
     <div className="products-page">
       <div className="products-header">
         <h1 className="products-title">📦 Gestión de Productos</h1>
-        {!showForm && (
+        {esAdministrador && !showForm && (
           <button onClick={() => setShowForm(true)} className="btn-new-product">
             <PlusCircle size={18} /> Nuevo Producto
           </button>
@@ -103,19 +125,22 @@ function ProductsPage() {
         <div className="products-list-section full-width">
           <ProductList
             products={products}
-            onEdit={handleEdit}
+            onEdit={esAdministrador ? handleEdit : null}
             loading={loading}
+            minimoNegocio={minimoNegocio}
           />
         </div>
       </div>
 
       {showForm && (
-        <div className="pf-overlay" onClick={closeForm}>
+        <div className="pf-overlay" onClick={() => closeForm()}>
           <div className="pf-box" onClick={(e) => e.stopPropagation()}>
             <ProductForm
               initialData={editingProduct}
               onSubmit={handleSubmit}
-              onCancel={closeForm}
+              onCancel={() => closeForm()}
+              onDirtyChange={setFormSucio}
+              minimoNegocio={minimoNegocio}
             />
           </div>
         </div>

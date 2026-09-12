@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import './ProductForm.css'
 
-function ProductForm({ onSubmit, initialData = null, onCancel }) {
+function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, minimoNegocio = 0 }) {
   const [formData, setFormData] = useState({
     descripcion: '',
     cantidad: '',
     costo: '',
     costo_total: '',
-    precio_venta: ''
+    precio_venta: '',
+    stock_minimo: ''
   })
+  // Evita el doble envío por doble clic y bloquea el botón mientras guarda
+  const [enviando, setEnviando] = useState(false)
 
   // Deja solo los dígitos de lo que escribe el usuario (quita puntos de miles y símbolos)
   const parseCOP = (value) => {
@@ -33,6 +36,10 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
     const { name, value } = e.target
     let newValue = value
 
+    // Avisa al contenedor que hay cambios sin guardar, para que pueda
+    // confirmar antes de cerrar y no descartarlos por un clic mal puesto
+    onDirtyChange?.(true)
+
     // Calcular costo_total automáticamente cuando cambia cantidad o costo
     if (name === 'cantidad' || name === 'costo') {
       const cantidad = name === 'cantidad' ? parseFloat(value) || 0 : parseFloat(formData.cantidad) || 0
@@ -52,16 +59,28 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    onSubmit(formData)
-    setFormData({
-      descripcion: '',
-      cantidad: '',
-      costo: '',
-      costo_total: '',
-      precio_venta: ''
-    })
+    if (enviando) return
+
+    setEnviando(true)
+    const guardado = await onSubmit(formData)
+    setEnviando(false)
+
+    // 🔧 Solo se limpia si el guardado fue exitoso. Antes se limpiaba de
+    // inmediato, así que un fallo de red dejaba el modal abierto con todos
+    // los campos en blanco y el usuario tenía que reescribir la ficha.
+    if (guardado === true) {
+      setFormData({
+        descripcion: '',
+        cantidad: '',
+        costo: '',
+        costo_total: '',
+        precio_venta: '',
+        stock_minimo: ''
+      })
+      onDirtyChange?.(false)
+    }
   }
 
   return (
@@ -146,12 +165,32 @@ function ProductForm({ onSubmit, initialData = null, onCancel }) {
         />
       </div>
 
+      <label className="form-label">Alerta de stock bajo</label>
+      <input
+        type="number"
+        name="stock_minimo"
+        placeholder={`Por defecto: ${minimoNegocio}`}
+        value={formData.stock_minimo ?? ''}
+        onChange={handleChange}
+        min="0"
+        className="form-input"
+      />
+      <p className="form-ayuda">
+        Déjalo vacío para usar el valor general del negocio. Pon 0 para no
+        recibir alertas de este producto.
+      </p>
+
       <div className="form-buttons">
-        <button type="submit" className="btn-submit">
-          {initialData ? 'Actualizar' : 'Crear Producto'}
+        <button type="submit" className="btn-submit" disabled={enviando}>
+          {enviando ? 'Guardando...' : initialData ? 'Actualizar' : 'Crear Producto'}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="btn-cancel">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="btn-cancel"
+            disabled={enviando}
+          >
             Cancelar
           </button>
         )}

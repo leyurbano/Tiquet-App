@@ -10,6 +10,8 @@ function ClientsPage() {
   const [loading, setLoading] = useState(true)
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  // Hay cambios escritos sin guardar en el modal
+  const [formSucio, setFormSucio] = useState(false)
 
   useEffect(() => {
     loadClients()
@@ -22,9 +24,15 @@ function ClientsPage() {
     setLoading(false)
   }
 
-  const closeForm = () => {
+  const closeForm = ({ forzar = false } = {}) => {
+    // Un clic en el fondo o un Escape no deberían borrar lo escrito sin avisar
+    if (!forzar && formSucio &&
+        !window.confirm('Hay cambios sin guardar. ¿Descartarlos?')) {
+      return
+    }
     setShowForm(false)
     setEditingClient(null)
+    setFormSucio(false)
   }
 
   useEffect(() => {
@@ -40,22 +48,26 @@ function ClientsPage() {
       document.body.style.overflow = ''
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [showForm])
+    // formSucio va en las dependencias a propósito: sin él, el manejador de
+    // Escape se quedaría con el valor inicial (false) y saltaría la confirmación
+  }, [showForm, formSucio])
 
   const handleAddClient = async (clientData) => {
     const newClient = await clientService.createClient(clientData)
     if (newClient) {
       setClients([newClient, ...clients])
-      closeForm()
+      closeForm({ forzar: true })
     }
+    return !!newClient
   }
 
   const handleUpdateClient = async (clientData) => {
     const updated = await clientService.updateClient(editingClient.id, clientData)
     if (updated) {
       setClients(clients.map(c => c.id === editingClient.id ? updated : c))
-      closeForm()
+      closeForm({ forzar: true })
     }
+    return !!updated
   }
 
   const handleDeleteClient = async (id) => {
@@ -95,12 +107,13 @@ function ClientsPage() {
       </div>
 
       {showForm && (
-        <div className="cf-overlay" onClick={closeForm}>
+        <div className="cf-overlay" onClick={() => closeForm()}>
           <div className="cf-box" onClick={(e) => e.stopPropagation()}>
             <ClientForm
               onSubmit={editingClient ? handleUpdateClient : handleAddClient}
               initialData={editingClient}
-              onCancel={closeForm}
+              onCancel={() => closeForm()}
+              onDirtyChange={setFormSucio}
             />
           </div>
         </div>

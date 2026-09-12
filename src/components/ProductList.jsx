@@ -2,13 +2,19 @@ import React, { useState, useEffect } from "react";
 import "./ProductList.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import ProductHistoryModal from "./ProductHistoryModal";
-import { Pencil, History, Package } from "lucide-react";
+import { Pencil, History, Package, AlertTriangle } from "lucide-react";
+import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
 
-function ProductList({ products, onEdit, loading = false }) {
+function ProductList({ products, onEdit, loading = false, minimoNegocio = 0 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [historyProduct, setHistoryProduct] = useState(null);
+  const [soloBajos, setSoloBajos] = useState(false);
+
+  const alertas = contarBajos(products || [], minimoNegocio);
+  const totalAlertas = alertas.agotados + alertas.bajos;
 
   const filteredProducts = (products || []).filter((product) => {
+    if (soloBajos && estadoStock(product, minimoNegocio) === "ok") return false;
     if (!searchTerm.trim()) return true;
     return (product.descripcion || "")
       .toLowerCase()
@@ -50,10 +56,35 @@ function ProductList({ products, onEdit, loading = false }) {
         </div>
       </div>
 
+      {totalAlertas > 0 && (
+        <button
+          className={`stock-alert-bar ${soloBajos ? "stock-alert-activa" : ""}`}
+          onClick={() => setSoloBajos((v) => !v)}
+        >
+          <AlertTriangle size={16} />
+          <span>
+            {alertas.agotados > 0 && (
+              <strong>{alertas.agotados} agotado{alertas.agotados !== 1 ? "s" : ""}</strong>
+            )}
+            {alertas.agotados > 0 && alertas.bajos > 0 && " · "}
+            {alertas.bajos > 0 && (
+              <span>{alertas.bajos} por agotarse</span>
+            )}
+          </span>
+          <span className="stock-alert-accion">
+            {soloBajos ? "Ver todos" : "Ver solo estos"}
+          </span>
+        </button>
+      )}
+
       {loading ? (
         <div className="loading-text">⏳ Cargando productos...</div>
       ) : filteredProducts.length === 0 ? (
-        <p className="empty-message">No hay productos disponibles</p>
+        <p className="empty-message">
+          {soloBajos
+            ? "No hay productos por agotarse"
+            : "No hay productos disponibles"}
+        </p>
       ) : (
         <div className="table-wrapper">
           <table className="products-table">
@@ -69,15 +100,26 @@ function ProductList({ products, onEdit, loading = false }) {
   </tr>
 </thead>
             <tbody>
-              {filteredProducts.map((product) => (
-                <tr key={product.id} className="table-row">
+              {filteredProducts.map((product) => {
+                const estado = estadoStock(product, minimoNegocio);
+                return (
+                <tr key={product.id} className={`table-row fila-${estado}`}>
                   <td className="cell-numeric">{product.id}</td>
                   <td className="cell-description">
                     {(product.descripcion || "")
                       .toLowerCase()
                       .replace(/\b\w/g, (c) => c.toUpperCase())}
                   </td>
-                  <td className="cell-numeric">{product.cantidad || 0}</td>
+                  <td className="cell-numeric">
+                    <span className={`stock-valor stock-${estado}`}>
+                      {product.cantidad || 0}
+                    </span>
+                    {estado !== "ok" && (
+                      <div className="stock-minimo">
+                        mín. {umbralDe(product, minimoNegocio)}
+                      </div>
+                    )}
+                  </td>
                   <td className="cell-numeric hide-mobile">
                     {formatCOP(product.costo || 0)}
                   </td>
@@ -94,12 +136,14 @@ function ProductList({ products, onEdit, loading = false }) {
                     )}
                   </td>
                   <td className="cell-actions">
-                    <button
-                      onClick={() => onEdit(product)}
-                      className="btn-edit"
-                    >
-                      <Pencil size={14} /> Editar
-                    </button>
+                    {onEdit && (
+                      <button
+                        onClick={() => onEdit(product)}
+                        className="btn-edit"
+                      >
+                        <Pencil size={14} /> Editar
+                      </button>
+                    )}
                     {/* Botón eliminar deshabilitado: evita romper el historial de productos con ventas asociadas */}
                     <button
                       onClick={() => setHistoryProduct(product)}
@@ -109,7 +153,8 @@ function ProductList({ products, onEdit, loading = false }) {
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

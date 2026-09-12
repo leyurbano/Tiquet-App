@@ -47,15 +47,21 @@
   min-width: 0;
 }
 
+/* align-items:flex-start + overflow-y:auto en el fondo, y margin:auto en la
+   caja: así se centra cuando hay espacio y, cuando no lo hay (móvil en
+   horizontal, ventana baja, teclado abierto), el fondo hace scroll en vez de
+   recortar la caja. Antes, con overflow:hidden y sin alto máximo, los botones
+   de guardar quedaban fuera de la pantalla y no había forma de alcanzarlos. */
 .cf-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   z-index: 50;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 1rem;
+  overflow-y: auto;
 }
 
 .cf-box {
@@ -64,5 +70,5 @@
   width: 100%;
   max-width: 480px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  margin: auto;
 }
