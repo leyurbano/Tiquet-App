@@ -2,40 +2,83 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+POS / inventory system for Colombian retail businesses ("Tiquet-App"), sold to multiple businesses. The first business is Fralu. UI text and code comments are in **Spanish**.
+
 ## Commands
 
 ```bash
-npm run dev      # Start dev server (Vite, port 5173)
-npm run build    # Production build
-npm run lint     # ESLint
+npm run dev      # Dev server (Vite, port 5173)
+npm run build    # Production build — the only automated check available
 npm run preview  # Preview production build
 ```
 
-No test suite is configured.
+`npm run lint` does not work: eslint is not installed. There is no test suite. Verify changes with `npm run build`.
 
 ## Architecture
 
-**Stack:** React + Vite frontend, Supabase (Postgres + Auth) backend. No backend server — all DB access is direct from the browser via the Supabase JS client.
+**Stack:** React 19 + Vite, React Router v6. Supabase provides Postgres, Auth, Storage (bucket `logos`) and Edge Functions.
 
-**Env vars required:** `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`.
+**There is no application server.** The browser talks to Supabase directly with the anon key, so **all authorization lives in the database** (RLS policies, triggers, `SECURITY DEFINER` functions). Hiding a button in the UI is never a security control; always enforce the rule in SQL too.
 
-### Routing
+**Env vars:** `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` (gitignored). Optional: `VITE_PRINTER_SERVER_URL` (thermal printer cut/drawer server, default `http://localhost:3001`).
 
-`App.jsx` uses `useState('sales')` and a `renderPage()` switch to navigate between pages — this is **state-based routing, not React Router**. React Router is imported in some auth pages but is not wired up in `App.jsx`.
+### Routes (`src/App.jsx`)
+
+`/` login (`InicioPage`), `/sales`, `/products`, `/clients`, `/cierre` (reports), `/configuracion` (business settings, administrators), `/plataforma` (platform panel, super admin). Before rendering routes, `App` shows `CuentaBloqueada` if the account can't operate, and `CambiarContrasenaModal` if a password change is pending.
 
 ### Layers
 
-- `src/services/` — Supabase API calls, one file per domain (`productService.js`, `salesService.js`, `clientService.js`, `authService.js`). All DB access goes through these.
-- `src/pages/` — Page-level containers that wire services to components.
-- `src/components/` — Presentational components with local state.
-- `src/contexts/AuthContext.jsx` — Auth state via React Context; use `useAuth()` hook anywhere auth is needed.
-- `src/utils/dateFormatter.js` — All date handling uses **Colombia timezone (America/Bogota)** via dayjs. Use `getTodayColombia()` for the current date.
+- `src/services/` — all Supabase access, one file per domain: `productService`, `salesService`, `clientService`, `cashSessionService`, `negocioService`, `perfilService`, `supabaseClient`.
+- `src/pages/` — page containers that wire services to components.
+- `src/components/` — UI components and modals.
+- `src/contexts/AuthContext.jsx` — `useAuth()`: `user`, `perfil`, `estadoCuenta`, `esAdministrador`, `esSuperAdmin`, `debeCambiarContrasena`, `recargarPerfil`, `login`, `logout`.
+- `src/contexts/CashSessionContext.jsx` — `useCashSession()`: the user's open cash session.
+- `src/utils/` — `dateFormatter` (Colombia time), `currencyFormatter`, `receipt` (receipt HTML), `cashSummary` (cash close math), `reportSummary` (margins), `stock` (low-stock rules), `motivosAnulacion`, `clientes`, `toast`.
 
-### Database tables
+## Multi-tenancy and roles
 
-`productos`, `ventas`, `detalle_ventas`, `clientes` — all in Supabase Postgres.
+- Table `negocios` holds each business and its receipt settings. Every business table (`productos`, `clientes`, `ventas`, `detalle_ventas`, `pagos_venta`, `producto_historial`, `sesiones_caja`) has `negocio_id` with `DEFAULT mi_negocio()`, so inserts don't send it. RLS policies filter on `negocio_id = mi_negocio()`.
+- The browser never sends the business id: `mi_negocio()` derives it from the session token. It returns null for inactive users or suspended businesses.
+- `perfiles.rol` is the role **inside** a business (`vendedor` | `administrador`). `perfiles.es_super_admin` is a **platform** permission, orthogonal to the role.
+- The super admin sees only aggregates (`resumen_negocios()`), never individual sales or clients of other businesses.
+- `estado_mi_cuenta()` explains why a user can't operate: `sin_perfil`, `usuario_inactivo`, `negocio_suspendido`, and so on.
+- RLS policies are **additive**. A single leftover policy with `true` removes isolation for that table.
 
-Key behaviors:
-- Deleting a sale restores product stock (handled in `salesService.js`).
-- Sales filtering is date-range based, always using Colombia-local dates.
-- Receipt printing targets a 55mm thermal printer.
+## Sales, stock and cash
+
+- **Register sales only through the RPC `registrar_venta`.** It is atomic, computes the total, requires payments to equal the total, locks stock rows (`FOR UPDATE`), freezes `costo_unitario`, and requires an open cash session. Never insert into `ventas`, `detalle_ventas` or `pagos_venta` from the client.
+- **Void sales with the RPC `anular_venta`** (administrators only). Sales are never deleted; voided ones keep `anulada_en` and `motivo_anulacion`.
+- Stock is decremented by the trigger `descontar_inventario` on `detalle_ventas`. The trigger `proteger_campos_producto` uses `pg_trigger_depth()`: sellers can only change stock through a sale, and can't change description, cost, price or `stock_minimo`.
+- Cash sessions (`sesiones_caja`) are opened on the Sales page, not at login. Administrators may skip opening one. The closing count happens in the logout modal and covers the shift (since `abierta_en`, for that user), not the calendar day. Closed sessions are immutable.
+
+## Database migrations
+
+- Numbered files `supabase/NN_*.sql`, run **in order** in the Supabase SQL Editor. Paste the whole file each time; a partial paste gives `syntax error at end of input`.
+- `supabase/verificar_estado.sql` checks what is applied. `supabase/README.md` lists each migration.
+- `00_triggers_existentes.sql` copies triggers that pre-date versioning. The original base tables are **not** in the repo; `supabase/README.md` explains how to dump the schema with `pg_dump`.
+- When adding a migration: use the next number, make it idempotent, and add it to the README table and to `verificar_estado.sql`.
+- In the SQL Editor `auth.uid()` is null. The security triggers let those changes through on purpose, and the context functions (`mi_negocio()`, etc.) return null there, so RLS can't be tested from the editor unless you simulate a user with `set_config('request.jwt.claims', …)` + `set local role authenticated` inside a transaction that ends in `rollback`.
+
+## Edge Functions
+
+`supabase/functions/crear-usuario` and `supabase/functions/restablecer-contrasena` need the service-role key, so they must never run in the browser. Deploy them with:
+
+```bash
+supabase functions deploy <nombre> --use-api   # no Docker on this machine
+```
+
+Run any migration that adds columns a function writes **before** deploying that function. The files are `.ts` because that is the CLI's entrypoint, but the code is plain JavaScript.
+
+## Conventions and gotchas
+
+- **CSS specificity trap:** `src/styles.css` (imported by `index.css`) styles `input[type="text"|"password"|…]` with specificity (0,1,1), which beats a single class. Nest input styles under a parent class, e.g. `.caja-money .caja-input`.
+- **Dates:** always Colombia time (`America/Bogota`) through `dateFormatter.js`. `ventas.fecha` is `timestamptz` set by the server with `now()`.
+- **Notifications:** use `toast.exito / toast.aviso / toast.error` from `utils/toast`. No `alert()`. Keep `window.confirm` only for destructive actions.
+- **Deletes under RLS** return no error when nothing was deleted; add `.select()` and check the returned row count.
+- **Money inputs** keep the raw digits in state and only format for display (`parseCOP` / `formatCOPInput`).
+- **Receipts** are built with `buildReceiptHTML` from the business settings (55 or 80 mm). `SalesPage` prints through a pop-up window and falls back to a hidden iframe when the browser blocks it.
+- **Consumidor final:** document `222222222`, one per business, auto-created by a trigger. The quick sale depends on it, so it can't be deleted or have its document changed.
+
+## Git workflow
+
+One branch per feature (`feature/T-NN`), merged through a pull request. Never commit `.env`, `backup_*.sql` or `supabase/config.toml`.
