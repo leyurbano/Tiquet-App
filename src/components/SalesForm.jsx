@@ -13,6 +13,8 @@ function SalesForm({
   products,
   onSubmit,
   onCancel,
+  // Logo del negocio (Configuración) para la marca de agua; sin logo, no hay
+  logoUrl = null,
 }) {
   const [saleDate, setSaleDate] = useState(getTodayColombia);
   const [customer, setCustomer] = useState({ name: "", cedula: "", phone: "" });
@@ -272,11 +274,14 @@ function SalesForm({
   return (
     <form onSubmit={handleSubmit} className="sales-form-wrapper">
 
-      <img
-        src="/Fralu.png"
-        alt=""
-        className="marca-agua-form"
-      />
+      {/* 🔧 Antes era /Fralu.png fijo: todos los negocios veían el logo de Fralu */}
+      {logoUrl && (
+        <img
+          src={logoUrl}
+          alt=""
+          className="marca-agua-form"
+        />
+      )}
 
       <h2 className="form-title">📝 Nueva Venta</h2>
 

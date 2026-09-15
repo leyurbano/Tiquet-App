@@ -381,6 +381,7 @@ function SalesPage() {
                 products={products}
                 onSubmit={handleCreateSale}
                 onCancel={() => setShowForm(false)}
+                logoUrl={negocio?.logo_url}
               />
             ) : (
               <div className="caja-cerrada-aviso">
