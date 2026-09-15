@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { fiadoService } from '../services/fiadoService'
 import { formatCOP } from '../utils/currencyFormatter'
+import { useDialogo } from '../hooks/useDialogo'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import './CajaModal.css'
 import './FiadoModals.css'
@@ -19,6 +20,7 @@ const descripcion = (m) => {
 function HistorialFiadoModal({ cliente, onClose }) {
   const [movimientos, setMovimientos] = useState(null) // null = cargando
   const [error, setError] = useState(false)
+  const refDialogo = useDialogo({ onCerrar: onClose })
 
   useEffect(() => {
     fiadoService.getMovimientos(cliente.id).then((resultado) => {
@@ -31,7 +33,7 @@ function HistorialFiadoModal({ cliente, onClose }) {
 
   return (
     <div className="caja-overlay" onClick={onClose}>
-      <div className="caja-box fiado-box fiado-box-ancha" onClick={(e) => e.stopPropagation()}>
+      <div className="caja-box fiado-box fiado-box-ancha" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Fiado de ${cliente.nombre}`}>
         <h2 className="caja-title">Fiado de {cliente.nombre}</h2>
         <p className="caja-subtitle">
           Cupo {formatCOP(cliente.cupo_fiado || 0)}

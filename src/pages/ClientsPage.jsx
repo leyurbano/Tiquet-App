@@ -8,6 +8,7 @@ import { clientService } from '../services/clientService'
 import { fiadoService } from '../services/fiadoService'
 import { toast } from '../utils/toast'
 import { formatCOP } from '../utils/currencyFormatter'
+import { useDialogo } from '../hooks/useDialogo'
 import './ClientsPage.css'
 import { PlusCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -60,23 +61,9 @@ function ClientsPage() {
     setFormSucio(false)
   }, [formSucio])
 
-  useEffect(() => {
-    if (!showForm) return
-
-    document.body.style.overflow = 'hidden'
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') closeForm()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-    // closeForm va en las dependencias: sin eso, el manejador de Escape se
-    // quedaría con la primera versión y saltaría la confirmación de cambios
-    // sin guardar. useCallback hace que solo cambie cuando cambia formSucio
-  }, [showForm, closeForm])
+  // Escape (con la confirmación de cambios sin guardar), foco, Tab y scroll.
+  // El hook siempre usa la versión más reciente de closeForm
+  const refDialogo = useDialogo({ onCerrar: () => closeForm(), activo: showForm })
 
   const handleAddClient = async (clientData) => {
     const newClient = await clientService.createClient(clientData)
@@ -150,7 +137,7 @@ function ClientsPage() {
 
       {showForm && (
         <div className="cf-overlay" onClick={() => closeForm()}>
-          <div className="cf-box" onClick={(e) => e.stopPropagation()}>
+          <div className="cf-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={editingClient ? 'Editar cliente' : 'Nuevo cliente'}>
             <ClientForm
               onSubmit={editingClient ? handleUpdateClient : handleAddClient}
               initialData={editingClient}

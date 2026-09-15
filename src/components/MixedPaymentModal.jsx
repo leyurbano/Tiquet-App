@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./MixedPaymentModal.css";
 import { formatCOP } from "../utils/currencyFormatter";
+import { useDialogo } from "../hooks/useDialogo";
 
 /**
  * Modal para registrar un pago mixto (ej. parte en efectivo, parte en transferencia).
@@ -58,18 +59,12 @@ function MixedPaymentModal({ total, mediosPago, onConfirm, onClose }) {
     onConfirm(pagos);
   };
 
-  // Cerrar con Escape
-  useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
+  // Escape, foco y Tab dentro de la ventana
+  const refDialogo = useDialogo({ onCerrar: onClose });
 
   return (
     <div className="mpm-overlay" onClick={onClose}>
-      <div className="mpm-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="mpm-modal" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Pago mixto">
         <div className="mpm-header">
           <h3 className="mpm-title">💳 Pago Mixto</h3>
           <button

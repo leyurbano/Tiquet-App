@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { perfilService } from '../services/perfilService'
+import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
 import './CambiarContrasenaModal.css'
 
@@ -23,6 +24,8 @@ function CambiarContrasenaModal({ obligatorio = false, onCerrar }) {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [listo, setListo] = useState(false)
+  // Obligatorio: no se descarta. Tampoco mientras guarda
+  const refDialogo = useDialogo({ onCerrar: obligatorio || guardando ? null : (onCerrar || null) })
 
   const guardar = async (e) => {
     e.preventDefault()
@@ -46,7 +49,7 @@ function CambiarContrasenaModal({ obligatorio = false, onCerrar }) {
 
   return (
     <div className="caja-overlay">
-      <div className="caja-box" role="dialog" aria-modal="true" aria-labelledby="pwd-titulo">
+      <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" aria-labelledby="pwd-titulo" tabIndex={-1}>
         <h2 id="pwd-titulo" className="caja-title">🔑 {obligatorio ? 'Crea tu contraseña' : 'Cambiar contraseña'}</h2>
         <p className="caja-subtitle">
           {obligatorio

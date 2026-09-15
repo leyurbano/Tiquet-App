@@ -7,6 +7,7 @@ import "./ProductsPage.css";
 import { PlusCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { negocioService } from "../services/negocioService";
+import { useDialogo } from "../hooks/useDialogo";
 
 function ProductsPage() {
   // La RLS es quien realmente lo impide; esto evita mostrar acciones que fallarían
@@ -84,23 +85,9 @@ function ProductsPage() {
     setFormSucio(false);
   }, [formSucio]);
 
-  useEffect(() => {
-    if (!showForm) return;
-
-    document.body.style.overflow = "hidden";
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") closeForm();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-    // closeForm va en las dependencias: sin eso, el manejador de Escape se
-    // quedaría con la primera versión y saltaría la confirmación de cambios
-    // sin guardar. useCallback hace que solo cambie cuando cambia formSucio
-  }, [showForm, closeForm]);
+  // Escape (con la confirmación de cambios sin guardar), foco, Tab y scroll.
+  // El hook siempre usa la versión más reciente de closeForm
+  const refDialogo = useDialogo({ onCerrar: () => closeForm(), activo: showForm });
 
   const handleEdit = (product) => {
     setEditingProduct(product);
@@ -136,7 +123,7 @@ function ProductsPage() {
 
       {showForm && (
         <div className="pf-overlay" onClick={() => closeForm()}>
-          <div className="pf-box" onClick={(e) => e.stopPropagation()}>
+          <div className="pf-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={editingProduct ? "Editar producto" : "Nuevo producto"}>
             <ProductForm
               initialData={editingProduct}
               onSubmit={handleSubmit}

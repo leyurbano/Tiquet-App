@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
 
 // Por qué un usuario autenticado no puede operar. Viene de la función
@@ -36,10 +37,12 @@ const MENSAJES = {
 function CuentaBloqueada() {
   const { estadoCuenta, logout } = useAuth()
   const m = MENSAJES[estadoCuenta] || MENSAJES.sin_perfil
+  // No se descarta: la única salida es cerrar sesión
+  const refDialogo = useDialogo()
 
   return (
     <div className="caja-overlay">
-      <div className="caja-box" role="alertdialog" aria-labelledby="bloqueo-titulo">
+      <div className="caja-box" ref={refDialogo} role="alertdialog" aria-modal="true" aria-labelledby="bloqueo-titulo" tabIndex={-1}>
         <h2 id="bloqueo-titulo" className="caja-title">🔒 {m.titulo}</h2>
         <p className="caja-subtitle">{m.texto}</p>
         <div className="caja-buttons">

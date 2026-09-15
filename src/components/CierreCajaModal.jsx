@@ -14,6 +14,7 @@ import { etiquetaMotivo } from '../utils/motivosAnulacion'
 import { etiquetaMotivoDevolucion } from '../utils/motivosDevolucion'
 import { devolucionService } from '../services/devolucionService'
 import { fiadoService } from '../services/fiadoService'
+import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
 import { AlertTriangle } from 'lucide-react'
 
@@ -41,6 +42,8 @@ function CierreCajaModal({ onCancel, onDone }) {
   const [confirmados, setConfirmados] = useState({})
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState('')
+  // Escape = "Seguir trabajando"; nunca mientras se registra el cierre
+  const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   useEffect(() => {
     if (!session) return
@@ -214,7 +217,7 @@ function CierreCajaModal({ onCancel, onDone }) {
 
   return (
     <div className="caja-overlay">
-      <div className="caja-box">
+      <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Cierre de caja">
         <h2 className="caja-title">🧾 Cierre de caja</h2>
         <p className="caja-subtitle">
           {session

@@ -1,0 +1,13 @@
+/* Foco visible dentro de las ventanas: quien navega con el teclado tiene
+   que ver dónde está. Solo con teclado (focus-visible), no al hacer clic. */
+[role="dialog"] :focus-visible,
+[role="alertdialog"] :focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* La ventana misma recibe el foco cuando no tiene controles: sin borde */
+[role="dialog"]:focus,
+[role="alertdialog"]:focus {
+  outline: none;
+}

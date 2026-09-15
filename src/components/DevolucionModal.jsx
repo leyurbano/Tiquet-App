@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { devolucionService } from '../services/devolucionService'
 import { MOTIVOS_DEVOLUCION } from '../utils/motivosDevolucion'
 import { formatCOP } from '../utils/currencyFormatter'
+import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
 import './DevolucionModal.css'
 
@@ -26,6 +27,8 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
   const [nota, setNota] = useState('')
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState('')
+  // Mientras guarda no se cierra: el resultado quedaría sin mostrarse
+  const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   useEffect(() => {
     devolucionService.getDevueltoPorLinea(sale.id).then((resultado) => {
@@ -97,7 +100,7 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
 
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
-      <div className="caja-box dev-box" onClick={(e) => e.stopPropagation()}>
+      <div className="caja-box dev-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Devolución de la venta ${sale.id}`}>
         <h2 className="caja-title">Devolución · venta #{sale.id}</h2>
         <p className="caja-subtitle">
           {clientName} · {formatCOP(sale.total || 0)}
