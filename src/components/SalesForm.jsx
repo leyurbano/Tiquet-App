@@ -6,6 +6,8 @@ import { clientService } from "../services/clientService";
 import { getTodayColombia } from "../utils/dateFormatter";
 import MixedPaymentModal from "./MixedPaymentModal";
 import { salesService } from "../services/salesService";
+import { fiadoService } from "../services/fiadoService";
+import { esConsumidorFinal } from "../utils/clientes";
 
 function SalesForm({
   products,
@@ -28,6 +30,8 @@ function SalesForm({
   const [showMixedModal, setShowMixedModal] = useState(false);
   const [pagosMixtos, setPagosMixtos] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Deuda de fiado del cliente elegido (para avisar si se pasa del cupo)
+  const [saldoInfo, setSaldoInfo] = useState({ clienteId: null, saldo: null });
 
   useEffect(() => {
     const cargarMediosPago = async () => {
@@ -172,6 +176,34 @@ function SalesForm({
     );
   };
 
+  // ---- Fiado: la base de datos exige cliente identificado y cupo; aquí
+  // solo se avisa antes de intentarlo ----
+  const medioFiado = mediosPago.find((m) => m.es_fiado);
+  const montoFiado = !medioFiado
+    ? 0
+    : pagosMixtos
+      ? pagosMixtos
+          .filter((p) => p.medio_pago_id === medioFiado.id)
+          .reduce((s, p) => s + (Number(p.monto) || 0), 0)
+      : paymentMethod === medioFiado.id
+        ? calculateTotal()
+        : 0;
+  const hayFiado = montoFiado > 0;
+  const clienteFiable = !!customerFound && !esConsumidorFinal(customerFound);
+  const clienteIdFiado = hayFiado && clienteFiable ? customerFound.id : null;
+
+  useEffect(() => {
+    if (!clienteIdFiado) return;
+    fiadoService.getSaldo(clienteIdFiado).then((saldo) =>
+      setSaldoInfo({ clienteId: clienteIdFiado, saldo })
+    );
+  }, [clienteIdFiado]);
+
+  const saldoCliente = saldoInfo.clienteId === clienteIdFiado ? saldoInfo.saldo : null;
+  const cupoCliente = Number(customerFound?.cupo_fiado) || 0;
+  const disponibleFiado = Math.max(cupoCliente - (saldoCliente || 0), 0);
+  const superaCupo = clienteIdFiado !== null && saldoCliente !== null && montoFiado > disponibleFiado;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -196,6 +228,11 @@ function SalesForm({
 
     if (!paymentMethod && !pagosMixtos) {
       toast.aviso("Selecciona una forma de pago");
+      return;
+    }
+
+    if (hayFiado && !clienteFiable) {
+      toast.aviso("Para vender fiado, busca o registra al cliente con su documento");
       return;
     }
 
@@ -469,6 +506,27 @@ function SalesForm({
           </p>
         )}
       </div>
+
+      {hayFiado && (
+        <div className={`sf-fiado-info ${!clienteFiable || superaCupo ? "sf-fiado-alerta" : ""}`}>
+          {!clienteFiable ? (
+            "Para vender fiado, busca o registra al cliente con su documento. A Consumidor final no se le puede fiar."
+          ) : saldoCliente === null ? (
+            "Consultando el cupo del cliente..."
+          ) : (
+            <>
+              Fiado: <strong>{formatCOP(montoFiado)}</strong> · Cupo {formatCOP(cupoCliente)} ·
+              Debe {formatCOP(saldoCliente)} · Disponible <strong>{formatCOP(disponibleFiado)}</strong>
+              {superaCupo && (
+                <>
+                  <br />
+                  Supera el cupo: la venta será rechazada. Un administrador puede subirle el cupo en Clientes.
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {showMixedModal && (
         <MixedPaymentModal

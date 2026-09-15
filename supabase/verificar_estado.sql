@@ -42,7 +42,11 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('24_importar_productos',   'registrar_entrada: agotados y tope 2.000', 'funcion_contiene', 'registrar_entrada|Máximo 2.000'),
   ('25_devoluciones',         'tabla devoluciones',              'tabla',    'devoluciones'),
   ('25_devoluciones',         'función registrar_devolucion()',  'funcion',  'registrar_devolucion'),
-  ('25_devoluciones',         'negocios.devoluciones_vendedor',  'columna',  'negocios.devoluciones_vendedor')
+  ('25_devoluciones',         'negocios.devoluciones_vendedor',  'columna',  'negocios.devoluciones_vendedor'),
+  ('26_fiado',                'tabla abonos',                    'tabla',    'abonos'),
+  ('26_fiado',                'clientes.cupo_fiado',             'columna',  'clientes.cupo_fiado'),
+  ('26_fiado',                'función registrar_abono()',       'funcion',  'registrar_abono'),
+  ('26_fiado',                'registrar_venta controla el cupo', 'funcion_contiene', 'registrar_venta|cupo de fiado')
 )
 select
   migracion,

@@ -1,5 +1,10 @@
 import { supabase } from './supabaseClient'
 
+// El cupo de fiado solo se envía si el formulario lo trae (administradores,
+// con la migración 26 aplicada). La base de datos igual lo protege.
+const conCupo = (client, fila) =>
+  client.cupo_fiado === undefined ? fila : { ...fila, cupo_fiado: client.cupo_fiado }
+
 export const clientService = {
   // Obtener todos los clientes
   async getAllClients() {
@@ -39,11 +44,11 @@ export const clientService = {
     try {
       const { data, error } = await supabase
         .from('clientes')
-        .insert([{
+        .insert([conCupo(client, {
           documento: client.documento,
           nombre: client.nombre,
           telefono: client.telefono
-        }])
+        })])
         .select()
       
       if (error) throw error
@@ -59,11 +64,11 @@ export const clientService = {
     try {
       const { data, error } = await supabase
         .from('clientes')
-        .update({
+        .update(conCupo(client, {
           documento: client.documento,
           nombre: client.nombre,
           telefono: client.telefono
-        })
+        }))
         .eq('id', id)
         .select()
       

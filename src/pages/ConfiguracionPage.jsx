@@ -99,6 +99,9 @@ function ConfiguracionPage() {
       cambios.devolucion_max_vendedor = Number(form.devolucion_max_vendedor) || 0
       cambios.devolucion_dias_vendedor = Number(form.devolucion_dias_vendedor) || 0
     }
+    if ('fiado_vendedor' in negocio) {
+      cambios.fiado_vendedor = form.fiado_vendedor ?? true
+    }
 
     const actualizado = await negocioService.updateNegocio(negocio.id, cambios)
 
@@ -275,6 +278,25 @@ function ConfiguracionPage() {
               <p className="config-ayuda">
                 Por encima de estos límites, la devolución la hace un administrador. Lo que
                 devuelve un vendedor siempre vuelve al inventario, y necesita tener la caja abierta.
+              </p>
+            </div>
+          )}
+
+          {'fiado_vendedor' in negocio && (
+            <div className="config-field">
+              <label className="config-label">Fiado</label>
+              <label className="config-check">
+                <input
+                  type="checkbox"
+                  checked={form.fiado_vendedor ?? true}
+                  onChange={(e) => cambiar('fiado_vendedor', e.target.checked)}
+                  disabled={!puedeEditar || guardando}
+                />
+                <span>Los vendedores pueden vender fiado</span>
+              </label>
+              <p className="config-ayuda">
+                Siempre dentro del cupo de cada cliente, que asigna un administrador en
+                Clientes. Un cliente nuevo empieza con cupo $0: no se le fía hasta asignárselo.
               </p>
             </div>
           )}

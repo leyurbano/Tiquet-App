@@ -1,15 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import ClientForm from '../components/ClientForm'
 import ClientList from '../components/ClientList'
+import AbonoModal from '../components/AbonoModal'
+import HistorialFiadoModal from '../components/HistorialFiadoModal'
 import { clientService } from '../services/clientService'
+import { fiadoService } from '../services/fiadoService'
+import { toast } from '../utils/toast'
+import { formatCOP } from '../utils/currencyFormatter'
 import './ClientsPage.css'
 import { PlusCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 function ClientsPage() {
-  // Borrar clientes es solo de administradores (la RLS lo exige igual)
+  // Borrar clientes y asignar cupo de fiado es solo de administradores
+  // (la base de datos lo exige igual)
   const { esAdministrador } = useAuth()
   const [clients, setClients] = useState([])
+  // Saldo de fiado por cliente; null = el fiado no está instalado
+  const [saldos, setSaldos] = useState(null)
   // Resultado de la última acción, visible en pantalla en vez de un alert
   const [mensaje, setMensaje] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -17,6 +25,10 @@ function ClientsPage() {
   const [showForm, setShowForm] = useState(false)
   // Hay cambios escritos sin guardar en el modal
   const [formSucio, setFormSucio] = useState(false)
+  const [abonando, setAbonando] = useState(null) // { cliente, saldo }
+  const [historial, setHistorial] = useState(null) // cliente
+
+  const fiadoActivo = saldos !== null
 
   useEffect(() => {
     loadClients()
@@ -24,10 +36,16 @@ function ClientsPage() {
 
   const loadClients = async () => {
     setLoading(true)
-    const data = await clientService.getAllClients()
+    const [data, saldosData] = await Promise.all([
+      clientService.getAllClients(),
+      fiadoService.getSaldos()
+    ])
     setClients(data)
+    setSaldos(saldosData)
     setLoading(false)
   }
+
+  const recargarSaldos = async () => setSaldos(await fiadoService.getSaldos())
 
   const closeForm = useCallback(({ forzar = false } = {}) => {
     // Un clic en el fondo o un Escape no deberían borrar lo escrito sin avisar
@@ -120,6 +138,9 @@ function ClientsPage() {
             onEdit={handleEdit}
             onDelete={esAdministrador ? handleDeleteClient : null}
             loading={loading}
+            saldos={saldos}
+            onAbono={(cliente, saldo) => setAbonando({ cliente, saldo })}
+            onHistorial={setHistorial}
           />
         </div>
       </div>
@@ -132,9 +153,28 @@ function ClientsPage() {
               initialData={editingClient}
               onCancel={() => closeForm()}
               onDirtyChange={setFormSucio}
+              mostrarCupo={fiadoActivo}
+              puedeEditarCupo={fiadoActivo && esAdministrador}
             />
           </div>
         </div>
+      )}
+
+      {abonando && (
+        <AbonoModal
+          cliente={abonando.cliente}
+          saldo={abonando.saldo}
+          onCancel={() => setAbonando(null)}
+          onDone={async (abono) => {
+            setAbonando(null)
+            toast.exito(`Abono registrado. ${abonando.cliente.nombre} queda debiendo ${formatCOP(abono.saldo)}`)
+            await recargarSaldos()
+          }}
+        />
+      )}
+
+      {historial && (
+        <HistorialFiadoModal cliente={historial} onClose={() => setHistorial(null)} />
       )}
     </div>
   )

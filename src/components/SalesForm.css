@@ -608,3 +608,18 @@
   margin-bottom: 8px;
   animation: fadeIn 0.3s ease;
 }
+/* ---- Fiado ---- */
+.sf-fiado-info {
+  margin: 0.5rem 0 1rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.sf-fiado-info.sf-fiado-alerta {
+  background: #fef2f2;
+  color: #991b1b;
+}

@@ -12,6 +12,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { devolucionService } from '../services/devolucionService'
 import { perfilService } from '../services/perfilService'
 import { etiquetaMotivoDevolucion } from '../utils/motivosDevolucion'
+import { fiadoService } from '../services/fiadoService'
+import { clientService } from '../services/clientService'
 import dayjs from 'dayjs'
 import './CierreCajaPage.css'
 import { Wallet, TrendingUp, Receipt, AlertTriangle, Percent, Package } from 'lucide-react'
@@ -41,6 +43,10 @@ function CierreCajaPage() {
   const [devoluciones, setDevoluciones] = useState([])
   // Para mostrar quién hizo cada devolución
   const [usuarios, setUsuarios] = useState([])
+  const [abonos, setAbonos] = useState([])
+  // Cuentas por cobrar: saldo de fiado de cada cliente (no depende del período)
+  const [saldos, setSaldos] = useState(null)
+  const [clientes, setClientes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -52,6 +58,8 @@ function CierreCajaPage() {
     if (!esAdministrador) return
     salesService.getMediosPago().then(setMediosPago)
     perfilService.getPerfiles().then(setUsuarios)
+    fiadoService.getSaldos().then(setSaldos)
+    clientService.getAllClients().then(setClientes)
   }, [esAdministrador])
 
   useEffect(() => {
@@ -65,10 +73,11 @@ function CierreCajaPage() {
     const inicio = dayjs.tz(`${d} 00:00:00`, 'America/Bogota').toISOString()
     const fin = dayjs.tz(`${h} 23:59:59`, 'America/Bogota').toISOString()
 
-    const [datos, canceladas, devs] = await Promise.all([
+    const [datos, canceladas, devs, abs] = await Promise.all([
       salesService.getSalesForReport(d, h),
       salesService.getAnnulledSales(inicio, fin),
-      devolucionService.getDevolucionesPeriodo(inicio, fin)
+      devolucionService.getDevolucionesPeriodo(inicio, fin),
+      fiadoService.getAbonosPeriodo(inicio, fin)
     ])
 
     // null = la consulta falló; distinto de [] , que es "no hubo ventas".
@@ -82,6 +91,7 @@ function CierreCajaPage() {
       setDevoluciones(devs)
     }
     setAnuladas(canceladas)
+    setAbonos(abs || [])
     setLoading(false)
   }
 
@@ -100,6 +110,20 @@ function CierreCajaPage() {
   const caja = useMemo(() => buildCashSummary(ventas, mediosPago), [ventas, mediosPago])
   const rep = useMemo(() => buildReportSummary(ventas, devoluciones), [ventas, devoluciones])
   const nombreUsuario = (id) => usuarios.find((u) => u.id === id)?.nombre || 'Usuario'
+
+  const porCobrar = useMemo(() => {
+    if (!saldos) return null
+    const conDeuda = Object.values(saldos)
+      .filter((s) => s.saldo > 0)
+      .map((s) => ({
+        ...s,
+        nombre: clientes.find((c) => c.id === s.cliente_id)?.nombre || `Cliente #${s.cliente_id}`
+      }))
+      .sort((a, b) => b.saldo - a.saldo)
+    return { total: conDeuda.reduce((t, s) => t + s.saldo, 0), clientes: conDeuda }
+  }, [saldos, clientes])
+
+  const totalAbonos = abonos.reduce((s, a) => s + (Number(a.monto) || 0), 0)
 
   const hayVentas = !loading && !error && ventas.length > 0
   const sufijoArchivo = () => (desde === hasta ? desde : `${desde}_a_${hasta}`)
@@ -201,7 +225,7 @@ function CierreCajaPage() {
             inténtalo de nuevo.
           </span>
         </div>
-      ) : rep.cantidadVentas === 0 && anuladas.length === 0 && devoluciones.length === 0 ? (
+      ) : rep.cantidadVentas === 0 && anuladas.length === 0 && devoluciones.length === 0 && abonos.length === 0 ? (
         <p className="cierre-empty">📭 No hay ventas registradas {etiquetaRango()}</p>
       ) : (
         <>
@@ -357,6 +381,32 @@ function CierreCajaPage() {
             )}
           </div>
 
+          {/* ---------- Abonos de fiado ---------- */}
+          {abonos.length > 0 && (
+            <div className="cierre-card">
+              <h2 className="cierre-card-title">Abonos de fiado ({abonos.length})</h2>
+              <p className="cierre-hint">
+                Pagos de deudas anteriores. No son ventas nuevas: no suman al vendido ni a la ganancia.
+              </p>
+              <table className="cierre-table">
+                <tbody>
+                  {abonos.map((a) => (
+                    <tr key={a.id}>
+                      <td className="cierre-medio">Abono #{a.id} · {a.clientes?.nombre || 'Cliente'}</td>
+                      <td className="cierre-medio-count">{a.medios_pago?.pago || 'Sin medio'}</td>
+                      <td className="cierre-medio-total">{formatCOP(a.monto)}</td>
+                    </tr>
+                  ))}
+                  <tr className="fila-total">
+                    <td className="cierre-medio">Total abonado</td>
+                    <td className="cierre-medio-count" />
+                    <td className="cierre-medio-total">{formatCOP(totalAbonos)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {/* ---------- Devoluciones ---------- */}
           {devoluciones.length > 0 && (
             <div className="cierre-card">
@@ -408,6 +458,31 @@ function CierreCajaPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* ---------- Cuentas por cobrar (no depende del período) ---------- */}
+      {porCobrar && porCobrar.total > 0 && (
+        <div className="cierre-card">
+          <h2 className="cierre-card-title">Cuentas por cobrar: {formatCOP(porCobrar.total)}</h2>
+          <p className="cierre-hint">
+            Lo que te deben hoy por ventas fiadas, sin importar el período elegido.
+          </p>
+          <table className="cierre-table">
+            <tbody>
+              {porCobrar.clientes.slice(0, 10).map((c) => (
+                <tr key={c.cliente_id}>
+                  <td className="cierre-medio">{c.nombre}</td>
+                  <td className="cierre-medio-total">{formatCOP(c.saldo)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {porCobrar.clientes.length > 10 && (
+            <p className="cierre-hint">
+              Mostrando los 10 que más deben, de {porCobrar.clientes.length}.
+            </p>
+          )}
+        </div>
       )}
     </div>
   )

@@ -35,6 +35,7 @@ archivo completo → Run.
 | 23 | `23_crear_productos.sql` | Productos nuevos desde una entrada o con stock inicial, siempre registrados como entrada; rechaza nombres repetidos. |
 | 24 | `24_importar_productos.sql` | Importación desde Excel: `registrar_entrada` acepta productos nuevos con cantidad 0 (agotados) y máximo 2.000 líneas. |
 | 25 | `25_devoluciones.sql` | Devoluciones parciales (`registrar_devolucion`), límites para vendedores en `negocios`, y `anular_venta` bloqueada si la venta tiene devoluciones. |
+| 26 | `26_fiado.sql` | Fiado: medio de pago `Fiado`, cupo por cliente, abonos (`registrar_abono`), saldo calculado (`saldo_fiado`, `saldos_fiado`), y control de cupo en `registrar_venta`. |
 
 ## Lo que todavía no está aquí
 

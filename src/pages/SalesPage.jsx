@@ -6,6 +6,7 @@ import { salesService } from '../services/salesService'
 import { negocioService } from '../services/negocioService'
 import { buildReceiptHTML } from '../utils/receipt'
 import { formatCOP } from '../utils/currencyFormatter'
+import { fiadoService } from '../services/fiadoService'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
 import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
@@ -113,12 +114,21 @@ function SalesPage() {
           monto: p.monto
         }))
 
+        // Si hubo fiado, el tiquete muestra cuánto queda debiendo el cliente
+        const huboFiado = (saleData.pagos || []).some(
+          p => mediosPago.find(m => m.id === p.medio_pago_id)?.es_fiado
+        )
+        const saldoFiado = huboFiado && saleData.cliente_id
+          ? await fiadoService.getSaldo(saleData.cliente_id)
+          : null
+
         setLastSale({
           id: newSale.id,
           fecha: newSale.fecha,
           total: saleData.total,
           items: itemsWithProductInfo,
           pagos: pagosConNombre, // 🆕 NUEVO: desglose de pagos para el recibo impreso
+          saldoFiado,
           customer: {
             name: saleData.customer_name || 'N/A',
             cedula: saleData.customer_cedula || 'N/A',
@@ -309,7 +319,8 @@ function SalesPage() {
       venta: { id: lastSale.id, fechaStr, total },
       cliente: { nombre: clienteName, documento: clienteCedula, telefono: clientePhone },
       items,
-      pagos: lastSale.pagos || []
+      pagos: lastSale.pagos || [],
+      saldoFiado: lastSale.saldoFiado ?? null
     })
 
     try {
