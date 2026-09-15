@@ -1,217 +1,425 @@
 /* ============================================
-   NAVBAR BASE (desktop)
+   BARRA DE NAVEGACIÓN — clases con prefijo nb-
+   Los CSS de la app son globales: nombres genéricos (.logo-title,
+   .nav-button) chocaban con los de otras pantallas y el título dejaba
+   de verse. Todo lo de la barra vive bajo .nb.
    ============================================ */
 
-.navbar {
+.nb {
+  --nb-azul: #2563eb;
+  --nb-azul-suave: #eff6ff;
+  --nb-texto: #111827;
+  --nb-texto-2: #4b5563;
+  --nb-borde: #e5e7eb;
+
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to right, #2563eb, #1e40af);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   z-index: 50;
+  background: #fff;
+  border-bottom: 1px solid var(--nb-borde);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
-.navbar-container {
+.nb-contenedor {
   max-width: 80rem;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
 
-.navbar-content {
+.nb-fila {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 4.5rem;
+  gap: 1.5rem;
+  height: 4rem;
 }
 
-/* Logo */
-.navbar-logo {
+.nb button {
+  font-family: inherit;
+}
+
+/* Foco visible con teclado */
+.nb button:focus-visible {
+  outline: 2px solid var(--nb-azul);
+  outline-offset: 2px;
+}
+
+/* ---- Marca (lleva a Ventas) ---- */
+.nb-marca {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.nb-marca-icono {
+  width: 2rem;
+  height: 2rem;
+  display: block;
+}
+
+.nb-marca-texto {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--nb-texto);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* ---- Secciones ---- */
+.nb-secciones {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.nb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.85rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--nb-texto-2);
+  font-size: 0.92rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.nb-link:hover {
+  background: #f3f4f6;
+  color: var(--nb-texto);
+}
+
+.nb-link-activo,
+.nb-link-activo:hover {
+  background: var(--nb-azul-suave);
+  color: var(--nb-azul);
+  font-weight: 600;
+}
+
+/* ---- Grupos desplegables ---- */
+.nb-grupo { position: relative; }
+
+.nb-grupo-btn svg { transition: transform 0.2s; }
+.nb-grupo-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+/* Título de sección: solo en el menú hamburguesa */
+.nb-grupo-titulo { display: none; }
+
+.nb-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  min-width: 12rem;
+  padding: 0.35rem;
+  background: #fff;
+  border: 1px solid var(--nb-borde);
+  border-radius: 0.6rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+  z-index: 60;
+}
+
+.nb-menu-abierto { display: block; }
+
+.nb-menu-derecha {
+  left: auto;
+  right: 0;
+  min-width: 16rem;
+}
+
+.nb-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: none;
+  color: #1f2937;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nb-menu-item svg { color: #6b7280; flex-shrink: 0; }
+
+.nb-menu-item:hover,
+.nb-menu-item:focus-visible {
+  background: #f3f4f6;
+}
+
+.nb-menu-item-activo,
+.nb-menu-item-activo:hover {
+  background: var(--nb-azul-suave);
+  color: var(--nb-azul);
+  font-weight: 600;
+}
+
+.nb-menu-salir { color: #b91c1c; }
+.nb-menu-salir svg { color: #b91c1c; }
+.nb-menu-salir:hover,
+.nb-menu-salir:focus-visible { background: #fef2f2; }
+
+/* ---- Cuenta ---- */
+.nb-cuenta {
+  position: relative;
   flex-shrink: 0;
 }
 
-.logo-title {
-  font-size: 1.75rem; /* 🔧 reducido de 2.9rem — era demasiado grande en móvil */
-  font-weight: 700;
-  color: white;
-  margin: 0;
-  white-space: nowrap;
-}
-
-/* Links en desktop */
-.navbar-links {
+.nb-cuenta-btn {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-/* Botones de navegación */
-.nav-button {
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  border: none;
+  gap: 0.6rem;
+  max-width: 17rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.25rem;
+  background: #fff;
+  border: 1px solid var(--nb-borde);
+  border-radius: 999px;
+  color: var(--nb-texto);
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.95rem;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.nb-cuenta-btn:hover,
+.nb-cuenta-btn[aria-expanded="true"] {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.nb-cuenta-flecha { color: #6b7280; flex-shrink: 0; }
+
+.nb-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: var(--nb-azul);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Estado de la caja: gris sin caja, verde con caja abierta */
+.nb-caja-punto {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #9ca3af;
+  border: 2px solid #fff;
+}
+
+.nb-caja-abierta .nb-caja-punto { background: #22c55e; }
+
+.nb-cuenta-textos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.nb-cuenta-nombre,
+.nb-cuenta-rol {
+  max-width: 11rem;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.nav-active {
-  background-color: white;
-  color: #2563eb;
+.nb-cuenta-nombre { font-size: 0.85rem; font-weight: 600; color: var(--nb-texto); }
+.nb-cuenta-rol { font-size: 0.72rem; color: #6b7280; }
+
+.nb-cuenta-info {
+  padding: 0.6rem 0.75rem 0.7rem;
+  margin-bottom: 0.3rem;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.nav-inactive {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: white;
+.nb-cuenta-info strong {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--nb-texto);
 }
 
-.nav-inactive:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+.nb-cuenta-info span {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+  overflow-wrap: anywhere;
 }
 
-.logout-btn {
-  background-color: #dc3545;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  border: none;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
-  white-space: nowrap;
+.nb .nb-estado-caja {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
 }
 
-.logout-btn:hover {
-  background-color: #c82333;
+.nb-estado-caja::before {
+  content: '';
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #9ca3af;
 }
 
-.logout-btn:active {
-  transform: scale(0.98);
-}
+.nb .nb-estado-caja.abierta { color: #15803d; }
+.nb-estado-caja.abierta::before { background: #22c55e; }
 
-/* ============================================
-   HAMBURGUESA — oculta en desktop
-   ============================================ */
+/* Bloques que solo existen en el menú hamburguesa */
+.nb-movil-usuario,
+.nb-movil-cuenta { display: none; }
 
-.navbar-hamburger {
-  display: none; /* oculto en desktop */
+/* ---- Hamburguesa (oculta en pantallas grandes) ---- */
+.nb-hamburguesa {
+  display: none;
   flex-direction: column;
   justify-content: center;
   gap: 5px;
+  margin-left: auto;
+  padding: 0.55rem;
   background: transparent;
   border: none;
+  border-radius: 0.5rem;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  transition: background 0.2s;
 }
 
-.navbar-hamburger:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
+.nb-hamburguesa:hover { background: #f3f4f6; }
 
-.hamburger-line {
+.nb-linea {
   display: block;
-  width: 24px;
+  width: 22px;
   height: 2px;
-  background-color: white;
+  background: var(--nb-texto);
   border-radius: 2px;
   transition: transform 0.25s ease, opacity 0.25s ease;
   transform-origin: center;
 }
 
-/* Animación X cuando está abierto */
-.line-top-open {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.line-mid-open {
-  opacity: 0;
-  transform: scaleX(0);
-}
-
-.line-bot-open {
-  transform: translateY(-7px) rotate(-45deg);
-}
+.nb-linea-1 { transform: translateY(7px) rotate(45deg); }
+.nb-linea-2 { opacity: 0; transform: scaleX(0); }
+.nb-linea-3 { transform: translateY(-7px) rotate(-45deg); }
 
 /* ============================================
-   RESPONSIVE — tablet y móvil
+   PANTALLAS CHICAS (tablets y celulares)
+   El menú hamburguesa aparece bajo 1024 px: con todas las secciones en
+   línea, entre 769 y ~1300 px los botones se desbordaban.
    ============================================ */
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .nb-contenedor { padding: 0 1rem; }
 
-  .navbar-container {
-    padding: 0 1rem;
-  }
+  .nb-secciones,
+  .nb-cuenta { display: none; }
 
-  .navbar-content {
-    height: 4rem;
-  }
+  .nb-hamburguesa { display: flex; }
 
-  .logo-title {
-    font-size: 1.4rem;
-  }
-
-  /* Ocultar links y mostrar hamburguesa */
-  .navbar-links {
-    display: none; /* ocultos por defecto en móvil */
-  }
-
-  .navbar-hamburger {
-    display: flex; /* visible en móvil */
-  }
-
-  /* Menú desplegable cuando está abierto */
-  .navbar-links-open {
+  .nb-secciones.nb-secciones-abierto {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
-
-    /* Se posiciona debajo del navbar */
+    gap: 0.2rem;
     position: absolute;
-    top: 4rem; /* misma altura que .navbar-content */
+    top: 4rem;
     left: 0;
     right: 0;
-    background: linear-gradient(to bottom, #1e40af, #1e3a8a);
-    padding: 1rem;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 49;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    padding: 0.75rem 1rem 1rem;
+    background: #fff;
+    border-bottom: 1px solid var(--nb-borde);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
   }
 
-  .navbar-links-open .nav-button {
+  .nb-secciones-abierto .nb-link,
+  .nb-secciones-abierto .nb-menu-item {
     width: 100%;
-    text-align: left;
-    padding: 0.75rem 1rem;
+    justify-content: flex-start;
+    padding: 0.75rem 0.85rem;
     font-size: 1rem;
-    border-radius: 0.5rem;
   }
 
-  .navbar-links-open .nav-active {
-    background-color: white;
-    color: #2563eb;
+  /* Los grupos se muestran abiertos, con su título de sección */
+  .nb-secciones-abierto .nb-grupo-btn { display: none; }
+
+  .nb-secciones-abierto .nb-grupo-titulo {
+    display: block;
+    padding: 0.75rem 0.85rem 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9ca3af;
   }
 
-  .navbar-links-open .nav-inactive {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+  .nb-secciones-abierto .nb-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    position: static;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    box-shadow: none;
   }
 
-  .navbar-links-open .logout-btn {
-    width: 100%;
-    text-align: left;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    background-color: #dc3545;
-    color: white;
+  .nb-secciones-abierto .nb-movil-usuario {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem 0.25rem 0.9rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid var(--nb-borde);
+  }
+
+  .nb-movil-usuario .nb-avatar { width: 2.6rem; height: 2.6rem; font-size: 0.95rem; }
+
+  .nb-movil-textos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .nb-movil-textos strong { font-size: 1rem; color: var(--nb-texto); }
+  .nb-movil-textos > span { font-size: 0.82rem; color: #6b7280; }
+
+  .nb-secciones-abierto .nb-movil-cuenta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-top: 0.6rem;
+    margin-top: 0.35rem;
+    border-top: 1px solid var(--nb-borde);
   }
 }
 
 @media (max-width: 400px) {
-  .logo-title {
-    font-size: 1.2rem;
-  }
+  .nb-marca-texto { font-size: 1.05rem; }
 }
