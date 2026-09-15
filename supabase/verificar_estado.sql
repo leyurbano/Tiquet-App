@@ -33,7 +33,9 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('17_proteger_clientes',    'trigger consumidor final',       'trigger',  'proteger_consumidor_final'),
   ('19_cambio_contrasena',    'perfiles.debe_cambiar_contrasena', 'columna', 'perfiles.debe_cambiar_contrasena'),
   ('19_cambio_contrasena',    'función marcar_contrasena_cambiada()', 'funcion', 'marcar_contrasena_cambiada'),
-  ('20_documento_por_negocio', 'trigger consumidor final por negocio', 'trigger', 'crear_consumidor_final')
+  ('20_documento_por_negocio', 'trigger consumidor final por negocio', 'trigger', 'crear_consumidor_final'),
+  ('21_entradas_mercancia',   'tabla entradas',                  'tabla',    'entradas'),
+  ('21_entradas_mercancia',   'función registrar_entrada()',     'funcion',  'registrar_entrada')
 )
 select
   migracion,

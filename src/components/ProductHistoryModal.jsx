@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { productService } from '../services/productService'
-import { ShoppingCart, Pencil, Undo2, MapPin, X } from 'lucide-react'
+import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus } from 'lucide-react'
 import './ProductHistoryModal.css'
 
 const TIPO_CONFIG = {
   venta:        { icon: ShoppingCart, label: 'Venta',        color: '#dc2626' },
   actualizacion:{ icon: Pencil,       label: 'Act. Inv.', color: '#2563eb' },
   reversion:    { icon: Undo2,        label: 'Rev. Vta.',     color: '#16a34a' },
+  entrada:      { icon: PackagePlus,  label: 'Entrada',       color: '#0d9488' },
 }
 
 function ProductHistoryModal({ product, onClose }) {
@@ -98,7 +99,11 @@ function ProductHistoryModal({ product, onClose }) {
                         </span>
                       </td>
                       <td className="phm-td-ref">
-                        {event.venta_id ? `#${event.venta_id}` : '—'}
+                        {event.venta_id
+                          ? `Venta #${event.venta_id}`
+                          : event.entrada_id
+                            ? `Entrada #${event.entrada_id}`
+                            : '—'}
                       </td>
                     </tr>
                   )

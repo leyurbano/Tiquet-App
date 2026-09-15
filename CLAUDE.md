@@ -52,6 +52,7 @@ There is no test suite. Verify changes with `npm run lint` and `npm run build`.
 - **Register sales only through the RPC `registrar_venta`.** It is atomic, computes the total, requires payments to equal the total, locks stock rows (`FOR UPDATE`), freezes `costo_unitario`, and requires an open cash session. Never insert into `ventas`, `detalle_ventas` or `pagos_venta` from the client.
 - **Void sales with the RPC `anular_venta`** (administrators only). Sales are never deleted; voided ones keep `anulada_en` and `motivo_anulacion`.
 - Stock is decremented by the trigger `descontar_inventario` on `detalle_ventas`. The trigger `proteger_campos_producto` uses `pg_trigger_depth()`: sellers can only change stock through a sale, and can't change description, cost, price or `stock_minimo`.
+- **Stock goes up only through the RPC `registrar_entrada`** (Inventario page, administrators). It adds the units, recomputes `costo` as a weighted average, snapshots before/after in `detalle_entradas`, and logs an `entrada` event. Entries are never updated or deleted.
 - Cash sessions (`sesiones_caja`) are opened on the Sales page, not at login. Administrators may skip opening one. The closing count happens in the logout modal and covers the shift (since `abierta_en`, for that user), not the calendar day. Closed sessions are immutable.
 
 ## Database migrations
