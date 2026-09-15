@@ -15,27 +15,25 @@ function ProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
-  // Fija en 1 hasta que exista paginación real (hoy se traen 1000 de una vez)
-  const [currentPage] = useState(1);
-  const [productsPerPage] = useState(1000);
   // Hay cambios escritos sin guardar en el modal
   const [formSucio, setFormSucio] = useState(false);
   // Umbral general del negocio para las alertas de stock bajo
   const [minimoNegocio, setMinimoNegocio] = useState(0);
 
   useEffect(() => {
-    loadProducts(1);
+    loadProducts();
     negocioService.getMiNegocio().then((n) =>
       setMinimoNegocio(n?.stock_minimo_defecto ?? 0)
     );
-    // Carga única al montar: loadProducts se recrea en cada render y no cambia
-    // lo que trae, así que no va en las dependencias
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadProducts = async (page) => {
+  // 🔧 Antes se traían máximo 1.000 productos: en un negocio más grande, el
+  // resto no aparecía. Ahora llega el catálogo completo y ProductList pinta
+  // 50 por página.
+  const loadProducts = async () => {
     setLoading(true);
-    const result = await productService.getAllProducts(page, productsPerPage);
+    const result = await productService.getTodosLosProductos();
+    if (result.error) toast.error("No se pudieron cargar los productos. Recarga la página.");
     setProducts(result.data);
     setLoading(false);
   };
@@ -47,7 +45,7 @@ function ProductsPage() {
       setShowForm(false);
       setFormSucio(false);
       toast.exito("Producto creado exitosamente");
-      loadProducts(1);
+      loadProducts();
     } else {
       toast.error("No se pudo crear el producto: " + (error || "error desconocido"));
     }
@@ -67,7 +65,7 @@ function ProductsPage() {
       setShowForm(false);
       setFormSucio(false);
       toast.exito("Producto actualizado exitosamente");
-      loadProducts(currentPage);
+      loadProducts();
     } else {
       toast.error("Error al actualizar el producto");
     }

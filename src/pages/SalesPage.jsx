@@ -62,7 +62,7 @@ function SalesPage() {
   // 🔧 Antes también las pedía aquí, así que al abrir se descargaban dos veces
   const loadInitialData = async () => {
     const [productsData, clientsData, mediosPagoData, negocioData] = await Promise.all([
-      productService.getAllProducts(),
+      productService.getTodosLosProductos(),
       clientService.getAllClients(),
       salesService.getMediosPago(), // 🆕 NUEVO: se carga junto con productos y clientes
       negocioService.getMiNegocio() // 🆕 datos del negocio para el tiquete
@@ -416,7 +416,7 @@ function SalesPage() {
               // El stock cambió: el formulario de venta debe verlo
               const [, productsData] = await Promise.all([
                 loadSalesByDate(selectedDate),
-                productService.getAllProducts()
+                productService.getTodosLosProductos()
               ])
               setProducts(productsData.data || [])
             }}

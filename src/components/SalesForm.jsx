@@ -57,7 +57,9 @@ function SalesForm({
         p.name?.toLowerCase().includes(search) ||
         p.id.toString().includes(search),
     );
-    setFilteredProducts(filtered);
+    // Con miles de productos, una sola letra coincide con cientos: se
+    // muestran las primeras 30 y se sigue escribiendo para afinar
+    setFilteredProducts(filtered.slice(0, 30));
   };
 
   const selectProductFromSearch = (product) => {
