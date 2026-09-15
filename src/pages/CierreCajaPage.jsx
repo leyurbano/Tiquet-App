@@ -9,6 +9,9 @@ import { descargarCSV } from '../utils/csv'
 import { filasVentas, filasProductos } from '../utils/exportarReportes'
 import { toast } from '../utils/toast'
 import { useAuth } from '../contexts/AuthContext'
+import { devolucionService } from '../services/devolucionService'
+import { perfilService } from '../services/perfilService'
+import { etiquetaMotivoDevolucion } from '../utils/motivosDevolucion'
 import dayjs from 'dayjs'
 import './CierreCajaPage.css'
 import { Wallet, TrendingUp, Receipt, AlertTriangle, Percent, Package } from 'lucide-react'
@@ -35,6 +38,9 @@ function CierreCajaPage() {
   const [ventas, setVentas] = useState([])
   const [mediosPago, setMediosPago] = useState([])
   const [anuladas, setAnuladas] = useState([])
+  const [devoluciones, setDevoluciones] = useState([])
+  // Para mostrar quién hizo cada devolución
+  const [usuarios, setUsuarios] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -43,7 +49,9 @@ function CierreCajaPage() {
   const [rangoActivo, setRangoActivo] = useState('hoy')
 
   useEffect(() => {
-    if (esAdministrador) salesService.getMediosPago().then(setMediosPago)
+    if (!esAdministrador) return
+    salesService.getMediosPago().then(setMediosPago)
+    perfilService.getPerfiles().then(setUsuarios)
   }, [esAdministrador])
 
   useEffect(() => {
@@ -57,17 +65,21 @@ function CierreCajaPage() {
     const inicio = dayjs.tz(`${d} 00:00:00`, 'America/Bogota').toISOString()
     const fin = dayjs.tz(`${h} 23:59:59`, 'America/Bogota').toISOString()
 
-    const [datos, canceladas] = await Promise.all([
+    const [datos, canceladas, devs] = await Promise.all([
       salesService.getSalesForReport(d, h),
-      salesService.getAnnulledSales(inicio, fin)
+      salesService.getAnnulledSales(inicio, fin),
+      devolucionService.getDevolucionesPeriodo(inicio, fin)
     ])
 
-    // null = la consulta falló; distinto de [] , que es "no hubo ventas"
-    if (datos === null) {
+    // null = la consulta falló; distinto de [] , que es "no hubo ventas".
+    // Sin las devoluciones, la ganancia saldría inflada.
+    if (datos === null || devs === null) {
       setError(true)
       setVentas([])
+      setDevoluciones([])
     } else {
       setVentas(datos)
+      setDevoluciones(devs)
     }
     setAnuladas(canceladas)
     setLoading(false)
@@ -86,7 +98,8 @@ function CierreCajaPage() {
   }
 
   const caja = useMemo(() => buildCashSummary(ventas, mediosPago), [ventas, mediosPago])
-  const rep = useMemo(() => buildReportSummary(ventas), [ventas])
+  const rep = useMemo(() => buildReportSummary(ventas, devoluciones), [ventas, devoluciones])
+  const nombreUsuario = (id) => usuarios.find((u) => u.id === id)?.nombre || 'Usuario'
 
   const hayVentas = !loading && !error && ventas.length > 0
   const sufijoArchivo = () => (desde === hasta ? desde : `${desde}_a_${hasta}`)
@@ -188,7 +201,7 @@ function CierreCajaPage() {
             inténtalo de nuevo.
           </span>
         </div>
-      ) : rep.cantidadVentas === 0 && anuladas.length === 0 ? (
+      ) : rep.cantidadVentas === 0 && anuladas.length === 0 && devoluciones.length === 0 ? (
         <p className="cierre-empty">📭 No hay ventas registradas {etiquetaRango()}</p>
       ) : (
         <>
@@ -202,7 +215,10 @@ function CierreCajaPage() {
             <div className="cierre-stat">
               <TrendingUp size={18} />
               <span className="cierre-stat-label">Vendido</span>
-              <span className="cierre-stat-value">{formatCOP(rep.totalVendido)}</span>
+              <span className="cierre-stat-value">{formatCOP(rep.ingresoNeto)}</span>
+              {rep.totalDevuelto > 0 && (
+                <span className="cierre-stat-extra">descontando {formatCOP(rep.totalDevuelto)} devueltos</span>
+              )}
             </div>
             <div className="cierre-stat stat-ganancia">
               <Percent size={18} />
@@ -237,6 +253,14 @@ function CierreCajaPage() {
                   <td className="cierre-medio">Ingresos por ventas</td>
                   <td className="cierre-medio-total">{formatCOP(rep.totalVendido)}</td>
                 </tr>
+                {rep.totalDevuelto > 0 && (
+                  <tr>
+                    <td className="cierre-medio">Devoluciones ({rep.cantidadDevoluciones})</td>
+                    <td className="cierre-medio-total cierre-anulada-monto">
+                      −{formatCOP(rep.totalDevuelto)}
+                    </td>
+                  </tr>
+                )}
                 <tr>
                   <td className="cierre-medio">Costo de lo vendido</td>
                   <td className="cierre-medio-total cierre-anulada-monto">
@@ -332,6 +356,34 @@ function CierreCajaPage() {
               </div>
             )}
           </div>
+
+          {/* ---------- Devoluciones ---------- */}
+          {devoluciones.length > 0 && (
+            <div className="cierre-card">
+              <h2 className="cierre-card-title">Devoluciones ({devoluciones.length})</h2>
+              <p className="cierre-hint">
+                Ya están descontadas de los totales de arriba, en el día en que se hicieron.
+              </p>
+              <table className="cierre-table">
+                <tbody>
+                  {devoluciones.map((d) => (
+                    <tr key={d.id}>
+                      <td className="cierre-medio">
+                        Devolución #{d.id} · venta #{d.venta_id}
+                      </td>
+                      <td className="cierre-medio-count">
+                        {nombreUsuario(d.user_id)} · {etiquetaMotivoDevolucion(d.motivo)} ·{' '}
+                        {d.medios_pago?.pago || 'Sin medio'}
+                      </td>
+                      <td className="cierre-medio-total cierre-anulada-monto">
+                        −{formatCOP(d.total || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* ---------- Anuladas ---------- */}
           {anuladas.length > 0 && (

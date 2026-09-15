@@ -3,10 +3,16 @@ import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
 import AnularVentaModal from './AnularVentaModal'
+import DevolucionModal from './DevolucionModal'
 
-function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange }) {
+function SalesList({
+  sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange,
+  // Devoluciones: puedeDevolver lo decide SalesPage según el rol y el negocio
+  puedeDevolver = false, mediosPago = [], esAdministrador = false, negocio = null, onDevuelta
+}) {
   const [searchTerm, setSearchTerm] = useState('')
   const [anulando, setAnulando] = useState(null) // 🆕 venta pendiente de anular
+  const [devolviendo, setDevolviendo] = useState(null) // venta de la que se devuelven productos
   const dateInputRef = useRef(null)
 
   const getClientName = (clienteId) => {
@@ -127,6 +133,15 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
                         >
                           📄
                         </button>
+                        {puedeDevolver && (
+                          <button
+                            onClick={() => setDevolviendo(sale)}
+                            className="btn-devolver-sale"
+                            title="Registrar devolución de productos"
+                          >
+                            ↩️
+                          </button>
+                        )}
                         {onDelete && (
                           <button
                             onClick={() => handleDelete(sale)}
@@ -161,6 +176,21 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
             <span className="sales-total-amount">{formatCOP(totalDia)}</span>
           </div>
         </>
+      )}
+
+      {devolviendo && (
+        <DevolucionModal
+          sale={devolviendo}
+          clientName={getClientName(devolviendo.cliente_id)}
+          mediosPago={mediosPago}
+          esAdministrador={esAdministrador}
+          negocio={negocio}
+          onCancel={() => setDevolviendo(null)}
+          onDone={async (devolucion) => {
+            setDevolviendo(null)
+            if (onDevuelta) await onDevuelta(devolucion)
+          }}
+        />
       )}
 
       {anulando && (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { negocioService } from '../services/negocioService'
 import { useAuth } from '../contexts/AuthContext'
+import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import './ConfiguracionPage.css'
 import { Store, Save, Upload, Trash2 } from 'lucide-react'
 
@@ -91,6 +92,13 @@ function ConfiguracionPage() {
     cambios.ancho_papel = form.ancho_papel || '55mm'
     cambios.mensaje_pie = form.mensaje_pie || null
     cambios.stock_minimo_defecto = Number(form.stock_minimo_defecto) || 0
+    // Si la migración 25 no se ha corrido, mandar estas columnas rompería
+    // todo el guardado
+    if ('devoluciones_vendedor' in negocio) {
+      cambios.devoluciones_vendedor = form.devoluciones_vendedor ?? true
+      cambios.devolucion_max_vendedor = Number(form.devolucion_max_vendedor) || 0
+      cambios.devolucion_dias_vendedor = Number(form.devolucion_dias_vendedor) || 0
+    }
 
     const actualizado = await negocioService.updateNegocio(negocio.id, cambios)
 
@@ -225,6 +233,51 @@ function ConfiguracionPage() {
               desde su ficha. Pon 0 para desactivar las alertas.
             </p>
           </div>
+
+          {'devoluciones_vendedor' in negocio && (
+            <div className="config-field">
+              <label className="config-label">Devoluciones de vendedores</label>
+              <label className="config-check">
+                <input
+                  type="checkbox"
+                  checked={form.devoluciones_vendedor ?? true}
+                  onChange={(e) => cambiar('devoluciones_vendedor', e.target.checked)}
+                  disabled={!puedeEditar || guardando}
+                />
+                <span>Los vendedores pueden registrar devoluciones</span>
+              </label>
+              {(form.devoluciones_vendedor ?? true) && (
+                <div className="config-dev-limites">
+                  <label className="config-sublabel">
+                    Monto máximo por devolución ($)
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formatCOPInput(form.devolucion_max_vendedor ?? '')}
+                      onChange={(e) => cambiar('devolucion_max_vendedor', parseCOP(e.target.value))}
+                      disabled={!puedeEditar || guardando}
+                      className="config-input"
+                    />
+                  </label>
+                  <label className="config-sublabel">
+                    Días máximos desde la venta
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.devolucion_dias_vendedor ?? 8}
+                      onChange={(e) => cambiar('devolucion_dias_vendedor', e.target.value)}
+                      disabled={!puedeEditar || guardando}
+                      className="config-input"
+                    />
+                  </label>
+                </div>
+              )}
+              <p className="config-ayuda">
+                Por encima de estos límites, la devolución la hace un administrador. Lo que
+                devuelve un vendedor siempre vuelve al inventario, y necesita tener la caja abierta.
+              </p>
+            </div>
+          )}
 
           <div className="config-field">
             <label className="config-label">Ancho del papel</label>

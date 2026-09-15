@@ -5,6 +5,7 @@ import SalesList from '../components/SalesList'
 import { salesService } from '../services/salesService'
 import { negocioService } from '../services/negocioService'
 import { buildReceiptHTML } from '../utils/receipt'
+import { formatCOP } from '../utils/currencyFormatter'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
 import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
@@ -39,6 +40,10 @@ function SalesPage() {
 
   // 🆕 Configuración del negocio (encabezado y pie del tiquete)
   const [negocio, setNegocio] = useState(null)
+
+  // Devoluciones: administradores siempre; vendedores solo si el negocio lo
+  // permite. La base de datos aplica los mismos límites (registrar_devolucion)
+  const puedeDevolver = esAdministrador || esSuperAdmin || !!negocio?.devoluciones_vendedor
 
   // ✅ getTodayColombia() ahora devuelve siempre la fecha correcta en Colombia
   const [selectedDate, setSelectedDate] = useState(getTodayColombia)
@@ -390,6 +395,19 @@ function SalesPage() {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             onViewInvoice={handleViewInvoice}
+            puedeDevolver={puedeDevolver}
+            mediosPago={mediosPago}
+            esAdministrador={esAdministrador || esSuperAdmin}
+            negocio={negocio}
+            onDevuelta={async (devolucion) => {
+              toast.exito(`Devolución #${devolucion.id} registrada por ${formatCOP(devolucion.total)}`)
+              // El stock cambió: el formulario de venta debe verlo
+              const [, productsData] = await Promise.all([
+                loadSalesByDate(selectedDate),
+                productService.getAllProducts()
+              ])
+              setProducts(productsData.data || [])
+            }}
             onDelete={!esAdministrador ? null : async (id, motivo) => {
               // La confirmación y el motivo se piden en AnularVentaModal
               const result = await salesService.annulSale(id, motivo)
