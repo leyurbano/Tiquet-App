@@ -114,6 +114,8 @@ Deno.serve(async (req) => {
       email_interno: email,
       rol,
       activo: true,
+      // La contraseña la escribió el super admin: el usuario debe cambiarla al entrar
+      debe_cambiar_contrasena: true,
       negocio_id: negocioId
     }])
 

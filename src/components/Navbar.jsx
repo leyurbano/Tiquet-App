@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useCashSession } from '../contexts/CashSessionContext'
 import CierreCajaModal from './CierreCajaModal'
+import CambiarContrasenaModal from './CambiarContrasenaModal'
 
 function Navbar() {
   const navigate = useNavigate()
@@ -12,6 +13,7 @@ function Navbar() {
   const { session } = useCashSession()
   const [menuOpen, setMenuOpen] = useState(false) // 🆕 estado del menú hamburguesa
   const [showCierre, setShowCierre] = useState(false) // 🆕 arqueo antes de salir
+  const [showContrasena, setShowContrasena] = useState(false)
   const menuRef = useRef(null)                     // 🆕 para cerrar al hacer clic afuera
 
   const salir = async () => {
@@ -106,6 +108,12 @@ function Navbar() {
               </button>
             )}
             <button
+              className="nav-button nav-inactive"
+              onClick={() => { setMenuOpen(false); setShowContrasena(true) }}
+            >
+              Contraseña
+            </button>
+            <button
               className="nav-button logout-btn"
               onClick={handleLogout}
             >
@@ -135,6 +143,9 @@ function Navbar() {
         onCancel={() => setShowCierre(false)}
         onDone={salir}
       />
+    )}
+    {showContrasena && (
+      <CambiarContrasenaModal onCerrar={() => setShowContrasena(false)} />
     )}
     </>
   )

@@ -136,6 +136,34 @@ function PlataformaPage() {
     await cargar()
   }
 
+  // Contraseña temporal legible: sin caracteres que se confunden (0/O, 1/l/I)
+  const generarContrasenaTemporal = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+    const valores = crypto.getRandomValues(new Uint32Array(10))
+    return Array.from(valores, (n) => chars[n % chars.length]).join('')
+  }
+
+  const restablecerContrasena = async (p) => {
+    if (!window.confirm(`¿Restablecer la contraseña de ${p.nombre}? Deberá cambiarla al volver a entrar.`)) return
+
+    setMensaje(null)
+    const temporal = generarContrasenaTemporal()
+    const { error, aviso } = await perfilService.restablecerContrasena(p.id, temporal)
+
+    // El aviso se muestra arriba de la página: se lleva la vista hasta él
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    if (error) {
+      setMensaje({ tipo: 'error', texto: error })
+      return
+    }
+    setMensaje({
+      tipo: 'ok',
+      texto: `Contraseña temporal de ${p.nombre}: ${temporal} — entrégasela; ` +
+             'deberá cambiarla al entrar.' + (aviso ? ` (${aviso})` : '')
+    })
+  }
+
   const nombreNegocio = (id) =>
     negocios.find((n) => n.id === id)?.nombre_comercial || 'Sin negocio'
 
@@ -393,6 +421,7 @@ function PlataformaPage() {
                 <th>Negocio</th>
                 <th>Rol</th>
                 <th className="num">Activo</th>
+                <th>Contraseña</th>
               </tr>
             </thead>
             <tbody>
@@ -420,6 +449,18 @@ function PlataformaPage() {
                       checked={p.activo}
                       onChange={(e) => cambiarPerfil(p, 'activo', e.target.checked)}
                     />
+                  </td>
+                  <td>
+                    {/* La propia cuenta se cambia desde el menú, con la contraseña actual */}
+                    {p.id !== perfil?.id && (
+                      <button
+                        type="button"
+                        onClick={() => restablecerContrasena(p)}
+                        className="plat-btn-sm"
+                      >
+                        Restablecer
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

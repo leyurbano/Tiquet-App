@@ -30,7 +30,9 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('15_ventas_atomicas',      'función registrar_venta()',      'funcion',  'registrar_venta'),
   ('15_ventas_atomicas',      'función anular_venta()',         'funcion',  'anular_venta'),
   ('17_proteger_clientes',    'trigger cliente con ventas',     'trigger',  'impedir_borrar_cliente_con_ventas'),
-  ('17_proteger_clientes',    'trigger consumidor final',       'trigger',  'proteger_consumidor_final')
+  ('17_proteger_clientes',    'trigger consumidor final',       'trigger',  'proteger_consumidor_final'),
+  ('19_cambio_contrasena',    'perfiles.debe_cambiar_contrasena', 'columna', 'perfiles.debe_cambiar_contrasena'),
+  ('19_cambio_contrasena',    'función marcar_contrasena_cambiada()', 'funcion', 'marcar_contrasena_cambiada')
 )
 select
   migracion,
