@@ -42,14 +42,14 @@ function ProductsPage() {
 
   const handleCreateProduct = async (formData) => {
     setLoading(true);
-    const newProduct = await productService.createProduct(formData);
+    const { producto: newProduct, error } = await productService.createProduct(formData);
     if (newProduct) {
       setShowForm(false);
       setFormSucio(false);
       toast.exito("Producto creado exitosamente");
       loadProducts(1);
     } else {
-      toast.error("Error al crear el producto");
+      toast.error("No se pudo crear el producto: " + (error || "error desconocido"));
     }
     setLoading(false);
     // El formulario necesita saber si guardó para decidir si se limpia

@@ -17,8 +17,10 @@ export const inventarioService = {
         p_proveedor: proveedor?.trim() || null,
         p_factura: factura?.trim() || null,
         p_nota: nota?.trim() || null,
+        // Cada línea trae el id de un producto existente o los datos de uno
+        // nuevo, que la base de datos crea dentro de la misma transacción
         p_items: (items || []).map((i) => ({
-          producto_id: i.producto_id,
+          ...(i.nuevo ? { nuevo: i.nuevo } : { producto_id: i.producto_id }),
           cantidad: Number(i.cantidad),
           costo_unitario: Number(i.costo_unitario)
         }))

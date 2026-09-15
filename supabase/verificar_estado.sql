@@ -37,7 +37,8 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('21_entradas_mercancia',   'tabla entradas',                  'tabla',    'entradas'),
   ('21_entradas_mercancia',   'función registrar_entrada()',     'funcion',  'registrar_entrada'),
   ('22_ajustes_inventario',   'tabla ajustes',                   'tabla',    'ajustes'),
-  ('22_ajustes_inventario',   'función registrar_ajuste()',      'funcion',  'registrar_ajuste')
+  ('22_ajustes_inventario',   'función registrar_ajuste()',      'funcion',  'registrar_ajuste'),
+  ('23_crear_productos',      'función crear_producto()',        'funcion',  'crear_producto')
 )
 select
   migracion,

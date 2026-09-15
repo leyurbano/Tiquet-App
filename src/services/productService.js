@@ -36,28 +36,33 @@ export const productService = {
     }
   },
 
-  // Crear producto
+  /**
+   * Crea un producto mediante la función crear_producto de la base de datos.
+   *
+   * 🔧 Antes era un insert directo: el "stock inicial" entraba sin dejar
+   * rastro. Ahora, si hay stock inicial, queda registrado como una entrada
+   * "Stock inicial" en el historial, con su costo de origen. Además se
+   * rechazan nombres repetidos.
+   *
+   * Devuelve { producto } o { error } con el motivo legible.
+   */
   async createProduct(product) {
     try {
-      const { data, error } = await supabase
-        .from('productos')
-        .insert([{
-          descripcion: product.descripcion,
-          cantidad: product.cantidad,
-          costo: product.costo,
-          costo_total: product.costo_total,
-          precio_venta: product.precio_venta,
-          // vacío = usa el umbral del negocio; 0 = sin alertas
-          stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
-            ? null : Number(product.stock_minimo)
-        }])
-        .select()
+      const { data, error } = await supabase.rpc('crear_producto', {
+        p_descripcion: product.descripcion,
+        p_precio_venta: Number(product.precio_venta) || 0,
+        // vacío = usa el umbral del negocio; 0 = sin alertas
+        p_stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
+          ? null : Number(product.stock_minimo),
+        p_stock_inicial: Number(product.cantidad) || 0,
+        p_costo: Number(product.costo) || 0
+      })
 
       if (error) throw error
-      return data?.[0]
+      return { producto: data }
     } catch (error) {
-      console.error('Error creating product:', error)
-      return null
+      console.error('Error creating product:', error.message || error)
+      return { error: error.message || 'Error desconocido' }
     }
   },
 
