@@ -38,7 +38,8 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('21_entradas_mercancia',   'función registrar_entrada()',     'funcion',  'registrar_entrada'),
   ('22_ajustes_inventario',   'tabla ajustes',                   'tabla',    'ajustes'),
   ('22_ajustes_inventario',   'función registrar_ajuste()',      'funcion',  'registrar_ajuste'),
-  ('23_crear_productos',      'función crear_producto()',        'funcion',  'crear_producto')
+  ('23_crear_productos',      'función crear_producto()',        'funcion',  'crear_producto'),
+  ('24_importar_productos',   'registrar_entrada: agotados y tope 2.000', 'funcion_contiene', 'registrar_entrada|Máximo 2.000')
 )
 select
   migracion,
@@ -70,6 +71,13 @@ select
     when tipo = 'funcion' then
       case when exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
                         where n.nspname='public' and p.proname=nombre)
+           then 'OK' else 'FALTA' end
+    -- nombre = 'funcion|texto': la función existe y su código contiene el texto
+    when tipo = 'funcion_contiene' then
+      case when exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                        where n.nspname='public'
+                          and p.proname = split_part(nombre,'|',1)
+                          and p.prosrc like '%' || split_part(nombre,'|',2) || '%')
            then 'OK' else 'FALTA' end
     when tipo = 'trigger' then
       case when exists (select 1 from pg_trigger where tgname=nombre)

@@ -7,8 +7,9 @@ import { formatCOP } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import './InventarioPage.css'
-import { PackagePlus, Trash2, ClipboardCheck } from 'lucide-react'
+import { PackagePlus, Trash2, ClipboardCheck, FileSpreadsheet } from 'lucide-react'
 import AjusteInventario from '../components/AjusteInventario'
+import ImportarProductos from '../components/ImportarProductos'
 
 // Mismo cálculo que hace registrar_entrada en la base de datos: promedio
 // ponderado entre lo que había y lo que llega. Aquí solo se usa para mostrar
@@ -54,7 +55,7 @@ function InventarioPage() {
   const cargar = async () => {
     setCargando(true)
     const [resultado, recientes] = await Promise.all([
-      productService.getAllProducts(),
+      productService.getTodosLosProductos(),
       inventarioService.getEntradasRecientes()
     ])
     setProductos(resultado.data || [])
@@ -219,9 +220,21 @@ function InventarioPage() {
         >
           <ClipboardCheck size={16} /> Ajuste por conteo
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={pestana === 'importar'}
+          className={`inv-tab ${pestana === 'importar' ? 'inv-tab-activa' : ''}`}
+          onClick={() => setPestana('importar')}
+        >
+          <FileSpreadsheet size={16} /> Importar desde Excel
+        </button>
       </div>
 
-      {pestana === 'ajustes' ? (
+      {pestana === 'importar' ? (
+        // Al importar se recargan productos y entradas de la otra pestaña
+        <ImportarProductos onImportado={cargar} />
+      ) : pestana === 'ajustes' ? (
         <AjusteInventario />
       ) : (
         <>

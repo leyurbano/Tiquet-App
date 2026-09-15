@@ -33,6 +33,7 @@ archivo completo → Run.
 | 21 | `21_entradas_mercancia.sql` | Entradas de mercancía: suman al stock, recalculan el costo promedio y quedan en el historial. |
 | 22 | `22_ajustes_inventario.sql` | Ajustes por conteo físico o corrección: fijan el stock en lo contado, con motivo y valor de la diferencia. |
 | 23 | `23_crear_productos.sql` | Productos nuevos desde una entrada o con stock inicial, siempre registrados como entrada; rechaza nombres repetidos. |
+| 24 | `24_importar_productos.sql` | Importación desde Excel: `registrar_entrada` acepta productos nuevos con cantidad 0 (agotados) y máximo 2.000 líneas. |
 
 ## Lo que todavía no está aquí
 

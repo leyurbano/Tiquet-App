@@ -36,7 +36,7 @@ There is no test suite. Verify changes with `npm run lint` and `npm run build`.
 - `src/components/` — UI components and modals.
 - `src/contexts/AuthContext.jsx` — `useAuth()`: `user`, `perfil`, `estadoCuenta`, `esAdministrador`, `esSuperAdmin`, `debeCambiarContrasena`, `recargarPerfil`, `login`, `logout`.
 - `src/contexts/CashSessionContext.jsx` — `useCashSession()`: the user's open cash session.
-- `src/utils/` — `dateFormatter` (Colombia time), `currencyFormatter`, `receipt` (receipt HTML), `cashSummary` (cash close math), `reportSummary` (margins), `stock` (low-stock rules), `motivosAnulacion`, `clientes`, `toast`.
+- `src/utils/` — `importarProductos` (Excel/CSV import parsing), `dateFormatter` (Colombia time), `currencyFormatter`, `receipt` (receipt HTML), `cashSummary` (cash close math), `reportSummary` (margins), `stock` (low-stock rules), `motivosAnulacion`, `clientes`, `toast`.
 
 ## Multi-tenancy and roles
 
@@ -54,6 +54,8 @@ There is no test suite. Verify changes with `npm run lint` and `npm run build`.
 - Stock is decremented by the trigger `descontar_inventario` on `detalle_ventas`. The trigger `proteger_campos_producto` uses `pg_trigger_depth()`: sellers can only change stock through a sale, and can't change description, cost, price or `stock_minimo`.
 - **Stock goes up only through the RPC `registrar_entrada`** (Inventario page, administrators). It adds the units, recomputes `costo` as a weighted average, snapshots before/after in `detalle_entradas`, and logs an `entrada` event. Entries are never updated or deleted. An entry line may create a product that isn't in the catalog yet (`nuevo`), inside the same transaction.
 - **Create products through the RPC `crear_producto`** (the Productos form uses it). Initial stock is registered as a "Stock inicial" entry, so every unit of stock has an entry behind it. Duplicate names (case- and space-insensitive) are rejected.
+- **Excel/CSV import** (Inventario → Importar, `components/ImportarProductos.jsx` + `utils/importarProductos.js`) previews every row, then sends the whole file as one `registrar_entrada` call (max 2,000 lines). New products may come with quantity 0; existing ones only add stock, their price is never changed. `.xlsx` is read with `read-excel-file/browser`, loaded on demand.
+- Supabase returns at most 1,000 rows per query. Use `productService.getTodosLosProductos()` when the whole catalog is needed (search, import matching).
 - **Physical counts and stock/cost corrections go through the RPC `registrar_ajuste`** (Inventario → Ajustes, administrators). Every line needs a reason, and the line is rejected if stock changed since the screen loaded. In Productos, stock and cost are read-only when editing, and `updateProduct` never sends them (sending the form's stored stock used to undo sales made while the form was open).
 - Cash sessions (`sesiones_caja`) are opened on the Sales page, not at login. Administrators may skip opening one. The closing count happens in the logout modal and covers the shift (since `abierta_en`, for that user), not the calendar day. Closed sessions are immutable.
 
