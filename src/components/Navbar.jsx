@@ -99,6 +99,14 @@ function Navbar() {
                 Configuración
               </button>
             )}
+            {esAdministrador && (
+              <button
+                className={`nav-button ${location.pathname === '/usuarios' ? 'nav-active' : 'nav-inactive'}`}
+                onClick={() => handleNav('/usuarios')}
+              >
+                Usuarios
+              </button>
+            )}
             {esSuperAdmin && (
               <button
                 className={`nav-button ${location.pathname === '/plataforma' ? 'nav-active' : 'nav-inactive'}`}

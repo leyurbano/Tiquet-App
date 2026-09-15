@@ -4,6 +4,7 @@ import { perfilService } from '../services/perfilService'
 import { useAuth } from '../contexts/AuthContext'
 import { formatCOP } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
+import { generarContrasenaTemporal } from '../utils/contrasena'
 import './PlataformaPage.css'
 import { Building2, Users, PlusCircle, UserPlus } from 'lucide-react'
 
@@ -134,13 +135,6 @@ function PlataformaPage() {
       texto: `"${n.nombre_comercial}" ${suspender ? 'suspendido' : 'reactivado'}.`
     })
     await cargar()
-  }
-
-  // Contraseña temporal legible: sin caracteres que se confunden (0/O, 1/l/I)
-  const generarContrasenaTemporal = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
-    const valores = crypto.getRandomValues(new Uint32Array(10))
-    return Array.from(valores, (n) => chars[n % chars.length]).join('')
   }
 
   const restablecerContrasena = async (p) => {
