@@ -410,3 +410,14 @@
   font-weight: 800;
   color: #ffffff;
 }
+/* Devolución parcial */
+.btn-devolver-sale {
+  background: #fef3c7;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-devolver-sale:hover { background: #fde68a; }

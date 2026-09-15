@@ -191,7 +191,7 @@ export const salesService = {
     try {
       const { data, error } = await supabase
         .from('medios_pago')
-        .select('id, pago')
+        .select('*') // incluye es_fiado (migración 26) cuando existe
         .neq('id', 3)
         .order('id', { ascending: true })
 

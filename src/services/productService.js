@@ -19,6 +19,34 @@ export const productService = {
     }
   },
 
+  /**
+   * Todo el catálogo, en páginas de 1.000 (lo máximo que Supabase devuelve
+   * por consulta). Para buscar productos o comparar contra un archivo
+   * importado, una lista cortada haría ver como "nuevos" a los que ya
+   * existen. Devuelve { data } o { data: [], error }.
+   */
+  async getTodosLosProductos() {
+    const TAM = 1000
+    const todos = []
+    try {
+      for (let desde = 0; ; desde += TAM) {
+        const { data, error } = await supabase
+          .from('productos')
+          .select('*')
+          .order('id', { ascending: true })
+          .range(desde, desde + TAM - 1)
+
+        if (error) throw error
+        todos.push(...(data || []))
+        if (!data || data.length < TAM) break
+      }
+      return { data: todos }
+    } catch (error) {
+      console.error('❌ Error fetching products:', error.message)
+      return { data: [], error: error.message }
+    }
+  },
+
   // Obtener producto por ID
   async getProductById(id) {
     try {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { productService } from '../services/productService'
-import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus, ClipboardCheck } from 'lucide-react'
+import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus, ClipboardCheck, RotateCcw } from 'lucide-react'
 import './ProductHistoryModal.css'
 
 const TIPO_CONFIG = {
@@ -9,6 +9,7 @@ const TIPO_CONFIG = {
   reversion:    { icon: Undo2,        label: 'Rev. Vta.',     color: '#16a34a' },
   entrada:      { icon: PackagePlus,  label: 'Entrada',       color: '#0d9488' },
   ajuste:       { icon: ClipboardCheck, label: 'Ajuste',      color: '#b45309' },
+  devolucion:   { icon: RotateCcw,    label: 'Devolución',   color: '#0d9488' },
 }
 
 function ProductHistoryModal({ product, onClose }) {
@@ -102,6 +103,8 @@ function ProductHistoryModal({ product, onClose }) {
                       <td className="phm-td-ref">
                         {event.venta_id
                           ? `Venta #${event.venta_id}`
+                          : event.devolucion_id
+                            ? `Devolución #${event.devolucion_id}`
                           : event.entrada_id
                             ? `Entrada #${event.entrada_id}`
                             : event.ajuste_id

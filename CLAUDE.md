@@ -31,12 +31,12 @@ There is no test suite. Verify changes with `npm run lint` and `npm run build`.
 
 ### Layers
 
-- `src/services/` — all Supabase access, one file per domain: `productService`, `salesService`, `clientService`, `cashSessionService`, `negocioService`, `perfilService`, `supabaseClient`.
+- `src/services/` — all Supabase access, one file per domain: `productService`, `salesService`, `clientService`, `cashSessionService`, `negocioService`, `perfilService`, `inventarioService`, `devolucionService`, `fiadoService`, `supabaseClient`.
 - `src/pages/` — page containers that wire services to components.
 - `src/components/` — UI components and modals.
 - `src/contexts/AuthContext.jsx` — `useAuth()`: `user`, `perfil`, `estadoCuenta`, `esAdministrador`, `esSuperAdmin`, `debeCambiarContrasena`, `recargarPerfil`, `login`, `logout`.
 - `src/contexts/CashSessionContext.jsx` — `useCashSession()`: the user's open cash session.
-- `src/utils/` — `dateFormatter` (Colombia time), `currencyFormatter`, `receipt` (receipt HTML), `cashSummary` (cash close math), `reportSummary` (margins), `stock` (low-stock rules), `motivosAnulacion`, `clientes`, `toast`.
+- `src/utils/` — `importarProductos` (Excel/CSV import parsing), `dateFormatter` (Colombia time), `currencyFormatter`, `receipt` (receipt HTML), `cashSummary` (cash close math), `reportSummary` (margins), `stock` (low-stock rules), `motivosAnulacion`, `motivosDevolucion`, `clientes`, `toast`.
 
 ## Multi-tenancy and roles
 
@@ -54,6 +54,10 @@ There is no test suite. Verify changes with `npm run lint` and `npm run build`.
 - Stock is decremented by the trigger `descontar_inventario` on `detalle_ventas`. The trigger `proteger_campos_producto` uses `pg_trigger_depth()`: sellers can only change stock through a sale, and can't change description, cost, price or `stock_minimo`.
 - **Stock goes up only through the RPC `registrar_entrada`** (Inventario page, administrators). It adds the units, recomputes `costo` as a weighted average, snapshots before/after in `detalle_entradas`, and logs an `entrada` event. Entries are never updated or deleted. An entry line may create a product that isn't in the catalog yet (`nuevo`), inside the same transaction.
 - **Create products through the RPC `crear_producto`** (the Productos form uses it). Initial stock is registered as a "Stock inicial" entry, so every unit of stock has an entry behind it. Duplicate names (case- and space-insensitive) are rejected.
+- **Excel/CSV import** (Inventario → Importar, `components/ImportarProductos.jsx` + `utils/importarProductos.js`) previews every row, then sends the whole file as one `registrar_entrada` call (max 2,000 lines). New products may come with quantity 0; existing ones only add stock, their price is never changed. `.xlsx` is read with `read-excel-file/browser`, loaded on demand.
+- **Partial returns go through the RPC `registrar_devolucion`** (Ventas → ↩️). The original sale is never modified. The function is `SECURITY DEFINER` and the return tables have no insert policy, so its limits can't be bypassed from the browser. Stock comes back through the trigger on `detalle_devoluciones` (trigger depth 2, the same path sales use). Sellers can return only if `negocios.devoluciones_vendedor`, up to `devolucion_max_vendedor` and `devolucion_dias_vendedor`, always back to stock, and with an open cash session. Cash returns are subtracted from that shift's expected cash; reports subtract returns on the day they happen. A sale with returns can't be voided.
+- **Credit sales (fiado)** use the payment method flagged `medios_pago.es_fiado`. `registrar_venta` requires an identified client (not consumidor final) and keeps them within `clientes.cupo_fiado`; only admins change the limit (trigger `proteger_cupo_fiado`), and new clients start at 0. Sellers may sell on credit only if `negocios.fiado_vendedor`. The balance is never stored: `saldo_fiado()` / `saldos_fiado()` compute credit in non-voided sales − returns refunded as fiado − `abonos`. Payments go through `registrar_abono` (`SECURITY DEFINER`, open cash session required). In the cash close, fiado is neither expected cash nor a transaction to verify; cash payments add to expected cash.
+- Supabase returns at most 1,000 rows per query. Use `productService.getTodosLosProductos()` when the whole catalog is needed (search, import matching).
 - **Physical counts and stock/cost corrections go through the RPC `registrar_ajuste`** (Inventario → Ajustes, administrators). Every line needs a reason, and the line is rejected if stock changed since the screen loaded. In Productos, stock and cost are read-only when editing, and `updateProduct` never sends them (sending the form's stored stock used to undo sales made while the form was open).
 - Cash sessions (`sesiones_caja`) are opened on the Sales page, not at login. Administrators may skip opening one. The closing count happens in the logout modal and covers the shift (since `abierta_en`, for that user), not the calendar day. Closed sessions are immutable.
 

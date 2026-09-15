@@ -31,7 +31,7 @@ function AjusteInventario() {
   const cargar = async () => {
     setCargando(true)
     const [resultado, recientes] = await Promise.all([
-      productService.getAllProducts(),
+      productService.getTodosLosProductos(),
       inventarioService.getAjustesRecientes()
     ])
     setProductos(resultado.data || [])
