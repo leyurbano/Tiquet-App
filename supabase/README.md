@@ -29,6 +29,7 @@ archivo completo → Run.
 | 17 | `17_proteger_clientes.sql` | Un cliente con ventas no se borra; solo administradores borran clientes; el Consumidor final queda protegido. |
 | 18 | `18_stock_solo_por_ventas.sql` | El vendedor ya no puede fijar el stock a mano: solo cambia al registrar ventas. |
 | 19 | `19_cambio_contrasena.sql` | Cambio de contraseña obligatorio para contraseñas asignadas por el administrador. |
+| 20 | `20_documento_unico_por_negocio.sql` | El documento del cliente es único por negocio; cada negocio tiene su Consumidor final, también los nuevos. |
 
 ## Lo que todavía no está aquí
 

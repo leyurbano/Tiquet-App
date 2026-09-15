@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from '../utils/toast'
 import "./SalesForm.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import { clientService } from "../services/clientService";
@@ -93,7 +94,7 @@ function SalesForm({
 
   const addNewCustomer = async () => {
     if (!customer.name.trim() || !customer.cedula.trim()) {
-      alert("Por favor completa nombre y cédula del cliente");
+      toast.aviso("Por favor completa nombre y cédula del cliente");
       return;
     }
     try {
@@ -105,11 +106,11 @@ function SalesForm({
       if (newCustomer) {
         setCustomerFound(newCustomer);
         setShowAddCustomerBtn(false);
-        alert("✅ Cliente registrado correctamente");
+        toast.exito("Cliente registrado correctamente");
       }
     } catch (error) {
       console.error("Error adding customer:", error);
-      alert("❌ Error al registrar el cliente");
+      toast.error("Error al registrar el cliente");
     }
   };
 
@@ -185,7 +186,7 @@ function SalesForm({
     e.preventDefault();
 
     if (items.length === 0) {
-      alert("Agrega al menos un producto");
+      toast.aviso("Agrega al menos un producto");
       return;
     }
 
@@ -204,7 +205,7 @@ function SalesForm({
     }
 
     if (!paymentMethod && !pagosMixtos) {
-      alert("Selecciona una forma de pago");
+      toast.aviso("Selecciona una forma de pago");
       return;
     }
 

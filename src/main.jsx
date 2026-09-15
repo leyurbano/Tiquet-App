@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import Toaster from './components/Toaster'
 import './index.css'
 import { AuthProvider } from './contexts/AuthContext'
 import { CashSessionProvider } from './contexts/CashSessionContext'
@@ -12,6 +13,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <CashSessionProvider>
         <BrowserRouter>
           <App />
+          {/* Fuera de App: App tiene salidas tempranas donde no se vería */}
+          <Toaster />
         </BrowserRouter>
       </CashSessionProvider>
     </AuthProvider>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from '../utils/toast'
 import SalesForm from '../components/SalesForm'
 import SalesList from '../components/SalesList'
 import { salesService } from '../services/salesService'
@@ -130,17 +131,17 @@ function SalesPage() {
 
         await loadSalesByDate(selectedDate)
         setShowForm(true)
-        alert('✅ Venta registrada exitosamente')
+        toast.exito('Venta registrada exitosamente')
         setLoading(false)
         return newSale // 🔧 CAMBIO: retorno explícito para que SalesForm sepa que sí se guardó
       } else {
-        alert('❌ No se pudo registrar la venta: ' + (errorVenta || 'error desconocido'))
+        toast.error('No se pudo registrar la venta: ' + (errorVenta || 'error desconocido'))
         setLoading(false)
         return null // 🔧 CAMBIO: retorno explícito de fallo
       }
     } catch (error) {
       console.error('Error:', error)
-      alert('❌ Error al registrar la venta')
+      toast.error('Error al registrar la venta')
       setLoading(false)
       return null // 🔧 CAMBIO: también se retorna null si hubo una excepción
     }
@@ -232,7 +233,7 @@ function SalesPage() {
     try {
       const saleDetails = await salesService.getSaleById(sale.id)
       if (!saleDetails) {
-        alert('No se pudieron cargar los detalles de la venta')
+        toast.error('No se pudieron cargar los detalles de la venta')
         return
       }
 
@@ -272,13 +273,13 @@ function SalesPage() {
 
     } catch (error) {
       console.error('Error:', error)
-      alert('Error al cargar la factura')
+      toast.error('Error al cargar la factura')
     }
   }
 
   const handlePrint = () => {
     if (!lastSale || !lastSale.items || lastSale.items.length === 0) {
-      alert('No hay items para imprimir')
+      toast.aviso('No hay items para imprimir')
       return
     }
 
@@ -319,7 +320,7 @@ function SalesPage() {
     } catch (error) {
       // El modal queda abierto para que se pueda reintentar
       console.error('Error preparando la impresión:', error)
-      alert('No se pudo preparar el tiquete para imprimir. Intenta de nuevo.')
+      toast.error('No se pudo preparar el tiquete para imprimir. Intenta de nuevo.')
       return
     }
 
@@ -402,10 +403,10 @@ function SalesPage() {
               // La confirmación y el motivo se piden en AnularVentaModal
               const result = await salesService.annulSale(id, motivo)
               if (result.success) {
-                alert(`✅ Venta anulada y ${result.itemsRestored} producto(s) restaurado(s)`)
+                toast.exito(`Venta anulada y ${result.itemsRestored} producto(s) restaurado(s)`)
                 await loadSalesByDate(selectedDate)
               } else {
-                alert(`❌ Error al anular la venta: ${result.error}`)
+                toast.error(`Error al anular la venta: ${result.error}`)
               }
             }}
           />
