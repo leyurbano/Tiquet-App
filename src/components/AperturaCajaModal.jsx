@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useCashSession } from '../contexts/CashSessionContext'
 import { useAuth } from '../contexts/AuthContext'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
+import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
 
 /**
@@ -20,6 +21,8 @@ function AperturaCajaModal({ onOmitir }) {
   const [base, setBase] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
+  // Sin onCerrar: no se descarta con Escape (ver arriba)
+  const refDialogo = useDialogo()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -37,7 +40,7 @@ function AperturaCajaModal({ onOmitir }) {
 
   return (
     <div className="caja-overlay">
-      <div className="caja-box">
+      <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Apertura de caja">
         <h2 className="caja-title">💰 Apertura de caja</h2>
         <p className="caja-subtitle">
           Ingresa el dinero en efectivo con el que arranca la caja. Al cerrar sesión

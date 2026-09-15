@@ -1,24 +1,6 @@
 import { supabase } from './supabaseClient'
 
 export const productService = {
-  // Obtener todos los productos con paginación
-  async getAllProducts(page = 1, limit = 1000) {
-    try {
-      const offset = (page - 1) * limit
-      const { data, error, count } = await supabase
-        .from('productos')
-        .select('*', { count: 'exact' })
-        .order('id', { ascending: true })
-        .range(offset, offset + limit - 1)
-
-      if (error) throw error
-      return { data: data || [], total: count || 0, page, limit }
-    } catch (error) {
-      console.error('❌ Error fetching products:', error.message)
-      return { data: [], total: 0, page, limit }
-    }
-  },
-
   /**
    * Todo el catálogo, en páginas de 1.000 (lo máximo que Supabase devuelve
    * por consulta). Para buscar productos o comparar contra un archivo

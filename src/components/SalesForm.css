@@ -587,9 +587,13 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100%;
+  /* Cada negocio sube su propio logo, de cualquier proporción: se limita
+     para que uno cuadrado o alto no tape el formulario */
+  width: min(60vw, 32rem);
+  max-height: 70vh;
   height: auto;
-  opacity: 0.15;  
+  object-fit: contain;
+  opacity: 0.15;
   pointer-events: none;
   z-index: 0;
   user-select: none;

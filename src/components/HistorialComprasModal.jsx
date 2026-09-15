@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { clientService } from '../services/clientService'
 import { formatCOP } from '../utils/currencyFormatter'
+import { useDialogo } from '../hooks/useDialogo'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { etiquetaMotivo } from '../utils/motivosAnulacion'
 import './CajaModal.css'
@@ -17,6 +18,7 @@ function HistorialComprasModal({ cliente, onClose }) {
   const [ventas, setVentas] = useState(null) // null = cargando
   const [error, setError] = useState(false)
   const [abierta, setAbierta] = useState(null) // id de la venta desplegada
+  const refDialogo = useDialogo({ onCerrar: onClose })
 
   useEffect(() => {
     clientService.getComprasCliente(cliente.id, LIMITE).then((resultado) => {
@@ -58,7 +60,7 @@ function HistorialComprasModal({ cliente, onClose }) {
 
   return (
     <div className="caja-overlay" onClick={onClose}>
-      <div className="caja-box compras-box" onClick={(e) => e.stopPropagation()}>
+      <div className="caja-box compras-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Compras de ${cliente.nombre}`}>
         <h2 className="caja-title">Compras de {cliente.nombre}</h2>
         <p className="caja-subtitle">Documento {cliente.documento}</p>
 

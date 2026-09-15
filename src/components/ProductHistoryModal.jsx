@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { productService } from '../services/productService'
 import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus, ClipboardCheck, RotateCcw } from 'lucide-react'
 import './ProductHistoryModal.css'
+import { useDialogo } from '../hooks/useDialogo'
 
 const TIPO_CONFIG = {
   venta:        { icon: ShoppingCart, label: 'Venta',        color: '#dc2626' },
@@ -25,11 +26,8 @@ function ProductHistoryModal({ product, onClose }) {
     load()
   }, [product.id])
 
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
+  // Escape, foco y Tab dentro de la ventana
+  const refDialogo = useDialogo({ onCerrar: onClose })
 
   const formatFecha = (iso) => {
     return new Date(iso).toLocaleString('es-CO', {
@@ -40,7 +38,7 @@ function ProductHistoryModal({ product, onClose }) {
 
   return (
     <div className="phm-overlay" onClick={onClose}>
-      <div className="phm-box" onClick={e => e.stopPropagation()}>
+      <div className="phm-box" onClick={e => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Historial de ${product.descripcion}`}>
 
         <div className="phm-header">
           <div>

@@ -3,6 +3,7 @@ import { fiadoService } from '../services/fiadoService'
 import { salesService } from '../services/salesService'
 import { useCashSession } from '../contexts/CashSessionContext'
 import { formatCOP } from '../utils/currencyFormatter'
+import { useDialogo } from '../hooks/useDialogo'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import './CajaModal.css'
 import './FiadoModals.css'
@@ -22,6 +23,7 @@ function AbonoModal({ cliente, saldo, onCancel, onDone }) {
   const [nota, setNota] = useState('')
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState('')
+  const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   useEffect(() => {
     salesService.getMediosPago().then((data) => {
@@ -56,7 +58,7 @@ function AbonoModal({ cliente, saldo, onCancel, onDone }) {
 
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
-      <div className="caja-box fiado-box" onClick={(e) => e.stopPropagation()}>
+      <div className="caja-box fiado-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Abono de ${cliente.nombre}`}>
         <h2 className="caja-title">Abono de {cliente.nombre}</h2>
         <p className="caja-subtitle">
           Debe <strong>{formatCOP(saldo)}</strong> en fiado.

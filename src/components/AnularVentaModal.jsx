@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { MOTIVOS_ANULACION } from '../utils/motivosAnulacion'
 import { formatCOP } from '../utils/currencyFormatter'
+import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
 
 /**
@@ -12,6 +13,7 @@ import './CajaModal.css'
 function AnularVentaModal({ sale, clientName, onCancel, onConfirm }) {
   const [motivo, setMotivo] = useState('')
   const [procesando, setProcesando] = useState(false)
+  const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   const confirmar = async () => {
     if (!motivo) return
@@ -23,7 +25,7 @@ function AnularVentaModal({ sale, clientName, onCancel, onConfirm }) {
 
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
-      <div className="caja-box" onClick={(e) => e.stopPropagation()}>
+      <div className="caja-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Anular venta ${sale.id}`}>
         <h2 className="caja-title">Anular venta #{sale.id}</h2>
         <p className="caja-subtitle">
           {clientName} · {formatCOP(sale.total || 0)}

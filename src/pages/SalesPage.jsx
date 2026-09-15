@@ -7,6 +7,7 @@ import { negocioService } from '../services/negocioService'
 import { buildReceiptHTML } from '../utils/receipt'
 import { formatCOP } from '../utils/currencyFormatter'
 import { fiadoService } from '../services/fiadoService'
+import { useDialogo } from '../hooks/useDialogo'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
 import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
@@ -33,6 +34,12 @@ function SalesPage() {
   const [lastSale, setLastSale] = useState(null)
   const [showPrintModal, setShowPrintModal] = useState(false)
   const [formKey, setFormKey] = useState(0)
+  // Ventana "¿Desea imprimir?": el foco cae en Imprimir (Enter imprime) y
+  // Escape equivale a Saltar
+  const refImprimir = useDialogo({
+    onCerrar: () => { setShowPrintModal(false); setFormKey(k => k + 1) },
+    activo: showPrintModal
+  })
 
   // 🆕 NUEVO: catálogo de medios de pago, necesario para traducir medio_pago_id -> nombre
   // en el recibo que se imprime justo después de registrar la venta (lastSale no trae el join
@@ -62,7 +69,7 @@ function SalesPage() {
   // 🔧 Antes también las pedía aquí, así que al abrir se descargaban dos veces
   const loadInitialData = async () => {
     const [productsData, clientsData, mediosPagoData, negocioData] = await Promise.all([
-      productService.getAllProducts(),
+      productService.getTodosLosProductos(),
       clientService.getAllClients(),
       salesService.getMediosPago(), // 🆕 NUEVO: se carga junto con productos y clientes
       negocioService.getMiNegocio() // 🆕 datos del negocio para el tiquete
@@ -347,7 +354,7 @@ function SalesPage() {
 
       {showPrintModal && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" ref={refImprimir} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Imprimir recibo">
             <h2>¿Desea imprimir el recibo?</h2>
             <div className="modal-buttons">
               <button onClick={handlePrint} className="btn-print">
@@ -381,6 +388,7 @@ function SalesPage() {
                 products={products}
                 onSubmit={handleCreateSale}
                 onCancel={() => setShowForm(false)}
+                logoUrl={negocio?.logo_url}
               />
             ) : (
               <div className="caja-cerrada-aviso">
@@ -415,7 +423,7 @@ function SalesPage() {
               // El stock cambió: el formulario de venta debe verlo
               const [, productsData] = await Promise.all([
                 loadSalesByDate(selectedDate),
-                productService.getAllProducts()
+                productService.getTodosLosProductos()
               ])
               setProducts(productsData.data || [])
             }}

@@ -5,6 +5,7 @@ import App from './App'
 import Toaster from './components/Toaster'
 import EstadoApp from './components/EstadoApp'
 import './index.css'
+import './styles/foco.css'
 import { AuthProvider } from './contexts/AuthContext'
 import { CashSessionProvider } from './contexts/CashSessionContext'
 

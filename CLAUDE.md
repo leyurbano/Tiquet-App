@@ -87,6 +87,7 @@ Run any migration that adds columns a function writes **before** deploying that 
 - **CSS specificity trap:** `src/styles.css` (imported by `index.css`) styles `input[type="text"|"password"|…]` with specificity (0,1,1), which beats a single class. Nest input styles under a parent class, e.g. `.caja-money .caja-input`.
 - **Dates:** always Colombia time (`America/Bogota`) through `dateFormatter.js`. `ventas.fecha` is `timestamptz` set by the server with `now()`.
 - **Notifications:** use `toast.exito / toast.aviso / toast.error` from `utils/toast`. No `alert()`. Keep `window.confirm` only for destructive actions.
+- **Modals** use `useDialogo` (`src/hooks/useDialogo.js`) on the dialog box, with `ref`, `role="dialog" aria-modal="true" tabIndex={-1}` and an `aria-label`. It traps Tab, closes on Escape (pass `onCerrar: null` when it must not close, e.g. while saving or for mandatory dialogs), restores focus to the opener, locks page scroll, and only the topmost dialog reacts. Use `activo` for dialogs rendered conditionally inside a page. Don't add per-modal Escape or `body.style.overflow` effects.
 - **Deletes under RLS** return no error when nothing was deleted; add `.select()` and check the returned row count.
 - **Money inputs** keep the raw digits in state and only format for display (`parseCOP` / `formatCOPInput`).
 - **Receipts** are built with `buildReceiptHTML` from the business settings (55 or 80 mm). `SalesPage` prints through a pop-up window and falls back to a hidden iframe when the browser blocks it.

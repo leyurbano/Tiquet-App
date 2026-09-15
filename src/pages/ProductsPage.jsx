@@ -7,6 +7,7 @@ import "./ProductsPage.css";
 import { PlusCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { negocioService } from "../services/negocioService";
+import { useDialogo } from "../hooks/useDialogo";
 
 function ProductsPage() {
   // La RLS es quien realmente lo impide; esto evita mostrar acciones que fallarían
@@ -15,27 +16,25 @@ function ProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
-  // Fija en 1 hasta que exista paginación real (hoy se traen 1000 de una vez)
-  const [currentPage] = useState(1);
-  const [productsPerPage] = useState(1000);
   // Hay cambios escritos sin guardar en el modal
   const [formSucio, setFormSucio] = useState(false);
   // Umbral general del negocio para las alertas de stock bajo
   const [minimoNegocio, setMinimoNegocio] = useState(0);
 
   useEffect(() => {
-    loadProducts(1);
+    loadProducts();
     negocioService.getMiNegocio().then((n) =>
       setMinimoNegocio(n?.stock_minimo_defecto ?? 0)
     );
-    // Carga única al montar: loadProducts se recrea en cada render y no cambia
-    // lo que trae, así que no va en las dependencias
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadProducts = async (page) => {
+  // 🔧 Antes se traían máximo 1.000 productos: en un negocio más grande, el
+  // resto no aparecía. Ahora llega el catálogo completo y ProductList pinta
+  // 50 por página.
+  const loadProducts = async () => {
     setLoading(true);
-    const result = await productService.getAllProducts(page, productsPerPage);
+    const result = await productService.getTodosLosProductos();
+    if (result.error) toast.error("No se pudieron cargar los productos. Recarga la página.");
     setProducts(result.data);
     setLoading(false);
   };
@@ -47,7 +46,7 @@ function ProductsPage() {
       setShowForm(false);
       setFormSucio(false);
       toast.exito("Producto creado exitosamente");
-      loadProducts(1);
+      loadProducts();
     } else {
       toast.error("No se pudo crear el producto: " + (error || "error desconocido"));
     }
@@ -67,7 +66,7 @@ function ProductsPage() {
       setShowForm(false);
       setFormSucio(false);
       toast.exito("Producto actualizado exitosamente");
-      loadProducts(currentPage);
+      loadProducts();
     } else {
       toast.error("Error al actualizar el producto");
     }
@@ -86,23 +85,9 @@ function ProductsPage() {
     setFormSucio(false);
   }, [formSucio]);
 
-  useEffect(() => {
-    if (!showForm) return;
-
-    document.body.style.overflow = "hidden";
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") closeForm();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-    // closeForm va en las dependencias: sin eso, el manejador de Escape se
-    // quedaría con la primera versión y saltaría la confirmación de cambios
-    // sin guardar. useCallback hace que solo cambie cuando cambia formSucio
-  }, [showForm, closeForm]);
+  // Escape (con la confirmación de cambios sin guardar), foco, Tab y scroll.
+  // El hook siempre usa la versión más reciente de closeForm
+  const refDialogo = useDialogo({ onCerrar: () => closeForm(), activo: showForm });
 
   const handleEdit = (product) => {
     setEditingProduct(product);
@@ -138,7 +123,7 @@ function ProductsPage() {
 
       {showForm && (
         <div className="pf-overlay" onClick={() => closeForm()}>
-          <div className="pf-box" onClick={(e) => e.stopPropagation()}>
+          <div className="pf-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={editingProduct ? "Editar producto" : "Nuevo producto"}>
             <ProductForm
               initialData={editingProduct}
               onSubmit={handleSubmit}

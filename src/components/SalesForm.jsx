@@ -13,6 +13,8 @@ function SalesForm({
   products,
   onSubmit,
   onCancel,
+  // Logo del negocio (Configuración) para la marca de agua; sin logo, no hay
+  logoUrl = null,
 }) {
   const [saleDate, setSaleDate] = useState(getTodayColombia);
   const [customer, setCustomer] = useState({ name: "", cedula: "", phone: "" });
@@ -55,7 +57,9 @@ function SalesForm({
         p.name?.toLowerCase().includes(search) ||
         p.id.toString().includes(search),
     );
-    setFilteredProducts(filtered);
+    // Con miles de productos, una sola letra coincide con cientos: se
+    // muestran las primeras 30 y se sigue escribiendo para afinar
+    setFilteredProducts(filtered.slice(0, 30));
   };
 
   const selectProductFromSearch = (product) => {
@@ -272,11 +276,14 @@ function SalesForm({
   return (
     <form onSubmit={handleSubmit} className="sales-form-wrapper">
 
-      <img
-        src="/Fralu.png"
-        alt=""
-        className="marca-agua-form"
-      />
+      {/* 🔧 Antes era /Fralu.png fijo: todos los negocios veían el logo de Fralu */}
+      {logoUrl && (
+        <img
+          src={logoUrl}
+          alt=""
+          className="marca-agua-form"
+        />
+      )}
 
       <h2 className="form-title">📝 Nueva Venta</h2>
 
