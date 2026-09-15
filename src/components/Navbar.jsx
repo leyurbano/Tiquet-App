@@ -79,18 +79,28 @@ function Navbar() {
             >
               Productos
             </button>
+            {esAdministrador && (
+              <button
+                className={`nav-button ${location.pathname === '/inventario' ? 'nav-active' : 'nav-inactive'}`}
+                onClick={() => handleNav('/inventario')}
+              >
+                Inventario
+              </button>
+            )}
             <button
               className={`nav-button ${location.pathname === '/clients' ? 'nav-active' : 'nav-inactive'}`}
               onClick={() => handleNav('/clients')}
             >
               Clientes
             </button>
-            <button
-              className={`nav-button ${location.pathname === '/cierre' ? 'nav-active' : 'nav-inactive'}`}
-              onClick={() => handleNav('/cierre')}
-            >
-              Reportes
-            </button>
+            {esAdministrador && (
+              <button
+                className={`nav-button ${location.pathname === '/cierre' ? 'nav-active' : 'nav-inactive'}`}
+                onClick={() => handleNav('/cierre')}
+              >
+                Reportes
+              </button>
+            )}
             {esAdministrador && (
               <button
                 className={`nav-button ${location.pathname === '/configuracion' ? 'nav-active' : 'nav-inactive'}`}

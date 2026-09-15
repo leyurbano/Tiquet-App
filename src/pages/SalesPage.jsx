@@ -30,7 +30,6 @@ function SalesPage() {
   const [loading, setLoading] = useState(false)
   const [lastSale, setLastSale] = useState(null)
   const [showPrintModal, setShowPrintModal] = useState(false)
-  const [finalCustomerId, setFinalCustomerId] = useState(null)
   const [formKey, setFormKey] = useState(0)
 
   // 🆕 NUEVO: catálogo de medios de pago, necesario para traducir medio_pago_id -> nombre
@@ -44,6 +43,7 @@ function SalesPage() {
   // ✅ getTodayColombia() ahora devuelve siempre la fecha correcta en Colombia
   const [selectedDate, setSelectedDate] = useState(getTodayColombia)
 
+  // Carga única de catálogos al montar
   useEffect(() => {
     loadInitialData()
   }, [])
@@ -52,8 +52,9 @@ function SalesPage() {
     loadSalesByDate(selectedDate)
   }, [selectedDate])
 
+  // Solo catálogos: las ventas del día las trae el efecto de selectedDate.
+  // 🔧 Antes también las pedía aquí, así que al abrir se descargaban dos veces
   const loadInitialData = async () => {
-    setLoading(true)
     const [productsData, clientsData, mediosPagoData, negocioData] = await Promise.all([
       productService.getAllProducts(),
       clientService.getAllClients(),
@@ -64,14 +65,6 @@ function SalesPage() {
     setClients(clientsData)
     setMediosPago(mediosPagoData)
     setNegocio(negocioData)
-
-    const finalCustomer = clientsData.find(c => c.documento === '222222222')
-    if (finalCustomer) {
-      setFinalCustomerId(finalCustomer.id)
-    }
-
-    await loadSalesByDate(getTodayColombia())
-    setLoading(false)
   }
 
   const loadSalesByDate = async (fecha) => {
@@ -370,10 +363,8 @@ function SalesPage() {
               <SalesForm
                 key={formKey}
                 products={products}
-                clients={clients}
                 onSubmit={handleCreateSale}
                 onCancel={() => setShowForm(false)}
-                finalCustomerId={finalCustomerId}
               />
             ) : (
               <div className="caja-cerrada-aviso">

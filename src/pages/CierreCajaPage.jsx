@@ -5,6 +5,10 @@ import { buildReportSummary, formatPct } from '../utils/reportSummary'
 import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
 import { etiquetaMotivo } from '../utils/motivosAnulacion'
+import { descargarCSV } from '../utils/csv'
+import { filasVentas, filasProductos } from '../utils/exportarReportes'
+import { toast } from '../utils/toast'
+import { useAuth } from '../contexts/AuthContext'
 import dayjs from 'dayjs'
 import './CierreCajaPage.css'
 import { Wallet, TrendingUp, Receipt, AlertTriangle, Percent, Package } from 'lucide-react'
@@ -26,6 +30,8 @@ const RANGOS = [
  * modales de apertura y cierre de caja, atados al turno del usuario.
  */
 function CierreCajaPage() {
+  // Solo administradores: los reportes muestran costos, ganancia y márgenes
+  const { esAdministrador } = useAuth()
   const [ventas, setVentas] = useState([])
   const [mediosPago, setMediosPago] = useState([])
   const [anuladas, setAnuladas] = useState([])
@@ -37,12 +43,12 @@ function CierreCajaPage() {
   const [rangoActivo, setRangoActivo] = useState('hoy')
 
   useEffect(() => {
-    salesService.getMediosPago().then(setMediosPago)
-  }, [])
+    if (esAdministrador) salesService.getMediosPago().then(setMediosPago)
+  }, [esAdministrador])
 
   useEffect(() => {
-    cargar(desde, hasta)
-  }, [desde, hasta])
+    if (esAdministrador) cargar(desde, hasta)
+  }, [desde, hasta, esAdministrador])
 
   const cargar = async (d, h) => {
     setLoading(true)
@@ -82,6 +88,21 @@ function CierreCajaPage() {
   const caja = useMemo(() => buildCashSummary(ventas, mediosPago), [ventas, mediosPago])
   const rep = useMemo(() => buildReportSummary(ventas), [ventas])
 
+  const hayVentas = !loading && !error && ventas.length > 0
+  const sufijoArchivo = () => (desde === hasta ? desde : `${desde}_a_${hasta}`)
+
+  const exportarVentas = () => {
+    const { columnas, filas } = filasVentas(ventas, mediosPago)
+    descargarCSV(`ventas_${sufijoArchivo()}.csv`, columnas, filas)
+    toast.exito(`${filas.length} ${filas.length === 1 ? 'venta exportada' : 'ventas exportadas'}`)
+  }
+
+  const exportarProductos = () => {
+    const { columnas, filas } = filasProductos(rep.productos)
+    descargarCSV(`productos_${sufijoArchivo()}.csv`, columnas, filas)
+    toast.exito(`${filas.length} ${filas.length === 1 ? 'producto exportado' : 'productos exportados'}`)
+  }
+
   const etiquetaRango = () => {
     if (desde === hasta) {
       return desde === getTodayColombia() ? 'hoy' : dayjs(desde).format('DD/MM/YYYY')
@@ -89,10 +110,39 @@ function CierreCajaPage() {
     return `${dayjs(desde).format('DD/MM')} – ${dayjs(hasta).format('DD/MM/YYYY')}`
   }
 
+  if (!esAdministrador) {
+    return (
+      <div className="cierre-page">
+        <p className="cierre-empty">Los reportes son solo para administradores del negocio.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="cierre-page">
       <div className="cierre-header">
         <h1 className="cierre-title">📊 Reportes</h1>
+        {/* Exportan el período elegido abajo; las ventas anuladas no se incluyen */}
+        <div className="exportar-botones">
+          <button
+            type="button"
+            className="exportar-btn"
+            onClick={exportarVentas}
+            disabled={!hayVentas}
+            title="Una fila por venta, con una columna por medio de pago"
+          >
+            ⬇ Ventas (Excel)
+          </button>
+          <button
+            type="button"
+            className="exportar-btn"
+            onClick={exportarProductos}
+            disabled={!hayVentas}
+            title="Unidades, vendido, costo, ganancia y margen por producto"
+          >
+            ⬇ Productos (Excel)
+          </button>
+        </div>
       </div>
 
       {/* ---------- Selector de período ---------- */}

@@ -9,10 +9,8 @@ import { salesService } from "../services/salesService";
 
 function SalesForm({
   products,
-  clients = [],
   onSubmit,
   onCancel,
-  finalCustomerId = null,
 }) {
   const [saleDate, setSaleDate] = useState(getTodayColombia);
   const [customer, setCustomer] = useState({ name: "", cedula: "", phone: "" });
@@ -113,14 +111,6 @@ function SalesForm({
       toast.error("Error al registrar el cliente");
     }
   };
-
-  const getProductById = (productId) => {
-    return products.find((p) => p.id === parseInt(productId));
-  };
-
-  const selectedProductData = selectedProduct
-    ? getProductById(selectedProduct)
-    : null;
 
   const addItem = async () => {
     if (!selectedProduct || !quantity) return;

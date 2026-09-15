@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
@@ -6,7 +6,6 @@ import AnularVentaModal from './AnularVentaModal'
 
 function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange }) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [filteredSales, setFilteredSales] = useState(sales)
   const [anulando, setAnulando] = useState(null) // 🆕 venta pendiente de anular
   const dateInputRef = useRef(null)
 
@@ -16,14 +15,14 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDele
     return client ? client.nombre : `Cliente #${clienteId}`
   }
 
-  useEffect(() => {
-    const filtered = sales.filter(sale => {
-      const clientName = getClientName(sale.cliente_id).toLowerCase()
-      return clientName.includes(searchTerm.toLowerCase()) ||
-             sale.cliente_id.toString().includes(searchTerm)
-    })
-    setFilteredSales(filtered)
-  }, [searchTerm, sales, clients])
+  // Filtro derivado: se calcula en cada render en vez de copiarse a un estado
+  // con useEffect, que agregaba un render de retraso
+  const termino = searchTerm.toLowerCase()
+  const filteredSales = sales.filter(sale =>
+    getClientName(sale.cliente_id).toLowerCase().includes(termino) ||
+    // Una venta sin cliente tiene cliente_id null: null.toString() rompía la lista
+    String(sale.cliente_id ?? '').includes(searchTerm)
+  )
 
   const totalDia = filteredSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
 

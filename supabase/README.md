@@ -30,6 +30,9 @@ archivo completo → Run.
 | 18 | `18_stock_solo_por_ventas.sql` | El vendedor ya no puede fijar el stock a mano: solo cambia al registrar ventas. |
 | 19 | `19_cambio_contrasena.sql` | Cambio de contraseña obligatorio para contraseñas asignadas por el administrador. |
 | 20 | `20_documento_unico_por_negocio.sql` | El documento del cliente es único por negocio; cada negocio tiene su Consumidor final, también los nuevos. |
+| 21 | `21_entradas_mercancia.sql` | Entradas de mercancía: suman al stock, recalculan el costo promedio y quedan en el historial. |
+| 22 | `22_ajustes_inventario.sql` | Ajustes por conteo físico o corrección: fijan el stock en lo contado, con motivo y valor de la diferencia. |
+| 23 | `23_crear_productos.sql` | Productos nuevos desde una entrada o con stock inicial, siempre registrados como entrada; rechaza nombres repetidos. |
 
 ## Lo que todavía no está aquí
 

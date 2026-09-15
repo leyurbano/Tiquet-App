@@ -9,6 +9,7 @@ import CierreCajaPage from "./pages/CierreCajaPage";
 import ConfiguracionPage from "./pages/ConfiguracionPage";
 import PlataformaPage from "./pages/PlataformaPage";
 import UsuariosPage from "./pages/UsuariosPage";
+import InventarioPage from "./pages/InventarioPage";
 import { useAuth } from "./contexts/AuthContext";
 import CuentaBloqueada from "./components/CuentaBloqueada";
 import CambiarContrasenaModal from "./components/CambiarContrasenaModal";
@@ -139,6 +140,20 @@ function App() {
             <div className="app-container">
               <Navbar />
               <div className="app-main"><UsuariosPage /></div>
+            </div>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/inventario"
+        element={
+          user ? (
+            <div className="app-container">
+              <Navbar />
+              <div className="app-main"><InventarioPage /></div>
             </div>
           ) : (
             <Navigate to="/" replace />

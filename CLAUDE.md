@@ -8,11 +8,14 @@ POS / inventory system for Colombian retail businesses ("Tiquet-App"), sold to m
 
 ```bash
 npm run dev      # Dev server (Vite, port 5173)
-npm run build    # Production build — the only automated check available
+npm run build    # Production build
+npm run lint     # ESLint (flat config in eslint.config.js)
 npm run preview  # Preview production build
 ```
 
-`npm run lint` does not work: eslint is not installed. There is no test suite. Verify changes with `npm run build`.
+There is no test suite. Verify changes with `npm run lint` and `npm run build`.
+
+`react-hooks/exhaustive-deps` is on purpose: it catches stale closures (a missing dependency once made Escape skip the "unsaved changes" confirmation). Only disable it on a single line, with a comment saying why (e.g. a mount-only data load).
 
 ## Architecture
 
@@ -49,6 +52,9 @@ npm run preview  # Preview production build
 - **Register sales only through the RPC `registrar_venta`.** It is atomic, computes the total, requires payments to equal the total, locks stock rows (`FOR UPDATE`), freezes `costo_unitario`, and requires an open cash session. Never insert into `ventas`, `detalle_ventas` or `pagos_venta` from the client.
 - **Void sales with the RPC `anular_venta`** (administrators only). Sales are never deleted; voided ones keep `anulada_en` and `motivo_anulacion`.
 - Stock is decremented by the trigger `descontar_inventario` on `detalle_ventas`. The trigger `proteger_campos_producto` uses `pg_trigger_depth()`: sellers can only change stock through a sale, and can't change description, cost, price or `stock_minimo`.
+- **Stock goes up only through the RPC `registrar_entrada`** (Inventario page, administrators). It adds the units, recomputes `costo` as a weighted average, snapshots before/after in `detalle_entradas`, and logs an `entrada` event. Entries are never updated or deleted. An entry line may create a product that isn't in the catalog yet (`nuevo`), inside the same transaction.
+- **Create products through the RPC `crear_producto`** (the Productos form uses it). Initial stock is registered as a "Stock inicial" entry, so every unit of stock has an entry behind it. Duplicate names (case- and space-insensitive) are rejected.
+- **Physical counts and stock/cost corrections go through the RPC `registrar_ajuste`** (Inventario → Ajustes, administrators). Every line needs a reason, and the line is rejected if stock changed since the screen loaded. In Productos, stock and cost are read-only when editing, and `updateProduct` never sends them (sending the form's stored stock used to undo sales made while the form was open).
 - Cash sessions (`sesiones_caja`) are opened on the Sales page, not at login. Administrators may skip opening one. The closing count happens in the logout modal and covers the shift (since `abierta_en`, for that user), not the calendar day. Closed sessions are immutable.
 
 ## Database migrations

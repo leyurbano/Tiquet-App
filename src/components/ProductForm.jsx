@@ -102,7 +102,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
 
       <div className="form-grid-2">
         <div>
-          <label className="form-label">Cantidad en stock</label>
+          <label className="form-label">{initialData ? 'Cantidad en stock' : 'Stock inicial'}</label>
           <input
             type="number"
             name="cantidad"
@@ -111,7 +111,8 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
             onChange={handleChange}
             min="0"
             required
-            className="form-input"
+            readOnly={!!initialData}
+            className={initialData ? 'form-input form-input-readonly' : 'form-input'}
           />
         </div>
 
@@ -129,11 +130,21 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
                 target: { name: 'costo', value: parseCOP(e.target.value) }
               })}
               required
-              className="form-input"
+              readOnly={!!initialData}
+              className={initialData ? 'form-input form-input-readonly' : 'form-input'}
             />
           </div>
         </div>
       </div>
+
+      {/* Al editar, stock y costo solo se cambian en Inventario: así cada
+          cambio queda registrado con su motivo y no se pisan ventas */}
+      {initialData && (
+        <p className="form-ayuda form-ayuda-bloqueo">
+          El stock y el costo se cambian en <strong>Inventario</strong>: con una entrada
+          de mercancía o con un ajuste. Así queda registrado por qué cambiaron.
+        </p>
+      )}
 
       <label className="form-label">Costo total</label>
       <div className="form-input-money">
