@@ -109,11 +109,18 @@
   font-weight: 600;
 }
 
+/* Íconos de sección: grises, y azules en la sección activa */
+.nb-link { gap: 0.4rem; }
+.nb-icono { color: #9ca3af; flex-shrink: 0; transition: color 0.15s; }
+.nb-link:hover .nb-icono { color: var(--nb-texto-2); }
+.nb-link-activo .nb-icono,
+.nb-link-activo:hover .nb-icono { color: var(--nb-azul); }
+
 /* ---- Grupos desplegables ---- */
 .nb-grupo { position: relative; }
 
-.nb-grupo-btn svg { transition: transform 0.2s; }
-.nb-grupo-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+.nb-flecha { color: #9ca3af; transition: transform 0.2s; }
+.nb-grupo-btn[aria-expanded="true"] .nb-flecha { transform: rotate(180deg); }
 
 /* Título de sección: solo en el menú hamburguesa */
 .nb-grupo-titulo { display: none; }
@@ -168,6 +175,8 @@
   color: var(--nb-azul);
   font-weight: 600;
 }
+
+.nb-menu-item-activo svg { color: var(--nb-azul); }
 
 .nb-menu-salir { color: #b91c1c; }
 .nb-menu-salir svg { color: #b91c1c; }
@@ -325,6 +334,14 @@
 .nb-linea-1 { transform: translateY(7px) rotate(45deg); }
 .nb-linea-2 { opacity: 0; transform: scaleX(0); }
 .nb-linea-3 { transform: translateY(-7px) rotate(-45deg); }
+
+/* Portátiles pequeños: con los íconos, la cuenta muestra solo las iniciales
+   (el nombre completo se ve al abrirla) para que todo quepa en una línea */
+@media (max-width: 1200px) and (min-width: 1025px) {
+  .nb-cuenta-textos { display: none; }
+  .nb-cuenta-btn { gap: 0.35rem; padding-right: 0.5rem; }
+  .nb-fila { gap: 1rem; }
+}
 
 /* ============================================
    PANTALLAS CHICAS (tablets y celulares)

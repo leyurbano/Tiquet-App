@@ -7,7 +7,10 @@ import { negocioService } from '../services/negocioService'
 import { formatHoraColombia } from '../utils/dateFormatter'
 import CierreCajaModal from './CierreCajaModal'
 import CambiarContrasenaModal from './CambiarContrasenaModal'
-import { ChevronDown, KeyRound, LogOut } from 'lucide-react'
+import {
+  ChevronDown, KeyRound, LogOut, ShoppingCart, Package, Boxes, Warehouse,
+  Users, BarChart3, Store, Settings, UserCog, LayoutGrid
+} from 'lucide-react'
 
 const iniciales = (texto) =>
   (texto || '')
@@ -72,25 +75,28 @@ function Navbar() {
   const textoSalir = session ? 'Cerrar caja y salir' : 'Cerrar sesión'
 
   // ---- Secciones según el rol (los mismos permisos de antes) ----------
+  // Ícono + texto: quien atiende la caja reconoce el ícono de un vistazo
   const itemsCatalogo = [
-    { ruta: '/products', etiqueta: 'Productos' },
-    ...(esAdministrador ? [{ ruta: '/inventario', etiqueta: 'Inventario' }] : [])
+    { ruta: '/products', etiqueta: 'Productos', icono: Boxes },
+    ...(esAdministrador ? [{ ruta: '/inventario', etiqueta: 'Inventario', icono: Warehouse }] : [])
   ]
   const itemsNegocio = [
     ...(esAdministrador
       ? [
-          { ruta: '/configuracion', etiqueta: 'Configuración' },
-          { ruta: '/usuarios', etiqueta: 'Usuarios' }
+          { ruta: '/configuracion', etiqueta: 'Configuración', icono: Settings },
+          { ruta: '/usuarios', etiqueta: 'Usuarios', icono: UserCog }
         ]
       : []),
-    ...(esSuperAdmin ? [{ ruta: '/plataforma', etiqueta: 'Plataforma' }] : [])
+    ...(esSuperAdmin ? [{ ruta: '/plataforma', etiqueta: 'Plataforma', icono: LayoutGrid }] : [])
   ]
   const secciones = [
-    { id: 'ventas', items: [{ ruta: '/sales', etiqueta: 'Ventas' }] },
-    { id: 'catalogo', etiqueta: 'Catálogo', items: itemsCatalogo },
-    { id: 'clientes', items: [{ ruta: '/clients', etiqueta: 'Clientes' }] },
-    ...(esAdministrador ? [{ id: 'reportes', items: [{ ruta: '/cierre', etiqueta: 'Reportes' }] }] : []),
-    { id: 'negocio', etiqueta: 'Negocio', items: itemsNegocio }
+    { id: 'ventas', icono: ShoppingCart, items: [{ ruta: '/sales', etiqueta: 'Ventas', icono: ShoppingCart }] },
+    { id: 'catalogo', etiqueta: 'Catálogo', icono: Package, items: itemsCatalogo },
+    { id: 'clientes', icono: Users, items: [{ ruta: '/clients', etiqueta: 'Clientes', icono: Users }] },
+    ...(esAdministrador
+      ? [{ id: 'reportes', icono: BarChart3, items: [{ ruta: '/cierre', etiqueta: 'Reportes', icono: BarChart3 }] }]
+      : []),
+    { id: 'negocio', etiqueta: 'Negocio', icono: Store, items: itemsNegocio }
   ].filter((s) => s.items.length > 0)
 
   const esActiva = (ruta) => location.pathname === ruta
@@ -223,6 +229,7 @@ function Navbar() {
                   onClick={() => handleNav(s.items[0].ruta)}
                   aria-current={esActiva(s.items[0].ruta) ? 'page' : undefined}
                 >
+                  <s.icono size={17} className="nb-icono" aria-hidden="true" />
                   {s.items[0].etiqueta}
                 </button>
               ) : (
@@ -239,7 +246,9 @@ function Navbar() {
                     aria-expanded={abierto === s.id}
                     onClick={() => alternar(s.id)}
                   >
-                    {s.etiqueta} <ChevronDown size={15} aria-hidden="true" />
+                    <s.icono size={17} className="nb-icono" aria-hidden="true" />
+                    {s.etiqueta}
+                    <ChevronDown size={15} className="nb-flecha" aria-hidden="true" />
                   </button>
                   {/* En el menú hamburguesa el grupo se muestra como título de sección */}
                   <span className="nb-grupo-titulo">{s.etiqueta}</span>
@@ -253,6 +262,7 @@ function Navbar() {
                         onClick={() => handleNav(item.ruta)}
                         aria-current={esActiva(item.ruta) ? 'page' : undefined}
                       >
+                        <item.icono size={16} aria-hidden="true" />
                         {item.etiqueta}
                       </button>
                     ))}
