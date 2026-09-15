@@ -29,7 +29,7 @@ const ALIAS = {
 const normalizarEncabezado = (v) =>
   String(v ?? '')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
     .replace(/[^a-z]/g, '')
 
@@ -74,7 +74,8 @@ export const parseNumero = (v) => {
 
 /** CSV con separador ; o , (se detecta), comillas y saltos de línea. */
 export const leerCSV = (texto) => {
-  texto = texto.replace(/^﻿/, '')
+  // BOM al inicio (lo pone Excel al guardar CSV UTF-8)
+  if (texto.charCodeAt(0) === 0xfeff) texto = texto.slice(1)
   const primera = texto.split(/\r?\n/, 1)[0]
   const sep = (primera.match(/;/g) || []).length >= (primera.match(/,/g) || []).length ? ';' : ','
 
@@ -120,7 +121,7 @@ export async function leerArchivo(archivo) {
     let texto = new TextDecoder('utf-8').decode(buffer)
     // Excel en Windows guarda el CSV en Windows-1252: en UTF-8 las tildes
     // salen como caracteres inválidos, así que se vuelve a leer
-    if (texto.includes('�')) texto = new TextDecoder('windows-1252').decode(buffer)
+    if (texto.includes('\uFFFD')) texto = new TextDecoder('windows-1252').decode(buffer)
     return leerCSV(texto)
   }
 
