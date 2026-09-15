@@ -209,3 +209,48 @@
 @media (max-width: 640px) {
   .inv-title { font-size: 1.5rem; }
 }
+
+/* ---- Pestañas ---- */
+
+.inv-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.inv-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.inv-tab:hover { color: #111827; }
+
+.inv-tab-activa {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+/* ---- Ajustes ---- */
+
+.inv-buscador-ajuste { margin-top: 1rem; }
+
+.inv-page .inv-input-motivo {
+  width: auto;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.inv-falta { color: #b91c1c; font-weight: 700; }
+.inv-sobra { color: #15803d; font-weight: 700; }

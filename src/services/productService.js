@@ -64,17 +64,15 @@ export const productService = {
   // Actualizar producto
 async updateProduct(id, product) {
   try {
-    // 🆕 Leer cantidad actual antes de actualizar
-    const productoActual = await this.getProductById(id)
-    const cantidadAnterior = productoActual?.cantidad ?? 0
-
+    // 🔧 Ya NO se envían cantidad, costo ni costo_total. Antes se mandaba el
+    // stock que tenía el formulario al abrirse: si en medio se vendía algo,
+    // al guardar un cambio de precio el stock volvía al valor viejo y esa
+    // venta desaparecía del inventario. Stock y costo cambian solo por
+    // ventas, entradas de mercancía y ajustes (página Inventario).
     const { data, error } = await supabase
       .from('productos')
       .update({
         descripcion: product.descripcion,
-        cantidad: product.cantidad,
-        costo: product.costo,
-        costo_total: product.costo_total,
         precio_venta: product.precio_venta,
         stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
           ? null : Number(product.stock_minimo)
@@ -83,21 +81,6 @@ async updateProduct(id, product) {
       .select()
 
     if (error) throw error
-
-    // 🆕 Registrar en historial solo si la cantidad cambió
-    const cantidadNueva = Number(product.cantidad)
-    if (cantidadAnterior !== cantidadNueva) {
-      await supabase
-        .from('producto_historial')
-        .insert([{
-          producto_id: id,
-          tipo_evento: 'actualizacion',
-          cantidad_anterior: cantidadAnterior,
-          cantidad_nueva: cantidadNueva,
-          descripcion: 'Edición manual desde módulo de productos'
-        }])
-    }
-
     return data?.[0]
   } catch (error) {
     console.error('Error updating product:', error)

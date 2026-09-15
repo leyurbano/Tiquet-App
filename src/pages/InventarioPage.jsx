@@ -7,7 +7,8 @@ import { formatCOP } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import './InventarioPage.css'
-import { PackagePlus, Trash2 } from 'lucide-react'
+import { PackagePlus, Trash2, ClipboardCheck } from 'lucide-react'
+import AjusteInventario from '../components/AjusteInventario'
 
 // Mismo cálculo que hace registrar_entrada en la base de datos: promedio
 // ponderado entre lo que había y lo que llega. Aquí solo se usa para mostrar
@@ -38,6 +39,7 @@ function InventarioPage() {
   const [lineas, setLineas] = useState([])
   const [cabecera, setCabecera] = useState(VACIO)
   const [guardando, setGuardando] = useState(false)
+  const [pestana, setPestana] = useState('entradas')
 
   const cargar = async () => {
     setCargando(true)
@@ -133,7 +135,32 @@ function InventarioPage() {
 
   return (
     <div className="inv-page">
-      <h1 className="inv-title"><PackagePlus size={26} /> Entrada de mercancía</h1>
+      <h1 className="inv-title"><PackagePlus size={26} /> Inventario</h1>
+
+      {/* Stock y costo solo cambian aquí: entradas (compras) y ajustes */}
+      <div className="inv-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={pestana === 'entradas'}
+          className={`inv-tab ${pestana === 'entradas' ? 'inv-tab-activa' : ''}`}
+          onClick={() => setPestana('entradas')}
+        >
+          <PackagePlus size={16} /> Entrada de mercancía
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={pestana === 'ajustes'}
+          className={`inv-tab ${pestana === 'ajustes' ? 'inv-tab-activa' : ''}`}
+          onClick={() => setPestana('ajustes')}
+        >
+          <ClipboardCheck size={16} /> Ajuste por conteo
+        </button>
+      </div>
+
+      {pestana === 'entradas' ? (
+        <>
 
       <div className="inv-card">
         {/* ---------- Datos de la compra ---------- */}
@@ -330,6 +357,10 @@ function InventarioPage() {
           </div>
         )}
       </div>
+        </>
+      ) : (
+        <AjusteInventario />
+      )}
     </div>
   )
 }

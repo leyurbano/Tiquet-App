@@ -50,5 +50,46 @@ export const inventarioService = {
       console.error('Error cargando entradas:', error.message || error)
       return []
     }
+  },
+
+  /**
+   * Registra un ajuste de inventario (conteo físico o corrección) en UNA
+   * transacción, mediante la función registrar_ajuste de la base de datos.
+   *
+   * Cada línea fija el stock en lo contado y puede corregir el costo. La base
+   * de datos rechaza la línea si el stock cambió desde que se abrió la
+   * pantalla (una venta en medio), para no pisar esa venta.
+   *
+   * Devuelve { ajuste } (con `lineas` y `cambios`) o { error }.
+   */
+  async registrarAjuste({ nota, items }) {
+    try {
+      const { data, error } = await supabase.rpc('registrar_ajuste', {
+        p_nota: nota?.trim() || null,
+        p_items: items
+      })
+
+      if (error) throw error
+      return { ajuste: data }
+    } catch (error) {
+      console.error('Error registrando el ajuste:', error.message || error)
+      return { error: error.message || 'Error desconocido' }
+    }
+  },
+
+  async getAjustesRecientes(limite = 20) {
+    try {
+      const { data, error } = await supabase
+        .from('ajustes')
+        .select('id, fecha, nota, detalle_ajustes ( diferencia, valor_diferencia )')
+        .order('fecha', { ascending: false })
+        .limit(limite)
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error cargando ajustes:', error.message || error)
+      return []
+    }
   }
 }

@@ -53,6 +53,7 @@ There is no test suite. Verify changes with `npm run lint` and `npm run build`.
 - **Void sales with the RPC `anular_venta`** (administrators only). Sales are never deleted; voided ones keep `anulada_en` and `motivo_anulacion`.
 - Stock is decremented by the trigger `descontar_inventario` on `detalle_ventas`. The trigger `proteger_campos_producto` uses `pg_trigger_depth()`: sellers can only change stock through a sale, and can't change description, cost, price or `stock_minimo`.
 - **Stock goes up only through the RPC `registrar_entrada`** (Inventario page, administrators). It adds the units, recomputes `costo` as a weighted average, snapshots before/after in `detalle_entradas`, and logs an `entrada` event. Entries are never updated or deleted.
+- **Physical counts and stock/cost corrections go through the RPC `registrar_ajuste`** (Inventario → Ajustes, administrators). Every line needs a reason, and the line is rejected if stock changed since the screen loaded. In Productos, stock and cost are read-only when editing, and `updateProduct` never sends them (sending the form's stored stock used to undo sales made while the form was open).
 - Cash sessions (`sesiones_caja`) are opened on the Sales page, not at login. Administrators may skip opening one. The closing count happens in the logout modal and covers the shift (since `abierta_en`, for that user), not the calendar day. Closed sessions are immutable.
 
 ## Database migrations
