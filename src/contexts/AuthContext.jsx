@@ -80,12 +80,21 @@ export function AuthProvider({ children }) {
     return () => { cancelado = true }
   }, [user])
 
+  // Vuelve a leer el perfil, por ejemplo después de cambiar la contraseña
+  const recargarPerfil = async () => {
+    const p = await perfilService.getMiPerfil()
+    setPerfil(p)
+  }
+
   return (
     <AuthContext.Provider
       value={{
         user,
         perfil,
         estadoCuenta,
+        // 🆕 Contraseña asignada por el administrador que aún no se cambia
+        debeCambiarContrasena: !!perfil?.debe_cambiar_contrasena,
+        recargarPerfil,
         esAdministrador: perfil?.rol === 'administrador',
         esSuperAdmin: !!perfil?.es_super_admin,
         loading,

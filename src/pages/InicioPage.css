@@ -164,3 +164,26 @@
   line-height: 1;
   color: #6b7280;
 }
+/* ---- ¿Olvidaste tu contraseña? ---- */
+
+.welcome-form .boton-olvide {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ayuda-olvide {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #4b5563;
+  line-height: 1.45;
+  text-align: center;
+}

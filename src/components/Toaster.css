@@ -1,0 +1,60 @@
+/* Por encima de todos los modales (los de caja usan z-index 100) */
+.toaster {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  max-width: min(24rem, calc(100vw - 2rem));
+  pointer-events: none; /* el contenedor no tapa clics; cada aviso sí los recibe */
+}
+
+.toaster .toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 0.95rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+  animation: toast-entrar 0.18s ease-out;
+}
+
+.toast-exito { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+.toast-aviso { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+.toast-error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+.toast-icono { flex-shrink: 0; }
+.toast-texto { word-break: break-word; }
+
+@keyframes toast-entrar {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toaster .toast { animation: none; }
+}
+
+/* En celular, arriba y a lo ancho: abajo taparía los botones de cobro */
+@media (max-width: 640px) {
+  .toaster {
+    top: 0.75rem;
+    bottom: auto;
+    left: 0.75rem;
+    right: 0.75rem;
+    max-width: none;
+    align-items: stretch;
+  }
+}

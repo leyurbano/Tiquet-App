@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from '../utils/toast'
 import ProductForm from "../components/ProductForm";
 import ProductList from "../components/ProductList";
 import { productService } from "../services/productService";
@@ -43,10 +44,10 @@ function ProductsPage() {
     if (newProduct) {
       setShowForm(false);
       setFormSucio(false);
-      alert("✅ Producto creado exitosamente");
+      toast.exito("Producto creado exitosamente");
       loadProducts(1);
     } else {
-      alert("❌ Error al crear el producto");
+      toast.error("Error al crear el producto");
     }
     setLoading(false);
     // El formulario necesita saber si guardó para decidir si se limpia
@@ -63,10 +64,10 @@ function ProductsPage() {
       setEditingProduct(null);
       setShowForm(false);
       setFormSucio(false);
-      alert("✅ Producto actualizado exitosamente");
+      toast.exito("Producto actualizado exitosamente");
       loadProducts(currentPage);
     } else {
-      alert("❌ Error al actualizar el producto");
+      toast.error("Error al actualizar el producto");
     }
     setLoading(false);
     return !!updated;

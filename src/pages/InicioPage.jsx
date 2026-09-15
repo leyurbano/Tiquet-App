@@ -10,6 +10,7 @@ function InicioPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [verPassword, setVerPassword] = useState(false);
+  const [mostrarAyuda, setMostrarAyuda] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -29,7 +30,7 @@ function InicioPage() {
       }
 
     } catch {
-      setError('Error inesperado, intentá de nuevo');
+      setError('Error inesperado, intenta de nuevo');
     } finally {
       setLoading(false);
     }
@@ -113,6 +114,22 @@ function InicioPage() {
               >
                 Cancelar
               </button>
+
+              {/* No hay correo de recuperación: sin un SMTP propio, Supabase
+                  solo envía correos a los miembros del equipo del proyecto */}
+              <button
+                type="button"
+                className="boton-olvide"
+                onClick={() => setMostrarAyuda((v) => !v)}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+              {mostrarAyuda && (
+                <p className="ayuda-olvide">
+                  Pídele al administrador de tu negocio que te la restablezca.
+                  Te dará una contraseña temporal y, al entrar, podrás crear una nueva.
+                </p>
+              )}
 
             </form>
           </div>

@@ -13,7 +13,4 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Credenciales de Supabase faltantes')
 }
 
-console.log('✅ Supabase configurado correctamente')
-console.log(`📍 URL: ${SUPABASE_URL}`)
-
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)

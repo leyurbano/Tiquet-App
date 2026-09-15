@@ -194,7 +194,6 @@ export const salesService = {
         .neq('id', 3)
         .order('id', { ascending: true })
 
-      console.log('medios_pago =>', data, error)
       if (error) throw error
       return data || []
     } catch (error) {

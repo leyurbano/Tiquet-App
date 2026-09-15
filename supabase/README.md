@@ -27,6 +27,9 @@ archivo completo → Run.
 | 15 | `15_ventas_atomicas.sql` | Venta y anulación en una sola transacción: sin ventas a medias ni stock devuelto dos veces. |
 | 16 | `16_venta_requiere_caja.sql` | `registrar_venta` exige una caja abierta: ninguna venta queda fuera de un arqueo. |
 | 17 | `17_proteger_clientes.sql` | Un cliente con ventas no se borra; solo administradores borran clientes; el Consumidor final queda protegido. |
+| 18 | `18_stock_solo_por_ventas.sql` | El vendedor ya no puede fijar el stock a mano: solo cambia al registrar ventas. |
+| 19 | `19_cambio_contrasena.sql` | Cambio de contraseña obligatorio para contraseñas asignadas por el administrador. |
+| 20 | `20_documento_unico_por_negocio.sql` | El documento del cliente es único por negocio; cada negocio tiene su Consumidor final, también los nuevos. |
 
 ## Lo que todavía no está aquí
 

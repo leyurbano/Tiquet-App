@@ -156,5 +156,80 @@ export const perfilService = {
       console.error('Error actualizando el perfil:', error.message || error)
       return { error: error.message }
     }
+  },
+
+  /**
+   * Cambia la contraseña del usuario con sesión iniciada.
+   *
+   * Primero comprueba la contraseña actual volviendo a iniciar sesión con
+   * ella: así, quien encuentre una sesión abierta en el computador del local
+   * no puede quedarse con la cuenta cambiándole la contraseña. Un intento
+   * fallido no cierra la sesión existente.
+   */
+  async cambiarMiContrasena(email, actual, nueva) {
+    try {
+      const { error: errActual } = await supabase.auth.signInWithPassword({ email, password: actual })
+      if (errActual) return { error: 'La contraseña actual no es correcta.' }
+
+      const { error: errNueva } = await supabase.auth.updateUser({ password: nueva })
+      if (errNueva) {
+        const m = errNueva.message || ''
+        if (/different from the old/i.test(m)) {
+          return { error: 'La nueva contraseña debe ser distinta de la actual.' }
+        }
+        if (/at least/i.test(m)) {
+          return { error: 'La nueva contraseña es demasiado corta.' }
+        }
+        if (/weak|pwned|leaked/i.test(m)) {
+          return { error: 'Esa contraseña es muy común o apareció en filtraciones. Elige otra.' }
+        }
+        return { error: 'No se pudo cambiar la contraseña: ' + m }
+      }
+
+      // Limpia la marca de cambio obligatorio (si la había)
+      const { error: errMarca } = await supabase.rpc('marcar_contrasena_cambiada')
+      if (errMarca) console.warn('No se pudo limpiar la marca de cambio obligatorio:', errMarca.message)
+
+      return { ok: true }
+    } catch (error) {
+      console.error('Error cambiando la contraseña:', error.message || error)
+      return { error: 'No se pudo cambiar la contraseña. Revisa tu conexión.' }
+    }
+  },
+
+  /**
+   * Le pone una contraseña temporal a otro usuario, vía la Edge Function
+   * `restablecer-contrasena` (necesita la service_role key, que no puede
+   * vivir en el navegador). El usuario deberá cambiarla al entrar.
+   */
+  async restablecerContrasena(userId, password) {
+    try {
+      const { data, error } = await supabase.functions.invoke('restablecer-contrasena', {
+        body: { user_id: userId, password }
+      })
+
+      if (error) {
+        console.error('restablecer-contrasena falló:', error.name, error)
+        if (error.name === 'FunctionsFetchError' || error.name === 'FunctionsRelayError') {
+          return {
+            error: 'No se pudo contactar la función `restablecer-contrasena`. ' +
+                   'Verifica que esté desplegada.'
+          }
+        }
+        let detalle = null
+        try { detalle = await error.context.json() } catch { /* respuesta sin cuerpo */ }
+        if (detalle?.error) return { error: detalle.error }
+        if (error.context?.status === 404) {
+          return { error: 'La función `restablecer-contrasena` no existe en el proyecto. Falta desplegarla.' }
+        }
+        return { error: `La función respondió con error ${error.context?.status || 'desconocido'}.` }
+      }
+
+      if (data?.error) return { error: data.error }
+      return { ok: true, aviso: data?.aviso }
+    } catch (error) {
+      console.error('Error restableciendo la contraseña:', error)
+      return { error: 'Error inesperado: ' + (error.message || error) }
+    }
   }
 }
