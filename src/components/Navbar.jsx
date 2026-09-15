@@ -93,12 +93,14 @@ function Navbar() {
             >
               Clientes
             </button>
-            <button
-              className={`nav-button ${location.pathname === '/cierre' ? 'nav-active' : 'nav-inactive'}`}
-              onClick={() => handleNav('/cierre')}
-            >
-              Reportes
-            </button>
+            {esAdministrador && (
+              <button
+                className={`nav-button ${location.pathname === '/cierre' ? 'nav-active' : 'nav-inactive'}`}
+                onClick={() => handleNav('/cierre')}
+              >
+                Reportes
+              </button>
+            )}
             {esAdministrador && (
               <button
                 className={`nav-button ${location.pathname === '/configuracion' ? 'nav-active' : 'nav-inactive'}`}

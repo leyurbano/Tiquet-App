@@ -8,6 +8,7 @@ import { etiquetaMotivo } from '../utils/motivosAnulacion'
 import { descargarCSV } from '../utils/csv'
 import { filasVentas, filasProductos } from '../utils/exportarReportes'
 import { toast } from '../utils/toast'
+import { useAuth } from '../contexts/AuthContext'
 import dayjs from 'dayjs'
 import './CierreCajaPage.css'
 import { Wallet, TrendingUp, Receipt, AlertTriangle, Percent, Package } from 'lucide-react'
@@ -29,6 +30,8 @@ const RANGOS = [
  * modales de apertura y cierre de caja, atados al turno del usuario.
  */
 function CierreCajaPage() {
+  // Solo administradores: los reportes muestran costos, ganancia y márgenes
+  const { esAdministrador } = useAuth()
   const [ventas, setVentas] = useState([])
   const [mediosPago, setMediosPago] = useState([])
   const [anuladas, setAnuladas] = useState([])
@@ -40,12 +43,12 @@ function CierreCajaPage() {
   const [rangoActivo, setRangoActivo] = useState('hoy')
 
   useEffect(() => {
-    salesService.getMediosPago().then(setMediosPago)
-  }, [])
+    if (esAdministrador) salesService.getMediosPago().then(setMediosPago)
+  }, [esAdministrador])
 
   useEffect(() => {
-    cargar(desde, hasta)
-  }, [desde, hasta])
+    if (esAdministrador) cargar(desde, hasta)
+  }, [desde, hasta, esAdministrador])
 
   const cargar = async (d, h) => {
     setLoading(true)
@@ -105,6 +108,14 @@ function CierreCajaPage() {
       return desde === getTodayColombia() ? 'hoy' : dayjs(desde).format('DD/MM/YYYY')
     }
     return `${dayjs(desde).format('DD/MM')} – ${dayjs(hasta).format('DD/MM/YYYY')}`
+  }
+
+  if (!esAdministrador) {
+    return (
+      <div className="cierre-page">
+        <p className="cierre-empty">Los reportes son solo para administradores del negocio.</p>
+      </div>
+    )
   }
 
   return (
