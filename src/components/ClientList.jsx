@@ -8,7 +8,7 @@ import { formatCOP } from '../utils/currencyFormatter'
  * si el fiado no está instalado (migración 26 sin correr): en ese caso no
  * se muestran la columna de saldo ni los botones de fiado.
  */
-function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null, onAbono, onHistorial }) {
+function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null, onAbono, onHistorial, onCompras }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [soloDeuda, setSoloDeuda] = useState(false)
 
@@ -98,6 +98,12 @@ function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null,
                       >
                         ✏️ Editar
                       </button>
+                      {/* Consumidor final agrupa ventas de muchas personas: su historial no dice nada */}
+                      {onCompras && !esConsumidorFinal(client) && (
+                        <button onClick={() => onCompras(client)} className="btn-compras">
+                          🧾 Compras
+                        </button>
+                      )}
                       {conFiado && saldo > 0 && onAbono && (
                         <button onClick={() => onAbono(client, saldo)} className="btn-abono">
                           💵 Abonar

@@ -80,6 +80,50 @@ export const clientService = {
     }
   },
 
+  /**
+   * Últimas compras de un cliente, con sus productos y pagos, y lo devuelto
+   * de cada una (`devuelto`). Incluye las anuladas: la pantalla las marca.
+   * null si la consulta falló.
+   */
+  async getComprasCliente(clienteId, limite = 200) {
+    try {
+      const { data, error } = await supabase
+        .from('ventas')
+        .select(`
+          id, fecha, total, anulada_en, motivo_anulacion,
+          detalle_ventas ( producto_id, cantidad, precio, productos ( descripcion ) ),
+          pagos_venta ( monto, medios_pago ( pago ) )
+        `)
+        .eq('cliente_id', clienteId)
+        .order('fecha', { ascending: false })
+        .limit(limite)
+
+      if (error) throw error
+      const ventas = data || []
+
+      // Devoluciones (migración 25). Si la tabla no existe, se omiten
+      if (ventas.length > 0) {
+        const { data: devs, error: errorDev } = await supabase
+          .from('devoluciones')
+          .select('venta_id, total')
+          .in('venta_id', ventas.map((v) => v.id))
+
+        if (!errorDev) {
+          const porVenta = {}
+          ;(devs || []).forEach((d) => {
+            porVenta[d.venta_id] = (porVenta[d.venta_id] || 0) + (Number(d.total) || 0)
+          })
+          ventas.forEach((v) => { v.devuelto = porVenta[v.id] || 0 })
+        }
+      }
+
+      return ventas
+    } catch (error) {
+      console.error('Error leyendo las compras del cliente:', error.message || error)
+      return null
+    }
+  },
+
   // Obtener cliente por documento
   async getClientByDocument(documento) {
     try {

@@ -3,6 +3,7 @@ import ClientForm from '../components/ClientForm'
 import ClientList from '../components/ClientList'
 import AbonoModal from '../components/AbonoModal'
 import HistorialFiadoModal from '../components/HistorialFiadoModal'
+import HistorialComprasModal from '../components/HistorialComprasModal'
 import { clientService } from '../services/clientService'
 import { fiadoService } from '../services/fiadoService'
 import { toast } from '../utils/toast'
@@ -27,6 +28,7 @@ function ClientsPage() {
   const [formSucio, setFormSucio] = useState(false)
   const [abonando, setAbonando] = useState(null) // { cliente, saldo }
   const [historial, setHistorial] = useState(null) // cliente
+  const [compras, setCompras] = useState(null) // cliente
 
   const fiadoActivo = saldos !== null
 
@@ -141,6 +143,7 @@ function ClientsPage() {
             saldos={saldos}
             onAbono={(cliente, saldo) => setAbonando({ cliente, saldo })}
             onHistorial={setHistorial}
+            onCompras={setCompras}
           />
         </div>
       </div>
@@ -175,6 +178,10 @@ function ClientsPage() {
 
       {historial && (
         <HistorialFiadoModal cliente={historial} onClose={() => setHistorial(null)} />
+      )}
+
+      {compras && (
+        <HistorialComprasModal cliente={compras} onClose={() => setCompras(null)} />
       )}
     </div>
   )
