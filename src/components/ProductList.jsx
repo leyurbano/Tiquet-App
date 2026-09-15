@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./ProductList.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import ProductHistoryModal from "./ProductHistoryModal";

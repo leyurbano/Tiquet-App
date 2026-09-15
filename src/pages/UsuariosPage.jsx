@@ -42,6 +42,8 @@ function UsuariosPage() {
 
   useEffect(() => {
     if (perfil?.negocio_id) cargar()
+    // Recarga solo cuando cambia el negocio: cargar se recrea en cada render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perfil?.negocio_id])
 
   const crear = async (e) => {

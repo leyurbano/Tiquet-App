@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import ClientForm from '../components/ClientForm'
 import ClientList from '../components/ClientList'
 import { clientService } from '../services/clientService'
@@ -29,7 +29,7 @@ function ClientsPage() {
     setLoading(false)
   }
 
-  const closeForm = ({ forzar = false } = {}) => {
+  const closeForm = useCallback(({ forzar = false } = {}) => {
     // Un clic en el fondo o un Escape no deberían borrar lo escrito sin avisar
     if (!forzar && formSucio &&
         !window.confirm('Hay cambios sin guardar. ¿Descartarlos?')) {
@@ -38,7 +38,7 @@ function ClientsPage() {
     setShowForm(false)
     setEditingClient(null)
     setFormSucio(false)
-  }
+  }, [formSucio])
 
   useEffect(() => {
     if (!showForm) return
@@ -53,9 +53,10 @@ function ClientsPage() {
       document.body.style.overflow = ''
       window.removeEventListener('keydown', handleKeyDown)
     }
-    // formSucio va en las dependencias a propósito: sin él, el manejador de
-    // Escape se quedaría con el valor inicial (false) y saltaría la confirmación
-  }, [showForm, formSucio])
+    // closeForm va en las dependencias: sin eso, el manejador de Escape se
+    // quedaría con la primera versión y saltaría la confirmación de cambios
+    // sin guardar. useCallback hace que solo cambie cuando cambia formSucio
+  }, [showForm, closeForm])
 
   const handleAddClient = async (clientData) => {
     const newClient = await clientService.createClient(clientData)

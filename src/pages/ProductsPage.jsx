@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { toast } from '../utils/toast'
 import ProductForm from "../components/ProductForm";
 import ProductList from "../components/ProductList";
@@ -15,8 +15,8 @@ function ProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
+  // Fija en 1 hasta que exista paginación real (hoy se traen 1000 de una vez)
+  const [currentPage] = useState(1);
   const [productsPerPage] = useState(1000);
   // Hay cambios escritos sin guardar en el modal
   const [formSucio, setFormSucio] = useState(false);
@@ -28,13 +28,15 @@ function ProductsPage() {
     negocioService.getMiNegocio().then((n) =>
       setMinimoNegocio(n?.stock_minimo_defecto ?? 0)
     );
+    // Carga única al montar: loadProducts se recrea en cada render y no cambia
+    // lo que trae, así que no va en las dependencias
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProducts = async (page) => {
     setLoading(true);
     const result = await productService.getAllProducts(page, productsPerPage);
     setProducts(result.data);
-    setTotalProducts(result.total);
     setLoading(false);
   };
 
@@ -73,7 +75,7 @@ function ProductsPage() {
     return !!updated;
   };
 
-  const closeForm = ({ forzar = false } = {}) => {
+  const closeForm = useCallback(({ forzar = false } = {}) => {
     // Un clic en el fondo o un Escape no deberían borrar lo escrito sin avisar
     if (!forzar && formSucio &&
         !window.confirm("Hay cambios sin guardar. ¿Descartarlos?")) {
@@ -82,7 +84,7 @@ function ProductsPage() {
     setShowForm(false);
     setEditingProduct(null);
     setFormSucio(false);
-  };
+  }, [formSucio]);
 
   useEffect(() => {
     if (!showForm) return;
@@ -97,9 +99,10 @@ function ProductsPage() {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
-    // formSucio va en las dependencias a propósito: sin él, el manejador de
-    // Escape se quedaría con el valor inicial (false) y saltaría la confirmación
-  }, [showForm, formSucio]);
+    // closeForm va en las dependencias: sin eso, el manejador de Escape se
+    // quedaría con la primera versión y saltaría la confirmación de cambios
+    // sin guardar. useCallback hace que solo cambie cuando cambia formSucio
+  }, [showForm, closeForm]);
 
   const handleEdit = (product) => {
     setEditingProduct(product);

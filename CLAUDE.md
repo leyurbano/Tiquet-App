@@ -8,11 +8,14 @@ POS / inventory system for Colombian retail businesses ("Tiquet-App"), sold to m
 
 ```bash
 npm run dev      # Dev server (Vite, port 5173)
-npm run build    # Production build — the only automated check available
+npm run build    # Production build
+npm run lint     # ESLint (flat config in eslint.config.js)
 npm run preview  # Preview production build
 ```
 
-`npm run lint` does not work: eslint is not installed. There is no test suite. Verify changes with `npm run build`.
+There is no test suite. Verify changes with `npm run lint` and `npm run build`.
+
+`react-hooks/exhaustive-deps` is on purpose: it catches stale closures (a missing dependency once made Escape skip the "unsaved changes" confirmation). Only disable it on a single line, with a comment saying why (e.g. a mount-only data load).
 
 ## Architecture
 
