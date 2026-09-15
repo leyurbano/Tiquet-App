@@ -11,7 +11,10 @@ npm run dev      # Dev server (Vite, port 5173)
 npm run build    # Production build
 npm run lint     # ESLint (flat config in eslint.config.js)
 npm run preview  # Preview production build
+npm run iconos   # Regenerate the PWA icons from public/icono.svg (pwa-assets.config.js)
 ```
+
+**Installable app (PWA):** `vite-plugin-pwa` in `vite.config.js`. The service worker caches only the app shell (HTML, JS, CSS, icons); never cache Supabase responses, since sales, stock and cash must always be live. `registerType: 'prompt'` is on purpose: `components/EstadoApp.jsx` asks before updating (an automatic reload mid-sale would lose the cart) and shows an offline banner. There is no offline selling.
 
 There is no test suite. Verify changes with `npm run lint` and `npm run build`.
 

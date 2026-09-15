@@ -1,0 +1,48 @@
+/* Avisos de conexión y de versión nueva (PWA) */
+
+.estado-app {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  width: min(36rem, calc(100% - 2rem));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+}
+
+.estado-offline {
+  top: 0.75rem;
+  background: #991b1b;
+  color: #fff;
+  justify-content: center;
+  text-align: center;
+}
+
+.estado-version {
+  bottom: 1rem;
+  background: #1e3a8a;
+  color: #fff;
+}
+
+.estado-botones { display: flex; gap: 0.4rem; }
+
+.estado-btn,
+.estado-btn-sec {
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.estado-btn { background: #fff; color: #1e3a8a; }
+.estado-btn-sec { background: transparent; color: #c7d2fe; }
