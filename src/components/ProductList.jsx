@@ -13,7 +13,7 @@ const POR_PAGINA = 50;
  * de stock se calculan sobre el catálogo completo) y pinta 50 por página:
  * pintar miles de filas a la vez es lo que volvía lenta la pantalla.
  */
-function ProductList({ products, onEdit, loading = false, minimoNegocio = 0 }) {
+function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mostrarCostos = false }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [historyProduct, setHistoryProduct] = useState(null);
   const [soloBajos, setSoloBajos] = useState(false);
@@ -50,8 +50,9 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0 }) {
     (sum, product) => sum + (product.cantidad || 0),
     0,
   );
+  // Solo los administradores reciben los costos desde la base de datos
   const totalInventoryValue = (products || []).reduce(
-    (sum, product) => sum + (product.costo_total || 0),
+    (sum, product) => sum + (Number(product.costo_total) || 0),
     0,
   );
 
@@ -77,10 +78,12 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0 }) {
             <span className="stat-label-text">Total Productos:</span>
             <span className="stat-value">{totalProducts}</span>
           </div>
-          <div className="stat-label">
-            <span className="stat-label-text">Valor Inventario:</span>
-            <span className="stat-value">{formatCOP(totalInventoryValue)}</span>
-          </div>
+          {mostrarCostos && (
+            <div className="stat-label">
+              <span className="stat-label-text">Valor Inventario:</span>
+              <span className="stat-value">{formatCOP(totalInventoryValue)}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -125,8 +128,12 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0 }) {
                   <th style={{ textAlign: 'right' }}>#</th>
                   <th style={{ textAlign: 'left' }}>Descripción</th>
                   <th style={{ textAlign: 'right' }}>Stock</th>
-                  <th style={{ textAlign: 'right' }} className="hide-mobile">Costo Unit.</th>
-                  <th style={{ textAlign: 'right' }} className="hide-mobile">Costo Total</th>
+                  {mostrarCostos && (
+                    <>
+                      <th style={{ textAlign: 'right' }} className="hide-mobile">Costo Unit.</th>
+                      <th style={{ textAlign: 'right' }} className="hide-mobile">Costo Total</th>
+                    </>
+                  )}
                   <th style={{ textAlign: 'right' }}>Precio Venta</th>
                   <th style={{ textAlign: 'center' }}>Acciones</th>
                 </tr>
@@ -152,12 +159,16 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0 }) {
                         </div>
                       )}
                     </td>
-                    <td className="cell-numeric hide-mobile">
-                      {formatCOP(product.costo || 0)}
-                    </td>
-                    <td className="cell-numeric hide-mobile">
-                      {formatCOP(product.costo_total || 0)}
-                    </td>
+                    {mostrarCostos && (
+                      <>
+                        <td className="cell-numeric hide-mobile">
+                          {formatCOP(product.costo || 0)}
+                        </td>
+                        <td className="cell-numeric hide-mobile">
+                          {formatCOP(product.costo_total || 0)}
+                        </td>
+                      </>
+                    )}
                     <td className="cell-numeric cell-price">
                       {product.precio_venta ? (
                         formatCOP(product.precio_venta)
