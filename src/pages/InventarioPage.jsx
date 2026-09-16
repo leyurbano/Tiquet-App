@@ -10,6 +10,7 @@ import './InventarioPage.css'
 import { PackagePlus, Trash2, ClipboardCheck, FileSpreadsheet } from 'lucide-react'
 import AjusteInventario from '../components/AjusteInventario'
 import { numeroProducto, coincideNumero } from '../utils/producto'
+import { numeroDoc } from '../utils/documento'
 import ImportarProductos from '../components/ImportarProductos'
 
 // Mismo cálculo que hace registrar_entrada en la base de datos: promedio
@@ -181,7 +182,7 @@ function InventarioPage() {
 
     const creados = entrada.productos_creados?.length || 0
     toast.exito(
-      `Entrada #${entrada.id} registrada: ${lineas.length} ${lineas.length === 1 ? 'producto' : 'productos'}` +
+      `Entrada #${numeroDoc(entrada)} registrada: ${lineas.length} ${lineas.length === 1 ? 'producto' : 'productos'}` +
       (creados > 0 ? ` (${creados} ${creados === 1 ? 'nuevo' : 'nuevos'} en el catálogo)` : '')
     )
     setLineas([])
@@ -478,7 +479,7 @@ function InventarioPage() {
                       const unidades = det.reduce((s, d) => s + (Number(d.cantidad) || 0), 0)
                       return (
                         <tr key={e.id}>
-                          <td>{e.id}</td>
+                          <td>{numeroDoc(e)}</td>
                           <td className="inv-fecha">{formatToColombiaShort(e.fecha)}</td>
                           <td>{e.proveedor || '—'}</td>
                           <td>{e.factura || '—'}</td>

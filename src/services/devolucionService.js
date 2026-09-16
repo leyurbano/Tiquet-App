@@ -62,7 +62,7 @@ export const devolucionService = {
     try {
       const { data, error } = await supabase
         .from('devoluciones')
-        .select('id, venta_id, fecha, total, motivo, medio_pago_id, medios_pago ( pago )')
+        .select('id, numero, venta_id, fecha, total, motivo, medio_pago_id, medios_pago ( pago ), ventas ( numero )')
         .eq('sesion_caja_id', sesionId)
         .order('fecha', { ascending: false })
 
@@ -80,8 +80,9 @@ export const devolucionService = {
       const { data, error } = await supabase
         .from('devoluciones')
         .select(`
-          id, venta_id, fecha, total, motivo, user_id,
+          id, numero, venta_id, fecha, total, motivo, user_id,
           medios_pago ( pago ),
+          ventas ( numero ),
           detalle_devoluciones ( producto_id, cantidad, precio, costo_unitario, reintegra, productos ( descripcion ) )
         `)
         .gte('fecha', inicioISO)

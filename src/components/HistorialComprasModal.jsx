@@ -4,6 +4,7 @@ import { formatCOP } from '../utils/currencyFormatter'
 import { useDialogo } from '../hooks/useDialogo'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { etiquetaMotivo } from '../utils/motivosAnulacion'
+import { numeroDoc } from '../utils/documento'
 import './CajaModal.css'
 import './HistorialCompras.css'
 
@@ -129,7 +130,7 @@ function HistorialComprasModal({ cliente, onClose }) {
                         >
                           <td className="compras-fecha">{formatToColombiaShort(v.fecha)}</td>
                           <td>
-                            #{v.id}
+                            #{numeroDoc(v)}
                             {anulada && (
                               <span className="compras-badge compras-badge-anulada">
                                 Anulada · {etiquetaMotivo(v.motivo_anulacion)}

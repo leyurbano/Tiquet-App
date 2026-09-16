@@ -7,6 +7,7 @@ import { negocioService } from '../services/negocioService'
 import { buildReceiptHTML } from '../utils/receipt'
 import { formatCOP } from '../utils/currencyFormatter'
 import { fiadoService } from '../services/fiadoService'
+import { numeroDoc } from '../utils/documento'
 import { useDialogo } from '../hooks/useDialogo'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
@@ -131,6 +132,7 @@ function SalesPage() {
 
         setLastSale({
           id: newSale.id,
+          numero: numeroDoc(newSale),
           fecha: newSale.fecha,
           total: saleData.total,
           items: itemsWithProductInfo,
@@ -274,7 +276,7 @@ function SalesPage() {
 
       const html = buildReceiptHTML({
         negocio,
-        venta: { id: sale.id, fechaStr, total: sale.total },
+        venta: { id: sale.id, numero: numeroDoc(sale), fechaStr, total: sale.total },
         cliente: { nombre: clientName, documento: clientDocument, telefono: clientPhone },
         items,
         pagos
@@ -323,7 +325,7 @@ function SalesPage() {
 
     const html = buildReceiptHTML({
       negocio,
-      venta: { id: lastSale.id, fechaStr, total },
+      venta: { id: lastSale.id, numero: lastSale.numero, fechaStr, total },
       cliente: { nombre: clienteName, documento: clienteCedula, telefono: clientePhone },
       items,
       pagos: lastSale.pagos || [],
@@ -419,7 +421,7 @@ function SalesPage() {
             esAdministrador={esAdministrador || esSuperAdmin}
             negocio={negocio}
             onDevuelta={async (devolucion) => {
-              toast.exito(`Devolución #${devolucion.id} registrada por ${formatCOP(devolucion.total)}`)
+              toast.exito(`Devolución #${numeroDoc(devolucion)} registrada por ${formatCOP(devolucion.total)}`)
               // El stock cambió: el formulario de venta debe verlo
               const [, productsData] = await Promise.all([
                 loadSalesByDate(selectedDate),

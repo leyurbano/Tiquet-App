@@ -12,6 +12,7 @@ const descripcion = (m) => {
       ? `Venta #${m.id} (fiado ${formatCOP(m.cargo)} de ${formatCOP(m.total)})`
       : `Venta #${m.id}`
   }
+  // m.id y m.ventaId ya llegan resueltos al número del negocio (fiadoService)
   if (m.tipo === 'devolucion') return `Devolución #${m.id} de la venta #${m.ventaId}`
   return `Abono #${m.id}${m.medio ? ` · ${m.medio}` : ''}${m.nota ? ` · ${m.nota}` : ''}`
 }

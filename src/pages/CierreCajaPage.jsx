@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { devolucionService } from '../services/devolucionService'
 import { perfilService } from '../services/perfilService'
 import { etiquetaMotivoDevolucion } from '../utils/motivosDevolucion'
+import { numeroDoc } from '../utils/documento'
 import { fiadoService } from '../services/fiadoService'
 import { clientService } from '../services/clientService'
 import dayjs from 'dayjs'
@@ -741,7 +742,7 @@ function CierreCajaPage() {
               items={abonos.map((a) => ({
                 clave: a.id,
                 titulo: a.clientes?.nombre || 'Cliente',
-                detalle: `Abono #${a.id} · ${a.medios_pago?.pago || 'Sin medio'}`,
+                detalle: `Abono #${numeroDoc(a)} · ${a.medios_pago?.pago || 'Sin medio'}`,
                 monto: Number(a.monto) || 0
               }))}
               total={totalAbonos}
@@ -756,7 +757,7 @@ function CierreCajaPage() {
               nota="Ya están descontadas de los totales de arriba, en el día en que se hicieron."
               items={devoluciones.map((d) => ({
                 clave: d.id,
-                titulo: `Devolución #${d.id} · venta #${d.venta_id}`,
+                titulo: `Devolución #${numeroDoc(d)} · venta #${d.ventas?.numero ?? d.venta_id}`,
                 detalle: `${nombreUsuario(d.user_id)} · ${etiquetaMotivoDevolucion(d.motivo)} · ${d.medios_pago?.pago || 'Sin medio'}`,
                 monto: Number(d.total) || 0
               }))}
@@ -773,7 +774,7 @@ function CierreCajaPage() {
               nota="No están incluidas en los totales de arriba. Se listan como control."
               items={anuladas.map((v) => ({
                 clave: v.id,
-                titulo: `Venta #${v.id}`,
+                titulo: `Venta #${numeroDoc(v)}`,
                 detalle: etiquetaMotivo(v.motivo_anulacion),
                 monto: Number(v.total) || 0
               }))}

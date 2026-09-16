@@ -144,9 +144,17 @@ async updateProduct(id, product) {
   },
   async getProductHistory(productoId) {
   try {
+    // Se piden los números de cada documento (consecutivos por negocio) para
+    // no mostrar los ids internos en la columna de referencia
     const { data, error } = await supabase
       .from('producto_historial')
-      .select('*')
+      .select(`
+        *,
+        ventas ( numero ),
+        entradas ( numero ),
+        ajustes ( numero ),
+        devoluciones ( numero )
+      `)
       .eq('producto_id', productoId)
       .order('created_at', { ascending: false })
       .limit(100)

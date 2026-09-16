@@ -103,7 +103,7 @@ export const salesService = {
       const { data, error } = await supabase
         .from('ventas')
         .select(`
-          id, fecha, total, medio_pago_id, user_id,
+          id, numero, fecha, total, medio_pago_id, user_id,
           clientes ( nombre, documento ),
           detalle_ventas ( producto_id, cantidad, precio, costo_unitario, productos ( descripcion ) ),
           pagos_venta ( monto, medios_pago ( pago ) )
