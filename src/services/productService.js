@@ -146,18 +146,30 @@ async updateProduct(id, product) {
   try {
     // Se piden los números de cada documento (consecutivos por negocio) para
     // no mostrar los ids internos en la columna de referencia
-    const { data, error } = await supabase
-      .from('producto_historial')
-      .select(`
+    const CON_NUMEROS = `
         *,
         ventas ( numero ),
         entradas ( numero ),
         ajustes ( numero ),
         devoluciones ( numero )
-      `)
+      `
+
+    const consulta = (select) => supabase
+      .from('producto_historial')
+      .select(select)
       .eq('producto_id', productoId)
       .order('created_at', { ascending: false })
       .limit(100)
+
+    let { data, error } = await consulta(CON_NUMEROS)
+
+    // Si alguna de esas relaciones no está declarada en la base de datos, la
+    // consulta entera falla y el historial se veía vacío. Se reintenta sin
+    // los números: es mejor mostrar los movimientos con el id que no mostrarlos
+    if (error) {
+      console.warn('Historial sin números de documento:', error.message)
+      ;({ data, error } = await consulta('*'))
+    }
 
     if (error) throw error
     return data || []

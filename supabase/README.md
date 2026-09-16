@@ -40,6 +40,7 @@ archivo completo → Run.
 | 28 | `28_costos_solo_admin.sql` | Fase 2: el costo sale de `productos` y pasa a `productos_costos` (solo admin). `registrar_venta` y `actualizar_inventario` pasan a `SECURITY DEFINER` con filtro de negocio explícito. |
 | 29 | `29_codigo_por_negocio.sql` | `productos.codigo`: número consecutivo por negocio (todos empiezan en 1), con contador en `negocios.ultimo_codigo_producto`. |
 | 30 | `30_numeros_por_negocio.sql` | `numero` por negocio en ventas, devoluciones, entradas, ajustes y abonos, con la tabla `consecutivos` (que absorbe el contador de productos). |
+| 31 | `31_historial_relacion_ventas.sql` | Declara la relación `producto_historial.venta_id → ventas`, que faltaba desde antes de las migraciones, e indexa las referencias del historial. |
 
 ## Lo que todavía no está aquí
 

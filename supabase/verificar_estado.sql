@@ -56,7 +56,8 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('29_codigo_por_negocio',   'trigger asignar_codigo_producto', 'trigger',  'asignar_codigo_producto'),
   ('30_numeros_por_negocio',  'tabla consecutivos',              'tabla',    'consecutivos'),
   ('30_numeros_por_negocio',  'ventas.numero',                   'columna',  'ventas.numero'),
-  ('30_numeros_por_negocio',  'trigger asignar_numero_venta',    'trigger',  'asignar_numero_venta')
+  ('30_numeros_por_negocio',  'trigger asignar_numero_venta',    'trigger',  'asignar_numero_venta'),
+  ('31_historial_relacion_ventas', 'relación historial → ventas', 'restriccion', 'producto_historial_venta_id_fkey')
 )
 select
   migracion,
@@ -95,6 +96,10 @@ select
                         where n.nspname='public'
                           and p.proname = split_part(nombre,'|',1)
                           and p.prosrc like '%' || split_part(nombre,'|',2) || '%')
+           then 'OK' else 'FALTA' end
+    -- nombre = nombre de la restricción (clave foránea, check...)
+    when tipo = 'restriccion' then
+      case when exists (select 1 from pg_constraint where conname = nombre)
            then 'OK' else 'FALTA' end
     when tipo = 'trigger' then
       case when exists (select 1 from pg_trigger where tgname=nombre)
