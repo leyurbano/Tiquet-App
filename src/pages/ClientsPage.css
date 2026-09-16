@@ -23,7 +23,12 @@
 
 @media (max-width: 640px) {
   .clients-title { font-size: 1.6rem; }
-  .btn-new-client { width: 100%; justify-content: center; }
+
+  /* Compacto, no de ancho completo: así cabe junto al título */
+  .btn-new-client {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.875rem;
+  }
 }
 
 .btn-new-client {

@@ -25,7 +25,12 @@
 
 @media (max-width: 640px) {
   .products-title { font-size: 1.6rem; }
-  .btn-new-product { width: 100%; justify-content: center; }
+
+  /* Compacto, no de ancho completo: así cabe junto al título */
+  .btn-new-product {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.875rem;
+  }
 }
 
 .btn-new-product {
