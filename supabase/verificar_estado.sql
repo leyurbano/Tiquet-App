@@ -51,7 +51,9 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('27_costos_no_visibles',   'devoluciones sin costo_total',    'ausente',  'devoluciones.costo_total'),
   ('28_costos_solo_admin',    'tabla productos_costos',          'tabla',    'productos_costos'),
   ('28_costos_solo_admin',    'productos sin costo',             'ausente',  'productos.costo'),
-  ('28_costos_solo_admin',    'trigger crear_costo_producto',    'trigger',  'crear_costo_producto')
+  ('28_costos_solo_admin',    'trigger crear_costo_producto',    'trigger',  'crear_costo_producto'),
+  ('29_codigo_por_negocio',   'productos.codigo',                'columna',  'productos.codigo'),
+  ('29_codigo_por_negocio',   'trigger asignar_codigo_producto', 'trigger',  'asignar_codigo_producto')
 )
 select
   migracion,

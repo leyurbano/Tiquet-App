@@ -9,6 +9,7 @@ import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import './InventarioPage.css'
 import { PackagePlus, Trash2, ClipboardCheck, FileSpreadsheet } from 'lucide-react'
 import AjusteInventario from '../components/AjusteInventario'
+import { numeroProducto, coincideNumero } from '../utils/producto'
 import ImportarProductos from '../components/ImportarProductos'
 
 // Mismo cálculo que hace registrar_entrada en la base de datos: promedio
@@ -72,7 +73,7 @@ function InventarioPage() {
     const t = normalizar(busqueda)
     if (!t) return []
     return productos
-      .filter((p) => normalizar(p.descripcion).includes(t) || String(p.id) === t)
+      .filter((p) => normalizar(p.descripcion).includes(t) || coincideNumero(p, t))
       .slice(0, 8)
   }, [busqueda, productos])
 
@@ -288,7 +289,7 @@ function InventarioPage() {
                   {sugerencias.map((p) => (
                     <li key={p.id}>
                       <button type="button" onClick={() => agregar(p)}>
-                        <span>#{p.id} · {p.descripcion}</span>
+                        <span>#{numeroProducto(p)} · {p.descripcion}</span>
                         <span className="inv-sug-stock">stock {p.cantidad ?? 0}</span>
                       </button>
                     </li>

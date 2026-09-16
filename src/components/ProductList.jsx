@@ -5,6 +5,7 @@ import ProductHistoryModal from "./ProductHistoryModal";
 import Paginacion from "./Paginacion";
 import { Pencil, History, Package, AlertTriangle } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
+import { numeroProducto, coincideNumero } from "../utils/producto";
 
 const POR_PAGINA = 50;
 
@@ -29,7 +30,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
     if (!termino) return true;
     return (
       (product.descripcion || "").toLowerCase().includes(termino) ||
-      String(product.id) === termino
+      coincideNumero(product, termino)
     );
   });
 
@@ -143,7 +144,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
                   const estado = estadoStock(product, minimoNegocio);
                   return (
                   <tr key={product.id} className={`table-row fila-${estado}`}>
-                    <td className="cell-numeric">{product.id}</td>
+                    <td className="cell-numeric">{numeroProducto(product)}</td>
                     <td className="cell-description">
                       {(product.descripcion || "")
                         .toLowerCase()

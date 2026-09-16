@@ -38,6 +38,7 @@ archivo completo → Run.
 | 26 | `26_fiado.sql` | Fiado: medio de pago `Fiado`, cupo por cliente, abonos (`registrar_abono`), saldo calculado (`saldo_fiado`, `saldos_fiado`), y control de cupo en `registrar_venta`. |
 | 27 | `27_costos_no_visibles.sql` | Costos fuera del alcance del vendedor (fase 1): `detalle_devoluciones` solo admin, `devoluciones` sin `costo_total`, `devuelto_por_linea()` y el historial sin costos en el texto. |
 | 28 | `28_costos_solo_admin.sql` | Fase 2: el costo sale de `productos` y pasa a `productos_costos` (solo admin). `registrar_venta` y `actualizar_inventario` pasan a `SECURITY DEFINER` con filtro de negocio explícito. |
+| 29 | `29_codigo_por_negocio.sql` | `productos.codigo`: número consecutivo por negocio (todos empiezan en 1), con contador en `negocios.ultimo_codigo_producto`. |
 
 ## Lo que todavía no está aquí
 
