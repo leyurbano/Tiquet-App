@@ -17,7 +17,7 @@ import { fiadoService } from '../services/fiadoService'
 import { clientService } from '../services/clientService'
 import dayjs from 'dayjs'
 import './CierreCajaPage.css'
-import { Wallet, TrendingUp, Receipt, AlertTriangle, Percent, Package, ArrowRight, Users } from 'lucide-react'
+import { Wallet, Receipt, AlertTriangle, Package, ArrowRight, Users } from 'lucide-react'
 
 const TZ = 'America/Bogota'
 const TOPE_LISTA = 8      // cuántos movimientos se muestran antes de "ver todos"
@@ -247,6 +247,15 @@ function CierreCajaPage() {
   }, [saldos, clientes])
 
   const totalAbonos = abonos.reduce((s, a) => s + (Number(a.monto) || 0), 0)
+
+  // La comparación va dentro de la frase: antes vivía en una tarjeta que
+  // repetía lo que la frase ya decía. Bajo el 1 % no se menciona: es ruido.
+  const comparado = (() => {
+    const v = variacion(rep.ingresoNeto, previo?.ingresoNeto)
+    if (v === null || !isFinite(v) || Math.abs(v) < 1) return null
+    const antes = desde === hasta && desde === getTodayColombia() ? 'ayer' : 'el período anterior'
+    return `${Math.abs(v).toFixed(0)} % ${v > 0 ? 'más' : 'menos'} que ${antes}`
+  })()
   const totalAnuladas = anuladas.reduce((s, v) => s + (Number(v.total) || 0), 0)
 
   const hayVentas = !loading && !error && ventas.length > 0
@@ -400,12 +409,34 @@ function CierreCajaPage() {
         <div className={loading ? 'cierre-actualizando' : ''}>
 
           {/* ---------- Resumen en una frase ---------- */}
+          {/* 🔧 Antes decía "vendiste $0 en 1 venta" sin nombrar la devolución
+              que explicaba ese $0, y parecía un error del sistema */}
           <p className="cierre-frase">
-            {inicioFrase()} vendiste <strong>{formatCOP(rep.ingresoNeto)}</strong> en{' '}
-            <strong>{rep.cantidadVentas}</strong> {rep.cantidadVentas === 1 ? 'venta' : 'ventas'}
-            {rep.ingresoNeto > 0 && (
-              <> y te quedaron <strong className="cierre-frase-ganancia">{formatCOP(rep.ganancia)}</strong> ({formatPct(rep.margen)})</>
-            )}.
+            {rep.cantidadVentas === 0 ? (
+              <>
+                {inicioFrase()} no registraste ventas
+                {rep.totalDevuelto > 0 && (
+                  <> y se devolvieron <strong>{formatCOP(rep.totalDevuelto)}</strong></>
+                )}.
+              </>
+            ) : rep.totalDevuelto > 0 ? (
+              <>
+                {inicioFrase()} hiciste <strong>{rep.cantidadVentas}</strong>{' '}
+                {rep.cantidadVentas === 1 ? 'venta' : 'ventas'} por{' '}
+                <strong>{formatCOP(rep.totalVendido)}</strong>, se devolvieron{' '}
+                <strong>{formatCOP(rep.totalDevuelto)}</strong> y te quedaron{' '}
+                <strong className="cierre-frase-ganancia">{formatCOP(rep.ganancia)}</strong>
+                {rep.ingresoNeto > 0 && <> ({formatPct(rep.margen)})</>}
+                {comparado && <>, <strong>{comparado}</strong></>}.
+              </>
+            ) : (
+              <>
+                {inicioFrase()} vendiste <strong>{formatCOP(rep.ingresoNeto)}</strong> en{' '}
+                <strong>{rep.cantidadVentas}</strong> {rep.cantidadVentas === 1 ? 'venta' : 'ventas'} y
+                te quedaron <strong className="cierre-frase-ganancia">{formatCOP(rep.ganancia)}</strong>{' '}
+                ({formatPct(rep.margen)}){comparado && <>, <strong>{comparado}</strong></>}.
+              </>
+            )}
           </p>
 
           {/* ---------- Cifras principales ---------- */}
@@ -414,24 +445,19 @@ function CierreCajaPage() {
               <Receipt size={18} />
               <span className="cierre-stat-label">Ventas</span>
               <span className="cierre-stat-value">{rep.cantidadVentas}</span>
-              <Comparacion valor={variacion(rep.cantidadVentas, previo?.cantidadVentas)} />
-            </div>
-            <div className="cierre-stat">
-              <TrendingUp size={18} />
-              <span className="cierre-stat-label">Vendido</span>
-              <span className="cierre-stat-value">{formatCOP(rep.ingresoNeto)}</span>
-              {rep.totalDevuelto > 0 ? (
-                <span className="cierre-stat-extra">ya sin {formatCOP(rep.totalDevuelto)} devueltos</span>
+              {/* El conteo no baja con las devoluciones: la venta ocurrió.
+                  Se dice aquí para que el número no parezca inflado */}
+              {rep.cantidadDevoluciones > 0 ? (
+                <span className="cierre-stat-extra">
+                  y {rep.cantidadDevoluciones} {rep.cantidadDevoluciones === 1 ? 'devolución' : 'devoluciones'}
+                </span>
               ) : (
-                <Comparacion valor={variacion(rep.ingresoNeto, previo?.ingresoNeto)} />
+                <Comparacion valor={variacion(rep.cantidadVentas, previo?.cantidadVentas)} />
               )}
             </div>
-            <div className="cierre-stat stat-ganancia">
-              <Percent size={18} />
-              <span className="cierre-stat-label">Te quedó</span>
-              <span className="cierre-stat-value">{formatCOP(rep.ganancia)}</span>
-              <span className="cierre-stat-extra">de cada $100, te quedan {formatPct(rep.margen).replace('%', '')}</span>
-            </div>
+            {/* 🔧 "Vendido" y "Te quedó" salieron de aquí: la frase de arriba
+                y la tabla "Cómo te fue" ya los dicen. Quedan los dos datos
+                que no están en ningún otro lado */}
             <div className="cierre-stat">
               <Wallet size={18} />
               <span className="cierre-stat-label">Venta promedio</span>

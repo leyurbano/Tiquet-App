@@ -78,6 +78,9 @@ export const buildReportSummary = (ventas = [], devoluciones = []) => {
   const ganancia = ingresoNeto - costoNeto
 
   const productos = Object.values(porProducto)
+    // Un producto vendido y devuelto por completo queda en ceros: listarlo
+    // como "lo que más te vende" es ruido
+    .filter((p) => p.unidades > 0 || p.ingreso > 0)
     .map((p) => ({
       ...p,
       ganancia: p.ingreso - p.costo,
@@ -96,7 +99,9 @@ export const buildReportSummary = (ventas = [], devoluciones = []) => {
     ganancia,
     // Margen sobre la venta neta: qué porcentaje de lo facturado queda como ganancia
     margen: ingresoNeto > 0 ? (ganancia / ingresoNeto) * 100 : 0,
-    ticketPromedio: ventas.length > 0 ? totalVendido / ventas.length : 0,
+    // Sobre lo que realmente entró: con el bruto, "venta promedio $500"
+    // convivía con "vendido $0" en la misma pantalla
+    ticketPromedio: ventas.length > 0 ? ingresoNeto / ventas.length : 0,
     unidades,
     lineasSinCosto,
     productos
