@@ -351,7 +351,202 @@
 
 .cierre-table thead th.num { text-align: right; }
 
+/* ---- Resumen en una frase ---- */
+
+.cierre-frase {
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: #374151;
+  margin-bottom: 1.25rem;
+}
+
+.cierre-frase strong { color: #111827; }
+.cierre-frase-ganancia { color: #15803d; }
+
+/* ---- Comparación con el período anterior ---- */
+
+.cierre-var {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.cierre-var-sube { color: #15803d; }
+.cierre-var-baja { color: #b91c1c; }
+
+/* ---- Encabezado de tarjeta con acción ---- */
+
+.cierre-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.cierre-card-head .cierre-card-title { margin-bottom: 0; }
+
+.cierre-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.cierre-accion:hover { background: #dbeafe; }
+
+/* ---- Listas de movimientos (se leen bien en celular) ---- */
+
+.cierre-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cierre-lista-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cierre-lista-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cierre-lista-texto strong {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.cierre-lista-texto span {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
+
+.cierre-lista-monto {
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.cierre-ver-mas {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0.6rem 0 0;
+  cursor: pointer;
+}
+
+.cierre-ver-mas:hover { text-decoration: underline; }
+
+.cierre-lista-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid #e5e7eb;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ---- Ventas por día ---- */
+
+.grafica {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  height: 11rem;
+  overflow-x: auto;
+  padding-top: 1.25rem;
+}
+
+.grafica-col {
+  flex: 1 0 1.6rem;
+  min-width: 1.6rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.grafica-barra {
+  width: 100%;
+  max-width: 2.5rem;
+  background: #93c5fd;
+  border-radius: 0.25rem 0.25rem 0 0;
+  transition: height 0.25s;
+}
+
+.grafica-mejor .grafica-barra { background: #2563eb; }
+
+.grafica-valor {
+  font-size: 0.62rem;
+  color: #6b7280;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  max-height: 4rem;
+  overflow: hidden;
+}
+
+.grafica-dia {
+  font-size: 0.65rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* ---- Estado vacío y actualización ---- */
+
+.cierre-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 2rem;
+}
+
+.cierre-vacio .cierre-empty { padding-bottom: 0.5rem; }
+
+/* Al cambiar de período: los datos viejos se atenúan, no desaparecen */
+.cierre-actualizando {
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+
+.fila-subtotal td {
+  border-top: 1px solid #e5e7eb;
+  font-weight: 700;
+}
+
 /* ---- Exportar a Excel ---- */
+
+.cierre-hint-export {
+  margin: 0.4rem 0 0;
+  text-align: right;
+}
 
 .exportar-botones {
   display: flex;
