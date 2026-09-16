@@ -198,17 +198,51 @@
 }
 
 /* ---- Fiado ---- */
-.clients-filtro-deuda {
+
+/* Misma forma que la barra de stock bajo en Productos, en rojo porque es
+   plata por cobrar y no una alerta de inventario */
+.deuda-bar {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: #374151;
-  margin: 0.5rem 0 0.75rem;
+  gap: 0.6rem;
+  width: 100%;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.clients-total-deuda { color: #b91c1c; font-weight: 600; }
+.deuda-bar:hover { background: #fee2e2; }
+
+.deuda-bar:focus-visible {
+  outline: 2px solid #b91c1c;
+  outline-offset: 2px;
+}
+
+.deuda-bar-activa {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.deuda-bar svg { flex-shrink: 0; }
+
+.deuda-bar-accion {
+  margin-left: auto;
+  font-weight: 700;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .deuda-bar { flex-wrap: wrap; }
+  .deuda-bar-accion { margin-left: 0; }
+}
 
 .saldo-cell { white-space: nowrap; }
 .saldo-deuda { color: #b91c1c; font-weight: 700; }

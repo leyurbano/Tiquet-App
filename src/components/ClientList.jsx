@@ -3,7 +3,7 @@ import './ClientList.css'
 import { esConsumidorFinal } from '../utils/clientes'
 import { formatCOP } from '../utils/currencyFormatter'
 import MenuAcciones from './MenuAcciones'
-import { Pencil, Banknote, Receipt, Wallet, Trash2 } from 'lucide-react'
+import { Pencil, Banknote, Receipt, Wallet, Trash2, AlertTriangle } from 'lucide-react'
 
 /**
  * saldos: { [cliente_id]: { saldo } } con el fiado de cada cliente, o null
@@ -22,18 +22,20 @@ function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null,
   const conFiado = saldos !== null
   const saldoDe = (client) => Number(saldos?.[client.id]?.saldo) || 0
 
+  const deudores = conFiado ? Object.values(saldos).filter((s) => Number(s.saldo) > 0) : []
+  const totalDeuda = deudores.reduce((s, x) => s + Number(x.saldo), 0)
+  // Si pagaron todo mientras el filtro estaba puesto, la lista no puede
+  // quedar vacía y sin forma de volver
+  const filtrarDeuda = soloDeuda && deudores.length > 0
+
   // Filtro derivado en cada render: no hace falta copiarlo a un estado
   const termino = searchTerm.toLowerCase()
   const filteredClients = clients.filter(client =>
     (client.nombre.toLowerCase().includes(termino) ||
       (client.documento && client.documento.includes(searchTerm)) ||
       (client.telefono && client.telefono.includes(searchTerm))) &&
-    (!soloDeuda || saldoDe(client) > 0)
+    (!filtrarDeuda || saldoDe(client) > 0)
   )
-
-  const totalDeuda = conFiado
-    ? Object.values(saldos).reduce((s, x) => s + Math.max(Number(x.saldo) || 0, 0), 0)
-    : 0
 
   // Acciones que no son del día a día: van en el menú "⋯"
   const accionesDe = (client) => {
@@ -76,16 +78,24 @@ function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null,
         className="search-input"
       />
 
-      {conFiado && (
-        <label className="clients-filtro-deuda">
-          <input
-            type="checkbox"
-            checked={soloDeuda}
-            onChange={(e) => setSoloDeuda(e.target.checked)}
-          />
-          Solo clientes con deuda de fiado
-          {totalDeuda > 0 && <span className="clients-total-deuda">· te deben {formatCOP(totalDeuda)}</span>}
-        </label>
+      {/* 🔧 Antes era un check suelto entre el buscador y la tabla, que salía
+          aunque nadie debiera. Ahora es una barra como la de stock bajo en
+          Productos, y solo aparece cuando hay algo que cobrar */}
+      {deudores.length > 0 && (
+        <button
+          type="button"
+          className={`deuda-bar ${soloDeuda ? 'deuda-bar-activa' : ''}`}
+          onClick={() => setSoloDeuda((v) => !v)}
+          aria-pressed={soloDeuda}
+        >
+          <AlertTriangle size={16} aria-hidden="true" />
+          <span>
+            <strong>{deudores.length}</strong>{' '}
+            {deudores.length === 1 ? 'cliente te debe' : 'clientes te deben'}{' '}
+            <strong>{formatCOP(totalDeuda)}</strong>
+          </span>
+          <span className="deuda-bar-accion">{soloDeuda ? 'Ver todos' : 'Ver solo estos'}</span>
+        </button>
       )}
 
       {filteredClients.length === 0 ? (
