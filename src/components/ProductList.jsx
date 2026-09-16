@@ -172,16 +172,22 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0 }) {
                         <button
                           onClick={() => onEdit(product)}
                           className="btn-edit"
+                          title="Editar producto"
+                          aria-label={`Editar ${product.descripcion}`}
                         >
-                          <Pencil size={14} /> Editar
+                          {/* El texto va en <span>: en celular se oculta y
+                              queda solo el ícono */}
+                          <Pencil size={14} aria-hidden="true" /> <span>Editar</span>
                         </button>
                       )}
                       {/* Botón eliminar deshabilitado: evita romper el historial de productos con ventas asociadas */}
                       <button
                         onClick={() => setHistoryProduct(product)}
                         className="btn-history"
+                        title="Ver historial de movimientos"
+                        aria-label={`Historial de ${product.descripcion}`}
                       >
-                        <History size={14} /> Historial
+                        <History size={14} aria-hidden="true" /> <span>Historial</span>
                       </button>
                     </td>
                   </tr>
