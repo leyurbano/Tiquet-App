@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { salesService } from '../services/salesService'
 import { buildCashSummary } from '../utils/cashSummary'
-import { buildReportSummary, formatPct } from '../utils/reportSummary'
+import { buildReportSummary, formatPct, resumenPorVendedor, productosEnRiesgo } from '../utils/reportSummary'
 import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
 import { etiquetaMotivo } from '../utils/motivosAnulacion'
@@ -17,7 +17,7 @@ import { fiadoService } from '../services/fiadoService'
 import { clientService } from '../services/clientService'
 import dayjs from 'dayjs'
 import './CierreCajaPage.css'
-import { Wallet, TrendingUp, Receipt, AlertTriangle, Percent, Package, ArrowRight } from 'lucide-react'
+import { Wallet, TrendingUp, Receipt, AlertTriangle, Percent, Package, ArrowRight, Users } from 'lucide-react'
 
 const TZ = 'America/Bogota'
 const TOPE_LISTA = 8      // cuántos movimientos se muestran antes de "ver todos"
@@ -206,6 +206,9 @@ function CierreCajaPage() {
   const caja = useMemo(() => buildCashSummary(ventas, mediosPago), [ventas, mediosPago])
   const rep = useMemo(() => buildReportSummary(ventas, devoluciones), [ventas, devoluciones])
   const nombreUsuario = (id) => usuarios.find((u) => u.id === id)?.nombre || 'Usuario'
+
+  const vendedores = useMemo(() => resumenPorVendedor(ventas, devoluciones), [ventas, devoluciones])
+  const riesgo = useMemo(() => productosEnRiesgo(rep.productos), [rep.productos])
 
   // Ventas de cada día del período (ya descontadas las devoluciones de ese día)
   const porDia = useMemo(() => {
@@ -448,6 +451,65 @@ function CierreCajaPage() {
             </div>
           )}
 
+          {/* ---------- Productos para revisar ---------- */}
+          {(riesgo.perdida.length > 0 || riesgo.bajos.length > 0) && (
+            <div className="cierre-card cierre-card-riesgo">
+              <div className="cierre-card-head">
+                <h2 className="cierre-card-title">
+                  <AlertTriangle size={18} /> Ojo con estos productos
+                </h2>
+                <button type="button" className="cierre-accion" onClick={() => navigate('/products')}>
+                  Ir a Productos <ArrowRight size={15} aria-hidden="true" />
+                </button>
+              </div>
+
+              {riesgo.perdida.length > 0 && (
+                <>
+                  <p className="cierre-hint">
+                    Los estás vendiendo <strong>por debajo de lo que te costaron</strong>:
+                    cada venta te quita plata. Revisa el precio en Productos, o el costo
+                    en Inventario si quedó mal cargado.
+                  </p>
+                  <ul className="cierre-lista">
+                    {riesgo.perdida.slice(0, 5).map((p) => (
+                      <li className="cierre-lista-item" key={p.id}>
+                        <span className="cierre-lista-texto">
+                          <strong>{p.nombre}</strong>
+                          <span>{p.unidades} unid. · vendiste {formatCOP(p.ingreso)}</span>
+                        </span>
+                        <span className="cierre-lista-monto cierre-anulada-monto">
+                          perdiste {formatCOP(Math.abs(p.ganancia))}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {riesgo.bajos.length > 0 && (
+                <>
+                  <p className="cierre-hint cierre-hint-separado">
+                    Estos dejan <strong>menos del 15 %</strong>. No es un error, pero
+                    conviene revisarlos.
+                  </p>
+                  <ul className="cierre-lista">
+                    {riesgo.bajos.slice(0, 5).map((p) => (
+                      <li className="cierre-lista-item" key={p.id}>
+                        <span className="cierre-lista-texto">
+                          <strong>{p.nombre}</strong>
+                          <span>{p.unidades} unid. · vendiste {formatCOP(p.ingreso)}</span>
+                        </span>
+                        <span className="cierre-lista-monto cierre-margen-bajo">
+                          {formatPct(p.margen)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
+
           {/* ---------- Ventas por día ---------- */}
           {porDia.length > 1 && (
             <div className="cierre-card">
@@ -557,6 +619,54 @@ function CierreCajaPage() {
                   Mostrando los 20 que más dinero dejaron, de {rep.productos.length} en total.
                 </p>
               )}
+            </div>
+          )}
+
+          {/* ---------- Por vendedor ----------
+              Solo tiene sentido si vende más de una persona */}
+          {vendedores.length > 1 && (
+            <div className="cierre-card">
+              <h2 className="cierre-card-title">
+                <Users size={18} /> Quién vendió
+              </h2>
+              <div className="tabla-scroll">
+                <table className="cierre-table">
+                  <thead>
+                    <tr>
+                      <th>Vendedor</th>
+                      <th className="num">Ventas</th>
+                      <th className="num">Vendido</th>
+                      <th className="num">Promedio</th>
+                      <th className="num">Devoluciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vendedores.map((v) => (
+                      <tr key={v.clave}>
+                        <td className="cierre-medio">
+                          {v.userId ? nombreUsuario(v.userId) : 'Sin registrar'}
+                          <span className="cierre-participacion">
+                            <span style={{ width: `${Math.round(v.participacion)}%` }} />
+                          </span>
+                        </td>
+                        <td className="cierre-medio-total">{v.ventas}</td>
+                        <td className="cierre-medio-total">
+                          {formatCOP(v.total)}
+                          <span className="cierre-sub">{v.participacion.toFixed(0)}% del total</span>
+                        </td>
+                        <td className="cierre-medio-total">{formatCOP(v.promedio)}</td>
+                        <td className={`cierre-medio-total ${v.devoluciones > 0 ? 'cierre-anulada-monto' : ''}`}>
+                          {v.devoluciones === 0 ? '—' : `${v.devoluciones} · ${formatCOP(v.devuelto)}`}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="cierre-hint">
+                Las devoluciones se cuentan por quien las registró. Muchas devoluciones
+                en una sola persona es algo para mirar de cerca.
+              </p>
             </div>
           )}
 

@@ -541,6 +541,53 @@
   font-weight: 700;
 }
 
+/* ---- Productos para revisar ---- */
+
+.cierre-card-riesgo {
+  border-left: 4px solid #f59e0b;
+}
+
+.cierre-card-riesgo .cierre-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #92400e;
+}
+
+.cierre-hint-separado {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.cierre-margen-bajo { color: #b45309; }
+
+/* ---- Quién vendió ---- */
+
+.cierre-participacion {
+  display: block;
+  height: 0.3rem;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  overflow: hidden;
+  max-width: 10rem;
+}
+
+.cierre-participacion > span {
+  display: block;
+  height: 100%;
+  background: #93c5fd;
+  border-radius: 999px;
+}
+
+.cierre-sub {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
 /* ---- Exportar a Excel ---- */
 
 .cierre-hint-export {
