@@ -103,5 +103,59 @@ export const buildReportSummary = (ventas = [], devoluciones = []) => {
   }
 }
 
+/**
+ * Cuánto vendió cada usuario en el período, y cuántas devoluciones registró.
+ *
+ * No calcula ganancia por vendedor a propósito: el costo de lo devuelto no
+ * se puede repartir con exactitud, y un número aproximado en dinero por
+ * persona se presta a conclusiones injustas.
+ */
+export const resumenPorVendedor = (ventas = [], devoluciones = []) => {
+  const porUsuario = {}
+  const fila = (id) => {
+    const clave = id || 'sin-registrar'
+    if (!porUsuario[clave]) {
+      porUsuario[clave] = { clave, userId: id || null, ventas: 0, total: 0, devoluciones: 0, devuelto: 0 }
+    }
+    return porUsuario[clave]
+  }
+
+  ventas.forEach((v) => {
+    const u = fila(v.user_id)
+    u.ventas += 1
+    u.total += Number(v.total) || 0
+  })
+
+  devoluciones.forEach((d) => {
+    const u = fila(d.user_id)
+    u.devoluciones += 1
+    u.devuelto += Number(d.total) || 0
+  })
+
+  const totalGeneral = Object.values(porUsuario).reduce((s, u) => s + u.total, 0)
+
+  return Object.values(porUsuario)
+    .map((u) => ({
+      ...u,
+      promedio: u.ventas > 0 ? u.total / u.ventas : 0,
+      participacion: totalGeneral > 0 ? (u.total / totalGeneral) * 100 : 0
+    }))
+    .sort((a, b) => b.total - a.total)
+}
+
+/**
+ * Productos que hay que revisar, a partir de `productos` de buildReportSummary:
+ *  - perdida: se vendieron por debajo del costo (cada venta resta plata)
+ *  - bajos:   dejan menos del margen mínimo (15 % por defecto)
+ */
+export const productosEnRiesgo = (productos = [], margenMinimo = 15) => ({
+  perdida: productos
+    .filter((p) => p.ingreso > 0 && p.ganancia < 0)
+    .sort((a, b) => a.ganancia - b.ganancia),
+  bajos: productos
+    .filter((p) => p.ingreso > 0 && p.ganancia >= 0 && p.margen < margenMinimo)
+    .sort((a, b) => b.ingreso - a.ingreso)
+})
+
 export const formatPct = (valor) =>
   `${(valor || 0).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`

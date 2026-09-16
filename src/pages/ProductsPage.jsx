@@ -104,7 +104,9 @@ function ProductsPage() {
     <div className="products-page">
       <div className="products-header">
         <h1 className="products-title">📦 Gestión de Productos</h1>
-        {esAdministrador && !showForm && (
+        {/* Siempre montado: si se desmonta al abrir el formulario, al cerrarlo
+            el foco del teclado no tiene a dónde volver */}
+        {esAdministrador && (
           <button onClick={() => setShowForm(true)} className="btn-new-product">
             <PlusCircle size={18} /> Nuevo Producto
           </button>

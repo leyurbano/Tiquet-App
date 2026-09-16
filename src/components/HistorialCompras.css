@@ -112,17 +112,5 @@
   font-size: 0.8rem;
 }
 
-/* Botón en la lista de clientes */
-.btn-compras {
-  background: #fef3c7;
-  color: #92400e;
-  border: none;
-  border-radius: 0.375rem;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-left: 0.3rem;
-}
-
-.btn-compras:hover { background: #fde68a; }
+/* El acceso al historial de compras vive ahora en el menú "⋯" de cada
+   cliente (MenuAcciones), así que no necesita botón propio */

@@ -5,6 +5,23 @@ import { supabase } from './supabaseClient'
 const conCupo = (client, fila) =>
   client.cupo_fiado === undefined ? fila : { ...fila, cupo_fiado: client.cupo_fiado }
 
+/**
+ * Traduce el error de la base de datos a algo que el usuario entienda.
+ *
+ * 🔧 Antes crear un cliente con un documento repetido devolvía null y la
+ * pantalla no mostraba nada: el formulario se quedaba abierto, sin decir
+ * por qué no guardaba.
+ *
+ * 23505 = documento repetido (índice único por negocio, migración 20).
+ */
+const motivoError = (error, accion) => {
+  if (error?.code === '23505') return 'Ya existe un cliente con ese documento.'
+  if (error?.code === '42501' || /row-level security/i.test(error?.message || '')) {
+    return `No tienes permiso para ${accion} clientes.`
+  }
+  return error?.message || `No se pudo ${accion} el cliente. Revisa tu conexión.`
+}
+
 export const clientService = {
   // Obtener todos los clientes
   async getAllClients() {
@@ -52,10 +69,10 @@ export const clientService = {
         .select()
       
       if (error) throw error
-      return data?.[0]
+      return { cliente: data?.[0] || null }
     } catch (error) {
-      console.error('Error creating client:', error)
-      return null
+      console.error('Error creating client:', error.message || error)
+      return { error: motivoError(error, 'crear') }
     }
   },
 
@@ -73,10 +90,10 @@ export const clientService = {
         .select()
       
       if (error) throw error
-      return data?.[0]
+      return { cliente: data?.[0] || null }
     } catch (error) {
-      console.error('Error updating client:', error)
-      return null
+      console.error('Error updating client:', error.message || error)
+      return { error: motivoError(error, 'actualizar') }
     }
   },
 

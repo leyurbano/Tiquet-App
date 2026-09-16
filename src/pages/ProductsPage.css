@@ -6,10 +6,14 @@
   padding: 2rem 1rem;
 }
 
+/* flex-wrap: en celular el título y el botón no caben en una línea y antes
+   se apretaban o se desbordaban */
 .products-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -17,6 +21,16 @@
   font-size: 2.25rem;
   font-weight: 700;
   color: #111827;
+}
+
+@media (max-width: 640px) {
+  .products-title { font-size: 1.6rem; }
+
+  /* Compacto, no de ancho completo: así cabe junto al título */
+  .btn-new-product {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.875rem;
+  }
 }
 
 .btn-new-product {
