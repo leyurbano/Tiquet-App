@@ -104,7 +104,7 @@ function SalesForm({
       return;
     }
     try {
-      const newCustomer = await clientService.createClient({
+      const { cliente: newCustomer, error } = await clientService.createClient({
         nombre: customer.name,
         documento: customer.cedula,
         telefono: customer.phone || "",
@@ -113,6 +113,8 @@ function SalesForm({
         setCustomerFound(newCustomer);
         setShowAddCustomerBtn(false);
         toast.exito("Cliente registrado correctamente");
+      } else {
+        toast.error(error);
       }
     } catch (error) {
       console.error("Error adding customer:", error);

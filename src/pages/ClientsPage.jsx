@@ -65,22 +65,30 @@ function ClientsPage() {
   // El hook siempre usa la versión más reciente de closeForm
   const refDialogo = useDialogo({ onCerrar: () => closeForm(), activo: showForm })
 
+  // El motivo del fallo se muestra como notificación, no en la página: el
+  // formulario sigue abierto encima y un mensaje detrás no se vería
   const handleAddClient = async (clientData) => {
-    const newClient = await clientService.createClient(clientData)
-    if (newClient) {
-      setClients([newClient, ...clients])
+    const { cliente, error } = await clientService.createClient(clientData)
+    if (cliente) {
+      setClients([cliente, ...clients])
       closeForm({ forzar: true })
+      toast.exito(`${cliente.nombre} fue creado`)
+    } else {
+      toast.error(error)
     }
-    return !!newClient
+    return !!cliente
   }
 
   const handleUpdateClient = async (clientData) => {
-    const updated = await clientService.updateClient(editingClient.id, clientData)
-    if (updated) {
-      setClients(clients.map(c => c.id === editingClient.id ? updated : c))
+    const { cliente, error } = await clientService.updateClient(editingClient.id, clientData)
+    if (cliente) {
+      setClients(clients.map(c => c.id === editingClient.id ? cliente : c))
       closeForm({ forzar: true })
+      toast.exito(`${cliente.nombre} fue actualizado`)
+    } else {
+      toast.error(error)
     }
-    return !!updated
+    return !!cliente
   }
 
   const handleDeleteClient = async (client) => {
@@ -107,11 +115,11 @@ function ClientsPage() {
     <div className="clients-page-container">
       <div className="clients-header">
         <h1 className="clients-title">👥 Gestión de Clientes</h1>
-        {!showForm && (
-          <button onClick={() => setShowForm(true)} className="btn-new-client">
-            <PlusCircle size={18} /> Nuevo Cliente
-          </button>
-        )}
+        {/* Siempre montado: si se desmonta al abrir el formulario, al cerrarlo
+            el foco del teclado no tiene a dónde volver */}
+        <button onClick={() => setShowForm(true)} className="btn-new-client">
+          <PlusCircle size={18} /> Nuevo Cliente
+        </button>
       </div>
 
       {mensaje && (

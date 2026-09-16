@@ -4,10 +4,14 @@
   padding: 2rem 1rem;
 }
 
+/* flex-wrap: en celular el título y el botón no caben en una línea y antes
+   se apretaban o se desbordaban */
 .clients-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -15,6 +19,11 @@
   font-size: 2.25rem;
   font-weight: 700;
   color: #111827;
+}
+
+@media (max-width: 640px) {
+  .clients-title { font-size: 1.6rem; }
+  .btn-new-client { width: 100%; justify-content: center; }
 }
 
 .btn-new-client {
