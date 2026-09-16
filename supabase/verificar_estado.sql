@@ -46,7 +46,9 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('26_fiado',                'tabla abonos',                    'tabla',    'abonos'),
   ('26_fiado',                'clientes.cupo_fiado',             'columna',  'clientes.cupo_fiado'),
   ('26_fiado',                'función registrar_abono()',       'funcion',  'registrar_abono'),
-  ('26_fiado',                'registrar_venta controla el cupo', 'funcion_contiene', 'registrar_venta|cupo de fiado')
+  ('26_fiado',                'registrar_venta controla el cupo', 'funcion_contiene', 'registrar_venta|cupo de fiado'),
+  ('27_costos_no_visibles',   'función devuelto_por_linea()',    'funcion',  'devuelto_por_linea'),
+  ('27_costos_no_visibles',   'devoluciones sin costo_total',    'ausente',  'devoluciones.costo_total')
 )
 select
   migracion,

@@ -36,6 +36,7 @@ archivo completo → Run.
 | 24 | `24_importar_productos.sql` | Importación desde Excel: `registrar_entrada` acepta productos nuevos con cantidad 0 (agotados) y máximo 2.000 líneas. |
 | 25 | `25_devoluciones.sql` | Devoluciones parciales (`registrar_devolucion`), límites para vendedores en `negocios`, y `anular_venta` bloqueada si la venta tiene devoluciones. |
 | 26 | `26_fiado.sql` | Fiado: medio de pago `Fiado`, cupo por cliente, abonos (`registrar_abono`), saldo calculado (`saldo_fiado`, `saldos_fiado`), y control de cupo en `registrar_venta`. |
+| 27 | `27_costos_no_visibles.sql` | Costos fuera del alcance del vendedor (fase 1): `detalle_devoluciones` solo admin, `devoluciones` sin `costo_total`, `devuelto_por_linea()` y el historial sin costos en el texto. |
 
 ## Lo que todavía no está aquí
 

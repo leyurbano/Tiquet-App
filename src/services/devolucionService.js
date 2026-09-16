@@ -33,13 +33,14 @@ export const devolucionService = {
   /**
    * Unidades ya devueltas de cada línea de una venta:
    * { [detalle_venta_id]: cantidad }. null si la consulta falló.
+   *
+   * 🔧 Antes leía detalle_devoluciones directamente, que incluye el costo
+   * congelado de la venta. Esa tabla pasó a ser solo de administradores
+   * (migración 27) y esta función devuelve únicamente cantidades.
    */
   async getDevueltoPorLinea(ventaId) {
     try {
-      const { data, error } = await supabase
-        .from('detalle_devoluciones')
-        .select('detalle_venta_id, cantidad')
-        .eq('venta_id', ventaId)
+      const { data, error } = await supabase.rpc('devuelto_por_linea', { p_venta_id: ventaId })
 
       if (error) throw error
       return (data || []).reduce((acc, d) => {
@@ -79,7 +80,7 @@ export const devolucionService = {
       const { data, error } = await supabase
         .from('devoluciones')
         .select(`
-          id, venta_id, fecha, total, costo_total, motivo, user_id,
+          id, venta_id, fecha, total, motivo, user_id,
           medios_pago ( pago ),
           detalle_devoluciones ( producto_id, cantidad, precio, costo_unitario, reintegra, productos ( descripcion ) )
         `)

@@ -17,15 +17,16 @@ export const salesService = {
         .select(`
           *,
           detalle_ventas (
-            *,
-            productos (*)
+            id, producto_id, cantidad, precio, total,
+            productos ( id, descripcion )
           ),
           pagos_venta (
             *,
             medios_pago (*)
           )
-        `) // 🔧 CAMBIO: se agregó pagos_venta con su join a medios_pago,
-           // así cada venta trae de una vez con qué medio(s) se pagó
+        `) // pagos_venta con su join a medios_pago: cada venta trae de una
+           // vez con qué medio(s) se pagó. El detalle NO pide costo_unitario:
+           // el tiquete no lo usa y los reportes tienen su propia consulta
         .is('anulada_en', null) // 🆕 las anuladas no suman dinero
 
       if (fecha) {
@@ -128,14 +129,14 @@ export const salesService = {
         .select(`
           *,
           detalle_ventas (
-            *,
-            productos (*)
+            id, producto_id, cantidad, precio, total,
+            productos ( id, descripcion )
           ),
           pagos_venta (
             *,
             medios_pago (*)
           )
-        `) // 🔧 CAMBIO: mismo join agregado aquí, por consistencia con getAllSales
+        `) // Mismo join que getAllSales, y sin costo_unitario por lo mismo
         .eq('id', id)
         .single()
 
