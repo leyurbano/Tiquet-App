@@ -385,6 +385,14 @@
   border-color: #f59e0b;
 }
 
+/* Aclara por qué el conteo es bajo: la alerta solo mira lo que rota */
+.stock-alert-nota {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
 .stock-alert-accion {
   margin-left: auto;
   font-weight: 700;

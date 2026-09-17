@@ -10,9 +10,46 @@ const conCosto = (fila) => ({
   productos_costos: undefined
 })
 
+// El error del índice único no le dice nada al usuario: "duplicate key
+// value violates unique constraint" no explica qué hacer.
+const mensajeDeError = (error) => {
+  if (error?.code === '23505' && String(error?.message).includes('codigo_barras')) {
+    return 'Ese código de barras ya lo tiene otro producto'
+  }
+  return error?.message || 'Error desconocido'
+}
+
 const SELECT_PRODUCTO = '*, productos_costos ( costo, costo_total )'
 
 export const productService = {
+  /**
+   * Unidades vendidas por producto en los últimos `dias`, como
+   * { [producto_id]: unidades }. Alimenta la alerta de stock bajo, que solo
+   * avisa de lo que rota (migración 33).
+   *
+   * La suma la hace Postgres: 30 días de ventas pasan de las 1.000 filas
+   * que devuelve Supabase por consulta, así que sumarlas en el navegador
+   * daría un conteo corto y sin error visible.
+   *
+   * Si la migración 33 no se ha corrido devuelve null, y `estadoStock`
+   * vuelve al comportamiento anterior (avisar por umbral solamente).
+   */
+  async getRotacion(dias = 30) {
+    try {
+      const { data, error } = await supabase.rpc('rotacion_productos', { p_dias: dias })
+      if (error) throw error
+
+      const porProducto = {}
+      for (const fila of data || []) {
+        porProducto[fila.producto_id] = Number(fila.vendidos) || 0
+      }
+      return porProducto
+    } catch (error) {
+      console.warn('Sin datos de rotación, la alerta de stock usa solo el umbral:', error.message || error)
+      return null
+    }
+  },
+
   /**
    * Todo el catálogo, en páginas de 1.000 (lo máximo que Supabase devuelve
    * por consulta). Para buscar productos o comparar contra un archivo
@@ -89,7 +126,8 @@ export const productService = {
         p_stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
           ? null : Number(product.stock_minimo),
         p_stock_inicial: Number(product.cantidad) || 0,
-        p_costo: Number(product.costo) || 0
+        p_costo: Number(product.costo) || 0,
+        p_codigo_barras: product.codigo_barras?.trim() || null
       })
 
       if (error) throw error
@@ -114,16 +152,19 @@ async updateProduct(id, product) {
         descripcion: product.descripcion,
         precio_venta: product.precio_venta,
         stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
-          ? null : Number(product.stock_minimo)
+          ? null : Number(product.stock_minimo),
+        // Vacío = sin código. Nunca cadena vacía: chocaría contra el
+        // índice único con los demás productos sin código.
+        codigo_barras: product.codigo_barras?.trim() || null
       })
       .eq('id', id)
       .select()
 
     if (error) throw error
-    return data?.[0]
+    return { producto: data?.[0] }
   } catch (error) {
     console.error('Error updating product:', error)
-    return null
+    return { error: mensajeDeError(error) }
   }
 },
 

@@ -39,7 +39,7 @@ const ORDENES = {
  * de stock se calculan sobre el catálogo completo) y pinta 50 por página:
  * pintar miles de filas a la vez es lo que volvía lenta la pantalla.
  */
-function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mostrarCostos = false }) {
+function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, rotacion = null, mostrarCostos = false }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [orden, setOrden] = useState("numero");
   const [historyProduct, setHistoryProduct] = useState(null);
@@ -47,16 +47,17 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
   const [pagina, setPagina] = useState(1);
   const inicioLista = useRef(null);
 
-  const alertas = contarBajos(products || [], minimoNegocio);
+  const alertas = contarBajos(products || [], minimoNegocio, rotacion);
   const totalAlertas = alertas.agotados + alertas.bajos;
 
   const termino = searchTerm.trim().toLowerCase();
   const filteredProducts = (products || []).filter((product) => {
-    if (soloBajos && estadoStock(product, minimoNegocio) === "ok") return false;
+    if (soloBajos && estadoStock(product, minimoNegocio, rotacion) === "ok") return false;
     if (!termino) return true;
     return (
       (product.descripcion || "").toLowerCase().includes(termino) ||
-      coincideNumero(product, termino)
+      coincideNumero(product, termino) ||
+      (product.codigo_barras || "").toLowerCase().includes(termino)
     );
   });
 
@@ -149,6 +150,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
             {alertas.bajos > 0 && (
               <span>{alertas.bajos} por agotarse</span>
             )}
+            {rotacion && <span className="stock-alert-nota">de lo que se está vendiendo</span>}
           </span>
           <span className="stock-alert-accion">
             {soloBajos ? "Ver todos" : "Ver solo estos"}
@@ -161,7 +163,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
       ) : filteredProducts.length === 0 ? (
         <p className="pl-vacio">
           {soloBajos
-            ? "No hay productos por agotarse"
+            ? "Nada por reponer: lo que se está vendiendo tiene stock"
             : "No hay productos disponibles"}
         </p>
       ) : (
@@ -185,7 +187,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
               </thead>
               <tbody>
                 {visibles.map((product) => {
-                  const estado = estadoStock(product, minimoNegocio);
+                  const estado = estadoStock(product, minimoNegocio, rotacion);
                   return (
                   <tr key={product.id} className={`pl-fila fila-${estado}`}>
                     <td className="cell-numeric">{numeroProducto(product)}</td>
