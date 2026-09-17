@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { formatCOP } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { generarContrasenaTemporal, revisarContrasena } from '../utils/contrasena'
+import CredencialTemporal from '../components/CredencialTemporal'
 import './PlataformaPage.css'
 import { Building2, Users, PlusCircle, UserPlus } from 'lucide-react'
 
@@ -19,6 +20,10 @@ function PlataformaPage() {
   const [mensaje, setMensaje] = useState(null)
 
   const [creando, setCreando] = useState(false)
+  // Contraseña temporal recién generada. Va en una tarjeta que hay que
+  // cerrar a mano: no se guarda en ningún lado, y si se pierde de pantalla
+  // la única salida es restablecerla otra vez.
+  const [credencial, setCredencial] = useState(null)
 
   // Alta completa: usuario + (opcionalmente) su negocio, en un solo paso.
   // La contraseña viene generada y cumpliendo la política de Auth: escrita
@@ -74,9 +79,9 @@ function PlataformaPage() {
     if (error) {
       setMensaje({ tipo: 'error', texto: error })
     } else {
-      setMensaje({
-        tipo: 'ok',
-        texto: `Usuario ${alta.email} creado. Entrégale la contraseña para que pueda entrar.`
+      setCredencial({
+        nombre: alta.nombre || alta.email, email: alta.email,
+        password: alta.password, motivo: 'creado'
       })
       setAlta(nuevaAlta())
       await cargar()
@@ -162,11 +167,10 @@ function PlataformaPage() {
       setMensaje({ tipo: 'error', texto: error })
       return
     }
-    setMensaje({
-      tipo: 'ok',
-      texto: `Contraseña temporal de ${p.nombre}: ${temporal} — entrégasela; ` +
-             'deberá cambiarla al entrar.' + (aviso ? ` (${aviso})` : '')
+    setCredencial({
+      nombre: p.nombre, email: p.email_interno, password: temporal, motivo: 'restablecido'
     })
+    if (aviso) setMensaje({ tipo: 'ok', texto: aviso })
   }
 
   const nombreNegocio = (id) =>
@@ -188,6 +192,8 @@ function PlataformaPage() {
   return (
     <div className="plat-page">
       <h1 className="plat-title"><Building2 size={26} /> Plataforma</h1>
+
+      <CredencialTemporal credencial={credencial} onCerrar={() => setCredencial(null)} />
 
       {mensaje && (
         <div className={`plat-mensaje ${mensaje.tipo === 'ok' ? 'msg-ok' : 'msg-error'}`}>
