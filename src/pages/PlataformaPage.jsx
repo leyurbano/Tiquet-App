@@ -4,7 +4,7 @@ import { perfilService } from '../services/perfilService'
 import { useAuth } from '../contexts/AuthContext'
 import { formatCOP } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
-import { generarContrasenaTemporal } from '../utils/contrasena'
+import { generarContrasenaTemporal, revisarContrasena } from '../utils/contrasena'
 import './PlataformaPage.css'
 import { Building2, Users, PlusCircle, UserPlus } from 'lucide-react'
 
@@ -20,12 +20,14 @@ function PlataformaPage() {
 
   const [creando, setCreando] = useState(false)
 
-  // Alta completa: usuario + (opcionalmente) su negocio, en un solo paso
-  const VACIO = {
-    email: '', password: '', nombre: '', rol: 'administrador',
+  // Alta completa: usuario + (opcionalmente) su negocio, en un solo paso.
+  // La contraseña viene generada y cumpliendo la política de Auth: escrita
+  // a mano casi siempre sale algo como "12345678", que Supabase rechaza.
+  const nuevaAlta = () => ({
+    email: '', password: generarContrasenaTemporal(), nombre: '', rol: 'administrador',
     negocio_id: '', nombre_negocio_nuevo: '', negocioNuevo: true
-  }
-  const [alta, setAlta] = useState(VACIO)
+  })
+  const [alta, setAlta] = useState(nuevaAlta)
   // Asignación en curso por usuario: { [userId]: { nombre, negocio_id, rol } }
   const [asignacion, setAsignacion] = useState({})
 
@@ -48,8 +50,17 @@ function PlataformaPage() {
 
   const crearUsuario = async (e) => {
     e.preventDefault()
-    setCreando(true)
     setMensaje(null)
+
+    // Se avisa aquí en vez de esperar el rechazo de Auth, que llega en
+    // inglés y con la lista entera de símbolos permitidos
+    const problema = revisarContrasena(alta.password)
+    if (problema) {
+      setMensaje({ tipo: 'error', texto: `Contraseña inválida. ${problema}.` })
+      return
+    }
+
+    setCreando(true)
 
     const { error } = await perfilService.crearUsuario({
       email: alta.email,
@@ -67,7 +78,7 @@ function PlataformaPage() {
         tipo: 'ok',
         texto: `Usuario ${alta.email} creado. Entrégale la contraseña para que pueda entrar.`
       })
-      setAlta(VACIO)
+      setAlta(nuevaAlta())
       await cargar()
     }
     setCreando(false)
@@ -346,7 +357,18 @@ function PlataformaPage() {
                 disabled={creando}
                 className="plat-input"
               />
-              <small>Mínimo 8 caracteres. Se la entregas al usuario.</small>
+              <small>
+                Se la entregas al usuario y deberá cambiarla al entrar.
+                Necesita minúscula, mayúscula, número y símbolo.{' '}
+                <button
+                  type="button"
+                  className="plat-enlace"
+                  onClick={() => editarAlta('password', generarContrasenaTemporal())}
+                  disabled={creando}
+                >
+                  Generar otra
+                </button>
+              </small>
             </label>
           </div>
 

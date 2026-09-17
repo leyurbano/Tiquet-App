@@ -280,3 +280,17 @@
 }
 
 .plat-btn-peligro:hover { background: #fef2f2; }
+
+/* Acción secundaria dentro de un texto de ayuda: parece enlace, no botón,
+   para no competir con el botón de crear */
+.plat-enlace {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.plat-enlace:disabled { color: #9ca3af; cursor: default; }
