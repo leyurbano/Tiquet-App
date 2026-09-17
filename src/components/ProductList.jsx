@@ -7,7 +7,9 @@ import { Pencil, History, Package, AlertTriangle } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
 import { numeroProducto, coincideNumero } from "../utils/producto";
 
-const POR_PAGINA = 50;
+// 25 y no 50: sin scroll interno, 50 filas son casi tres pantallas y la
+// paginación queda al fondo. Para buscar algo puntual está el buscador
+const POR_PAGINA = 25;
 
 // El orden lo elige el usuario. Por defecto, por número: es la costumbre de
 // quien ya se sabe el catálogo. "Más recientes" evita que un producto recién

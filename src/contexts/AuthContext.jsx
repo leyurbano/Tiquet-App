@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { perfilService } from '../services/perfilService'
+import { toast } from '../utils/toast'
 
 const AuthContext = createContext()
 
@@ -78,6 +79,45 @@ export function AuthProvider({ children }) {
         setEstadoCuenta(estado)
       })
     return () => { cancelado = true }
+  }, [user])
+
+  // 🆕 El rol se leía una sola vez al iniciar sesión: si el super admin lo
+  // cambiaba, la persona seguía con los permisos viejos en pantalla hasta
+  // cerrar sesión. Ahora se vuelve a leer al volver a la pestaña y cada 5
+  // minutos, así el cambio se aplica solo.
+  //
+  // Esto es comodidad, no seguridad: quien manda es la base de datos, que
+  // rechaza igual lo que el rol nuevo no permita.
+  useEffect(() => {
+    if (!user) return
+
+    const refrescar = async () => {
+      if (document.visibilityState !== 'visible') return
+      const [p, estado] = await Promise.all([
+        perfilService.getMiPerfil(),
+        perfilService.getEstadoCuenta()
+      ])
+      setPerfil((anterior) => {
+        // Si cambiaron los permisos, se avisa: el menú cambia solo y sin
+        // explicación se siente como un error
+        if (anterior && p && anterior.rol !== p.rol) {
+          toast.aviso(
+            p.rol === 'administrador'
+              ? 'Ahora eres administrador de este negocio'
+              : 'Tu perfil cambió a vendedor'
+          )
+        }
+        return p
+      })
+      setEstadoCuenta(estado)
+    }
+
+    document.addEventListener('visibilitychange', refrescar)
+    const id = setInterval(refrescar, 5 * 60 * 1000)
+    return () => {
+      document.removeEventListener('visibilitychange', refrescar)
+      clearInterval(id)
+    }
   }, [user])
 
   // Vuelve a leer el perfil, por ejemplo después de cambiar la contraseña
