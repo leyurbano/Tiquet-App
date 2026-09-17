@@ -1,0 +1,66 @@
+/* Tarjeta de credencial temporal.
+   Clases propias (`cred-`) y no las `usr-` de UsuariosPage: el CSS de esta
+   app es global, así que reusar aquellas funcionaría solo mientras esa
+   hoja esté cargada y mientras nadie las renombre. */
+
+.cred-caja {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  color: #1e3a8a;
+}
+
+.cred-titulo { font-weight: 700; margin-bottom: 0.5rem; }
+.cred-dato { font-size: 0.9rem; margin-bottom: 0.25rem; }
+
+/* Monospace y bien separada: ahora las contraseñas llevan símbolos y se
+   leen en voz alta o se copian a mano */
+.cred-password {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.45rem;
+  letter-spacing: 0.05em;
+  word-break: break-all;
+}
+
+.cred-nota {
+  font-size: 0.8rem;
+  color: #1e40af;
+  margin: 0.6rem 0 0.8rem;
+  line-height: 1.4;
+}
+
+.cred-acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.cred-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.cred-btn:hover { background: #1d4ed8; }
+
+.cred-btn:focus-visible {
+  outline: 2px solid #1e3a8a;
+  outline-offset: 2px;
+}
+
+.cred-btn-sec {
+  background: #fff;
+  color: #1e3a8a;
+  border: 1px solid #bfdbfe;
+}
+
+.cred-btn-sec:hover { background: #dbeafe; }

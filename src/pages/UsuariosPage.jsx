@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { perfilService } from '../services/perfilService'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from '../utils/toast'
+import CredencialTemporal from '../components/CredencialTemporal'
 import { generarContrasenaTemporal } from '../utils/contrasena'
 import './UsuariosPage.css'
 import { Users, UserPlus } from 'lucide-react'
@@ -100,15 +101,6 @@ function UsuariosPage() {
     cargar()
   }
 
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(credencial.password)
-      toast.exito('Contraseña copiada')
-    } catch {
-      toast.aviso('No se pudo copiar automáticamente; anótala a mano')
-    }
-  }
-
   if (!esAdministrador) {
     return (
       <div className="usr-page">
@@ -121,27 +113,7 @@ function UsuariosPage() {
     <div className="usr-page">
       <h1 className="usr-title"><Users size={26} /> Usuarios del negocio</h1>
 
-      {credencial && (
-        <div className="usr-credencial" role="status">
-          <p className="usr-credencial-titulo">
-            {credencial.motivo === 'creado' ? 'Usuario creado' : 'Contraseña restablecida'}: {credencial.nombre}
-          </p>
-          <p className="usr-credencial-dato">Correo: <strong>{credencial.email}</strong></p>
-          <p className="usr-credencial-dato">
-            Contraseña temporal: <code className="usr-password">{credencial.password}</code>
-          </p>
-          <p className="usr-credencial-nota">
-            Entrégasela a la persona. Al entrar por primera vez, la app le pedirá
-            crear una contraseña propia. Esta contraseña no se vuelve a mostrar.
-          </p>
-          <div className="usr-credencial-acciones">
-            <button type="button" className="usr-btn" onClick={copiar}>Copiar contraseña</button>
-            <button type="button" className="usr-btn usr-btn-sec" onClick={() => setCredencial(null)}>
-              Ya la entregué
-            </button>
-          </div>
-        </div>
-      )}
+      <CredencialTemporal credencial={credencial} onCerrar={() => setCredencial(null)} />
 
       {/* ---------- Crear usuario ---------- */}
       <div className="usr-card">
