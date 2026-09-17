@@ -101,7 +101,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
             setSearchTerm(e.target.value);
             setPagina(1);
           }}
-          className="search-input"
+          className="pl-buscador"
         />
         <label className="orden-campo">
           <span className="orden-etiqueta">Ordenar por</span>
@@ -157,9 +157,9 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
       )}
 
       {loading ? (
-        <div className="loading-text">⏳ Cargando productos...</div>
+        <div className="pl-cargando">⏳ Cargando productos...</div>
       ) : filteredProducts.length === 0 ? (
-        <p className="empty-message">
+        <p className="pl-vacio">
           {soloBajos
             ? "No hay productos por agotarse"
             : "No hay productos disponibles"}
@@ -169,7 +169,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
           <div className="pl-tabla-wrap">
             <table className="products-table">
               <thead>
-                <tr className="table-header">
+                <tr className="pl-cabecera">
                   <th style={{ textAlign: 'right' }}>#</th>
                   <th style={{ textAlign: 'left' }}>Descripción</th>
                   <th style={{ textAlign: 'right' }}>Stock</th>
@@ -187,7 +187,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
                 {visibles.map((product) => {
                   const estado = estadoStock(product, minimoNegocio);
                   return (
-                  <tr key={product.id} className={`table-row fila-${estado}`}>
+                  <tr key={product.id} className={`pl-fila fila-${estado}`}>
                     <td className="cell-numeric">{numeroProducto(product)}</td>
                     <td className="cell-description">
                       {(product.descripcion || "")

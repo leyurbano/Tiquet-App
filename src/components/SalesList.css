@@ -22,7 +22,7 @@
   margin-bottom: 0.75rem;
 }
 
-.search-input {
+.vl-buscador {
   width: 55%;
   padding: 0.35rem 0.65rem;
   border: 1px solid #e5e7eb;
@@ -32,7 +32,7 @@
   box-sizing: border-box;
 }
 
-.search-input:focus {
+.vl-buscador:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -76,14 +76,14 @@
   pointer-events: none;
 }
 
-.empty-message {
+.vl-vacio {
   text-align: center;
   color: #6b7280;
   padding: 1.5rem 0;
   font-size: 0.875rem;
 }
 
-.loading-text {
+.vl-cargando {
   text-align: center;
   padding: 1.5rem;
   font-size: 1rem;
@@ -91,7 +91,7 @@
 }
 
 /* Scroll: ~10 filas */
-.table-wrapper {
+.vl-tabla-wrap {
   overflow-x: auto;
   overflow-y: auto;
   max-height: 400px;
@@ -113,12 +113,12 @@
   min-width: 350px;
 }
 
-.table-header {
+.vl-cabecera {
   background-color: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.table-header th {
+.vl-cabecera th {
   padding: 0.5rem 0.4rem;
   text-align: left;
   font-size: 0.75rem;
@@ -140,7 +140,7 @@
 .sales-table th:nth-child(4),
 .sales-table td:nth-child(4) { width: 30%; text-align: center; min-width: 140px; }
 
-.table-header th:last-child {
+.vl-cabecera th:last-child {
   text-align: center;
 }
 
@@ -148,12 +148,12 @@
   text-align: right !important;
 }
 
-.table-row {
+.vl-fila {
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s;
 }
 
-.table-row:hover {
+.vl-fila:hover {
   background-color: #f9fafb;
 }
 
@@ -175,7 +175,7 @@
 }
 
 /* Celda de acciones */
-.actions-cell {
+.vl-acciones {
   text-align: center;
   padding: 0.5rem 0.4rem;
   overflow: visible !important;
@@ -317,7 +317,7 @@
 
 
 @media (max-width: 768px) {
-  .search-input {
+  .vl-buscador {
     width: 100%;
   }
 

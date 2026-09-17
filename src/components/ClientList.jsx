@@ -63,7 +63,7 @@ function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null,
   }
 
   if (loading) {
-    return <div className="loading-text">⏳ Cargando clientes...</div>
+    return <div className="cl-cargando">⏳ Cargando clientes...</div>
   }
 
   return (
@@ -75,7 +75,7 @@ function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null,
         placeholder="Buscar por nombre, documento o teléfono..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="search-input"
+        className="cl-buscador"
       />
 
       {/* 🔧 Antes era un check suelto entre el buscador y la tabla, que salía
@@ -99,17 +99,17 @@ function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null,
       )}
 
       {filteredClients.length === 0 ? (
-        <p className="empty-message">No hay clientes disponibles</p>
+        <p className="cl-vacio">No hay clientes disponibles</p>
       ) : (
-        <div className="table-wrapper">
+        <div className="cl-tabla-wrap">
           <table className="clients-table">
             <thead>
-              <tr className="table-header">
+              <tr className="cl-cabecera">
                 <th>Documento</th>
                 <th>Nombre</th>
                 <th>Teléfono</th>
                 {conFiado && <th>Fiado</th>}
-                <th className="actions-header">Acciones</th>
+                <th className="cl-acciones-th">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -118,7 +118,7 @@ function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null,
                 const cupo = Number(client.cupo_fiado) || 0
                 const acciones = accionesDe(client)
                 return (
-                  <tr key={client.id} className="table-row">
+                  <tr key={client.id} className="cl-fila">
                     <td className="document-cell">{client.documento}</td>
                     <td className="name-cell">{client.nombre}</td>
                     <td className="phone-cell">{client.telefono || '-'}</td>
@@ -134,7 +134,7 @@ function ClientList({ clients, onEdit, onDelete, loading = false, saldos = null,
                         {cupo > 0 && <span className="saldo-cupo">cupo {formatCOP(cupo)}</span>}
                       </td>
                     )}
-                    <td className="actions-cell">
+                    <td className="cl-acciones">
                       <button
                         onClick={() => onEdit(client)}
                         className="btn-cliente btn-cliente-editar"

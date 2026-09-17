@@ -34,7 +34,7 @@
 /* Empuja las cifras al extremo derecho, separadas de los controles */
 .search-and-stats-wrapper .stats-container { margin-left: auto; }
 
-.search-input {
+.pl-buscador {
   flex: 1 1 18rem;
   min-width: 0;
   max-width: 24rem;
@@ -45,7 +45,7 @@
   transition: border-color 0.2s;
 }
 
-.search-input:focus {
+.pl-buscador:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -83,14 +83,14 @@
   text-align: center;
 }
 
-.empty-message {
+.pl-vacio {
   text-align: center;
   color: #6b7280;
   padding: 2rem;
   font-size: 0.9375rem;
 }
 
-.loading-text {
+.pl-cargando {
   text-align: center;
   padding: 2rem;
   color: #6b7280;
@@ -99,7 +99,7 @@
 /* Sin overflow en escritorio: basta con declarar UN eje en auto para que el
    navegador active el otro, y eso volvía a crear un scroll interno con el
    encabezado pegado a la tarjeta en vez de a la ventana */
-/* Clase propia: `table-wrapper` también la define ClientList.css, y como los
+/* Clase propia: `pl-tabla-wrap` también la define ClientList.css, y como los
    CSS de la app son globales, el último en cargarse le devolvía el scroll */
 .pl-tabla-wrap {
   margin-bottom: 1.5rem;
@@ -129,14 +129,14 @@
   background-color: #f3f4f6;
 }
 
-.table-header {
+.pl-cabecera {
   background-color: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
   display: table-row;
 }
 
 /* Pon esto en su lugar */
-.table-header th {
+.pl-cabecera th {
   padding: 0.75rem 1rem;
   font-weight: 600;
   color: #374151;
@@ -144,13 +144,13 @@
   text-align: right;
 }
 
-.table-row {
+.pl-fila {
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s;
   display: table-row;
 }
 
-.table-row:hover {
+.pl-fila:hover {
   background-color: #f9fafb;
 }
 
@@ -291,7 +291,7 @@
     gap: 1rem;
   }
 
-  .search-input {
+  .pl-buscador {
     min-width: 100%;
     max-width: 100%;
   }
@@ -468,7 +468,7 @@
     gap: 0.5rem;
   }
 
-  .search-and-stats-wrapper .search-input {
+  .search-and-stats-wrapper .pl-buscador {
     flex: 1 1 55%;
     min-width: 0;
     max-width: none;
