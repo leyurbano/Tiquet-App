@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { mensajeErrorAuth } from '../utils/contrasena'
 
 export const perfilService = {
   /**
@@ -174,16 +175,9 @@ export const perfilService = {
       const { error: errNueva } = await supabase.auth.updateUser({ password: nueva })
       if (errNueva) {
         const m = errNueva.message || ''
-        if (/different from the old/i.test(m)) {
-          return { error: 'La nueva contraseña debe ser distinta de la actual.' }
-        }
-        if (/at least/i.test(m)) {
-          return { error: 'La nueva contraseña es demasiado corta.' }
-        }
-        if (/weak|pwned|leaked/i.test(m)) {
-          return { error: 'Esa contraseña es muy común o apareció en filtraciones. Elige otra.' }
-        }
-        return { error: 'No se pudo cambiar la contraseña: ' + m }
+        // La traducción vive en utils/contrasena para poder probarla contra
+        // los mensajes reales de Auth (ahí se coló el bug de "demasiado corta")
+        return { error: mensajeErrorAuth(m) || 'No se pudo cambiar la contraseña: ' + m }
       }
 
       // Limpia la marca de cambio obligatorio (si la había)

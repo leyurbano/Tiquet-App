@@ -67,3 +67,34 @@ export const revisarContrasena = (valor) => {
   if (faltan.length === 0) return null
   return `Le falta ${faltan.join(', ')}`
 }
+
+/**
+ * Traduce al español el error de Supabase Auth al cambiar la contraseña.
+ * Devuelve null si no reconoce el mensaje, para que el llamador muestre el
+ * original en vez de inventar una explicación equivocada.
+ *
+ * ⚠️ EL ORDEN DE ESTAS REGLAS IMPORTA. El error de política dice
+ * "Password should contain AT LEAST one character of each: ...", así que
+ * una regla /at least/ suelta lo capturaba y lo traducía como "demasiado
+ * corta". El usuario alargaba la contraseña una y otra vez y nunca
+ * funcionaba, porque lo que faltaba era un símbolo. La regla de variedad
+ * va antes que la de largo.
+ */
+export const mensajeErrorAuth = (mensaje) => {
+  const m = mensaje || ''
+
+  if (/different from the old/i.test(m)) {
+    return 'La nueva contraseña debe ser distinta de la actual.'
+  }
+  if (/one character of each|should contain/i.test(m)) {
+    return 'A la contraseña le falta variedad: necesita una minúscula, ' +
+           'una mayúscula, un número y un símbolo (por ejemplo * o #).'
+  }
+  if (/at least \d+ characters|too short/i.test(m)) {
+    return 'La nueva contraseña es demasiado corta.'
+  }
+  if (/weak|pwned|leaked/i.test(m)) {
+    return 'Esa contraseña es muy común o apareció en filtraciones. Elige otra.'
+  }
+  return null
+}
