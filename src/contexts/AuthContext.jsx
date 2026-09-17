@@ -51,17 +51,43 @@ export function AuthProvider({ children }) {
     }
   }
 
+  /**
+   * Cierra la sesión.
+   *
+   * 🔧 Antes, si `signOut()` devolvía error, el estado local NO se limpiaba
+   * y la persona se quedaba adentro sin ningún aviso: desde el modal de
+   * apertura de caja no había manera de salir, y desde el menú `navigate('/')`
+   * rebotaba de vuelta a /sales porque la sesión seguía viva. `signOut()`
+   * falla por cosas normales —el token venció, no hay red—, así que no puede
+   * ser lo que decida si el usuario sale o no.
+   *
+   * Ahora el estado local se limpia pase lo que pase. Dejar a alguien dentro
+   * después de que pidió salir es peor que cualquier error de red, sobre todo
+   * en un computador compartido entre turnos.
+   */
   async function logout() {
+    let fallo = null
+
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
+    } catch (error) {
+      fallo = error
+      // El cierre global necesita servidor. Si no se pudo, al menos se borra
+      // la sesión guardada en este navegador: si no, el token sigue ahí y al
+      // recargar la persona vuelve a entrar sola.
+      try {
+        await supabase.auth.signOut({ scope: 'local' })
+      } catch {
+        // Ya no hay sesión que borrar: es el resultado que se buscaba
+      }
+    } finally {
       setUser(null)
       setPerfil(null)
       setEstadoCuenta(null)
-      return { success: true }
-    } catch (error) {
-      return { success: false, error: error.message }
     }
+
+    return fallo ? { success: false, error: fallo.message } : { success: true }
   }
 
   // Carga el perfil cada vez que cambia el usuario
