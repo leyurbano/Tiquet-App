@@ -12,11 +12,15 @@ npm run build    # Production build
 npm run lint     # ESLint (flat config in eslint.config.js)
 npm run preview  # Preview production build
 npm run iconos   # Regenerate the PWA icons from public/icono.svg (pwa-assets.config.js)
+npm test         # Vitest, single run
+npm run test:watch
 ```
 
 **Installable app (PWA):** `vite-plugin-pwa` in `vite.config.js`. The service worker caches only the app shell (HTML, JS, CSS, icons); never cache Supabase responses, since sales, stock and cash must always be live. `registerType: 'prompt'` is on purpose: `components/EstadoApp.jsx` asks before updating (an automatic reload mid-sale would lose the cart) and shows an offline banner. There is no offline selling.
 
-There is no test suite. Verify changes with `npm run lint` and `npm run build`.
+Verify changes with `npm run lint`, `npm run build` and `npm test`.
+
+**Tests cover the pure logic only** (`src/utils/*.test.js`): `reportSummary` (margins, returns), `cashSummary` (cash close), `stock` (low-stock rules), `importarProductos` (number and CSV parsing). These are the functions where a silent error costs money, and they need no database or React to run. There are no component or integration tests: screens are still verified by using the app. When changing any of those utils, add the case to its test file — and check the test fails before the fix, or it is not testing what you think.
 
 `react-hooks/exhaustive-deps` is on purpose: it catches stale closures (a missing dependency once made Escape skip the "unsaved changes" confirmation). Only disable it on a single line, with a comment saying why (e.g. a mount-only data load).
 
