@@ -5,17 +5,19 @@
 // negocio nuevo. Existe porque crear usuarios exige la service_role key,
 // que ignora toda la RLS y por tanto NO puede vivir en el navegador.
 //
-// Dos capas de verificación:
-//  1. Con el token de quien llama se comprueba contra la base que sea super
-//     admin (respetando RLS, sin privilegios especiales).
-//  2. Solo entonces se usa la service_role para crear el usuario.
+// Quién puede usarla (se comprueba con el token de quien llama, contra la
+// base y respetando la RLS, antes de tocar la service_role):
+//  - El super admin: en cualquier negocio, o creando un negocio nuevo.
+//  - El administrador de un negocio activo: solo en SU negocio. El negocio
+//    sale de su sesión (mi_negocio()); el que venga en la petición se
+//    ignora, y no puede crear negocios.
 //
 // El archivo se llama .ts porque es el punto de entrada que espera el CLI
 // de Supabase, y Deno ejecuta TypeScript de forma nativa. Aun así, el código
 // es JavaScript normal, sin anotaciones de tipos: no hay nada que aprender
 // aquí que no se use ya en el resto del proyecto.
 //
-// Desplegar:  supabase functions deploy crear-usuario
+// Desplegar:  supabase functions deploy crear-usuario --use-api
 // =====================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -54,7 +56,20 @@ Deno.serve(async (req) => {
 
     const { data: esSuper, error: errRol } = await clienteUsuario.rpc('es_super_admin')
     if (errRol) return json({ error: 'No se pudo verificar el permiso' }, 500)
-    if (!esSuper) return json({ error: 'Solo un super administrador puede crear usuarios' }, 403)
+
+    // Administrador de negocio: mi_negocio() es null si el usuario está
+    // inactivo o su negocio suspendido, así que eso también queda cubierto
+    let negocioDelAdmin = null
+    if (!esSuper) {
+      const [{ data: miNegocio }, { data: miRol }] = await Promise.all([
+        clienteUsuario.rpc('mi_negocio'),
+        clienteUsuario.rpc('mi_rol')
+      ])
+      if (!miNegocio || miRol !== 'administrador') {
+        return json({ error: 'Solo un administrador puede crear usuarios' }, 403)
+      }
+      negocioDelAdmin = miNegocio
+    }
 
     // ---- 2. Validar la entrada ----------------------------------------
     const body = await req.json()
@@ -64,6 +79,14 @@ Deno.serve(async (req) => {
     const rol = body.rol === 'administrador' ? 'administrador' : 'vendedor'
     const nombreNegocioNuevo = (body.nombre_negocio_nuevo || '').trim()
     let negocioId = body.negocio_id ? Number(body.negocio_id) : null
+
+    // El administrador de un negocio solo crea usuarios en el suyo
+    if (negocioDelAdmin) {
+      if (nombreNegocioNuevo) {
+        return json({ error: 'Solo el administrador de la plataforma puede crear negocios' }, 403)
+      }
+      negocioId = negocioDelAdmin
+    }
 
     if (!email.includes('@')) return json({ error: 'Correo inválido' }, 400)
     if (password.length < 8) return json({ error: 'La contraseña debe tener al menos 8 caracteres' }, 400)
@@ -114,6 +137,8 @@ Deno.serve(async (req) => {
       email_interno: email,
       rol,
       activo: true,
+      // La contraseña la escribió el super admin: el usuario debe cambiarla al entrar
+      debe_cambiar_contrasena: true,
       negocio_id: negocioId
     }])
 

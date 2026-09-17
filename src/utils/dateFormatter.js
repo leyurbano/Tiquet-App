@@ -43,6 +43,18 @@ export const formatToColombia = (date) => {
 /*
   Convierte una fecha a formato corto para tablas.
  */
+/**
+ * Solo la hora en Colombia ("8:05 AM"); si no es de hoy, antepone el día
+ * ("14/09 8:05 PM"). Para indicadores como "Caja abierta desde...".
+ */
+export const formatHoraColombia = (date) => {
+  if (!date) return 'N/A'
+  const d = dayjs(date).tz(COLOMBIA_TZ)
+  return d.format('YYYY-MM-DD') === getTodayColombia()
+    ? d.format('h:mm A')
+    : d.format('DD/MM h:mm A')
+}
+
 export const formatToColombiaShort = (date) => {
   if (!date) return 'N/A'
   return dayjs(date)

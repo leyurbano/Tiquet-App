@@ -4,12 +4,18 @@ import { salesService } from '../services/salesService'
 import {
   buildCashSummary,
   buildPaymentItems,
+  esMedioFiado,
   parseCOP,
   formatCOPInput
 } from '../utils/cashSummary'
 import { formatCOP } from '../utils/currencyFormatter'
 import { formatToColombia } from '../utils/dateFormatter'
 import { etiquetaMotivo } from '../utils/motivosAnulacion'
+import { etiquetaMotivoDevolucion } from '../utils/motivosDevolucion'
+import { devolucionService } from '../services/devolucionService'
+import { numeroDoc } from '../utils/documento'
+import { fiadoService } from '../services/fiadoService'
+import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
 import { AlertTriangle } from 'lucide-react'
 
@@ -28,6 +34,8 @@ function CierreCajaModal({ onCancel, onDone }) {
   const { session, closeSession } = useCashSession()
   const [sales, setSales] = useState([])
   const [anuladas, setAnuladas] = useState([])
+  const [devoluciones, setDevoluciones] = useState([])
+  const [abonos, setAbonos] = useState([])
   const [mediosPago, setMediosPago] = useState([])
   const [cargando, setCargando] = useState(true)
   const [errorCarga, setErrorCarga] = useState(false)
@@ -35,20 +43,29 @@ function CierreCajaModal({ onCancel, onDone }) {
   const [confirmados, setConfirmados] = useState({})
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState('')
+  // Escape = "Seguir trabajando"; nunca mientras se registra el cierre
+  const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   useEffect(() => {
     if (!session) return
 
     const load = async () => {
       setCargando(true)
-      const [ventas, medios, canceladas] = await Promise.all([
+      const [ventas, medios, canceladas, devs, abs] = await Promise.all([
         // Acotado al cajero dueño del turno, no solo al rango de tiempo
         salesService.getSalesBetween(session.abierta_en, null, session.user_id),
         salesService.getMediosPago(),
-        salesService.getAnnulledSales(session.abierta_en)
+        salesService.getAnnulledSales(session.abierta_en),
+        // Las devoluciones hechas desde esta caja
+        devolucionService.getDevolucionesDeSesion(session.id),
+        // Abonos de clientes recibidos en esta caja
+        fiadoService.getAbonosDeSesion(session.id)
       ])
       // null = la consulta falló. Distinto de [] , que sí significa "sin ventas".
-      setErrorCarga(ventas === null)
+      // Sin las devoluciones, el efectivo esperado también sería falso
+      setErrorCarga(ventas === null || devs === null || abs === null)
+      setDevoluciones(devs || [])
+      setAbonos(abs || [])
       setSales(ventas || [])
       setAnuladas(canceladas)
       setMediosPago(medios)
@@ -59,13 +76,32 @@ function CierreCajaModal({ onCancel, onDone }) {
   }, [session])
 
   const resumen = useMemo(() => buildCashSummary(sales, mediosPago), [sales, mediosPago])
-  const itemsPorMedio = useMemo(() => buildPaymentItems(sales, mediosPago), [sales, mediosPago])
+  // Pagos por validar: los de las ventas más los abonos que no fueron en
+  // efectivo (una transferencia de un abono también hay que confirmarla)
+  const itemsPorMedio = useMemo(() => {
+    const porMedio = buildPaymentItems(sales, mediosPago)
+    abonos
+      .filter((a) => !/efectivo/i.test(a.medios_pago?.pago || ''))
+      .forEach((a) => {
+        const nombre = a.medios_pago?.pago || 'Sin definir'
+        if (!porMedio[nombre]) porMedio[nombre] = []
+        porMedio[nombre].push({
+          key: `abono-${a.id}`,
+          ventaId: null,
+          abonoId: a.id,
+          etiqueta: `Abono #${numeroDoc(a)}${a.clientes?.nombre ? ` · ${a.clientes.nombre}` : ''}`,
+          monto: Number(a.monto) || 0
+        })
+      })
+    return porMedio
+  }, [sales, mediosPago, abonos])
 
   // Medios distintos al efectivo: son los que se validan uno por uno
   const transacciones = useMemo(
     () =>
       Object.entries(itemsPorMedio)
-        .filter(([nombre]) => nombre !== resumen.claveEfectivo)
+        // El fiado no se valida: ese dinero no llegó
+        .filter(([nombre]) => nombre !== resumen.claveEfectivo && !esMedioFiado(nombre))
         .map(([nombre, items]) => {
           const esperado = items.reduce((s, i) => s + i.monto, 0)
           const confirmado = items
@@ -85,7 +121,15 @@ function CierreCajaModal({ onCancel, onDone }) {
   )
 
   const base = parseFloat(session?.base_inicial) || 0
-  const efectivoEsperado = base + resumen.efectivoVentas
+  // Devoluciones del turno: las de efectivo salieron del cajón
+  const devEfectivo = devoluciones
+    .filter((d) => /efectivo/i.test(d.medios_pago?.pago || ''))
+    .reduce((s, d) => s + (Number(d.total) || 0), 0)
+  // Abonos de clientes en efectivo: entraron al cajón
+  const abonoEfectivo = abonos
+    .filter((a) => /efectivo/i.test(a.medios_pago?.pago || ''))
+    .reduce((s, a) => s + (Number(a.monto) || 0), 0)
+  const efectivoEsperado = base + resumen.efectivoVentas + abonoEfectivo - devEfectivo
   const hayConteo = conteo !== ''
   const difEfectivo = hayConteo ? (parseFloat(conteo) || 0) - efectivoEsperado : 0
 
@@ -119,6 +163,9 @@ function CierreCajaModal({ onCancel, onDone }) {
           efectivo: {
             base_inicial: base,
             ventas: resumen.efectivoVentas,
+            devoluciones: devEfectivo,
+            abonos: abonoEfectivo,
+            fiado: resumen.fiadoVentas,
             esperado: efectivoEsperado,
             contado: parseFloat(conteo) || 0,
             diferencia: difEfectivo
@@ -131,6 +178,7 @@ function CierreCajaModal({ onCancel, onDone }) {
             diferencia: t.diferencia,
             pagos: t.items.map((i) => ({
               venta_id: i.ventaId,
+              abono_id: i.abonoId || null,
               monto: i.monto,
               confirmado: !!confirmados[i.key]
             }))
@@ -139,6 +187,13 @@ function CierreCajaModal({ onCancel, onDone }) {
             venta_id: v.id,
             monto: v.total || 0,
             motivo: v.motivo_anulacion
+          })),
+          devoluciones: devoluciones.map((d) => ({
+            devolucion_id: d.id,
+            venta_id: d.venta_id,
+            monto: Number(d.total) || 0,
+            medio: d.medios_pago?.pago || null,
+            motivo: d.motivo
           }))
         }
 
@@ -163,7 +218,7 @@ function CierreCajaModal({ onCancel, onDone }) {
 
   return (
     <div className="caja-overlay">
-      <div className="caja-box">
+      <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Cierre de caja">
         <h2 className="caja-title">🧾 Cierre de caja</h2>
         <p className="caja-subtitle">
           {session
@@ -197,6 +252,12 @@ function CierreCajaModal({ onCancel, onDone }) {
                 {resumen.cantidadVentas} · {formatCOP(resumen.totalVendido)}
               </span>
             </div>
+            {resumen.fiadoVentas > 0 && (
+              <div className="caja-row">
+                <span>De eso, vendido fiado (no entra al cajón)</span>
+                <span className="caja-row-value">{formatCOP(resumen.fiadoVentas)}</span>
+              </div>
+            )}
 
             {Math.abs(resumen.descuadre) > 0.01 && (
               <div className="caja-alert">
@@ -219,6 +280,18 @@ function CierreCajaModal({ onCancel, onDone }) {
               <span>Ventas en efectivo</span>
               <span className="caja-row-value">{formatCOP(resumen.efectivoVentas)}</span>
             </div>
+            {devEfectivo > 0 && (
+              <div className="caja-row">
+                <span>Devoluciones en efectivo</span>
+                <span className="caja-row-value">−{formatCOP(devEfectivo)}</span>
+              </div>
+            )}
+            {abonoEfectivo > 0 && (
+              <div className="caja-row">
+                <span>Abonos de fiado en efectivo</span>
+                <span className="caja-row-value">+{formatCOP(abonoEfectivo)}</span>
+              </div>
+            )}
             <div className="caja-row caja-row-strong">
               <span>Esperado en caja</span>
               <span className="caja-row-value">{formatCOP(efectivoEsperado)}</span>
@@ -285,7 +358,7 @@ function CierreCajaModal({ onCancel, onDone }) {
                               onChange={() => toggle(item.key)}
                               disabled={procesando}
                             />
-                            <span className="caja-check-venta">Venta #{item.ventaId}</span>
+                            <span className="caja-check-venta">{item.etiqueta || `Venta #${item.ventaId}`}</span>
                             <span className="caja-check-monto">{formatCOP(item.monto)}</span>
                           </label>
                         </li>
@@ -325,7 +398,7 @@ function CierreCajaModal({ onCancel, onDone }) {
                   {anuladas.map((v) => (
                     <div className="caja-anulada" key={v.id}>
                       <span>
-                        Venta #{v.id}
+                        Venta #{numeroDoc(v)}
                         <br />
                         <span className="caja-anulada-motivo">
                           {etiquetaMotivo(v.motivo_anulacion)}
@@ -334,6 +407,31 @@ function CierreCajaModal({ onCancel, onDone }) {
                       <span className="caja-anulada-monto">
                         −{formatCOP(v.total || 0)}
                       </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* ---------- Devoluciones registradas desde esta caja ---------- */}
+            {devoluciones.length > 0 && (
+              <>
+                <h3 className="caja-section">Devoluciones del turno</h3>
+                <p className="caja-hint">
+                  Las de efectivo ya están restadas del efectivo esperado. Las de otros
+                  medios se listan como control: ese dinero no sale del cajón.
+                </p>
+                <div className="caja-anuladas-box">
+                  {devoluciones.map((d) => (
+                    <div className="caja-anulada" key={d.id}>
+                      <span>
+                        Devolución #{numeroDoc(d)} · venta #{d.ventas?.numero ?? d.venta_id}
+                        <br />
+                        <span className="caja-anulada-motivo">
+                          {etiquetaMotivoDevolucion(d.motivo)} · {d.medios_pago?.pago || 'Sin medio'}
+                        </span>
+                      </span>
+                      <span className="caja-anulada-monto">−{formatCOP(d.total || 0)}</span>
                     </div>
                   ))}
                 </div>

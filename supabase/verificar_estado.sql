@@ -22,7 +22,7 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('11_permisos_vendedor',    'trigger de columnas',            'trigger',  'proteger_campos_producto'),
   ('12_stock_minimo',         'negocios.stock_minimo_defecto',  'columna',  'negocios.stock_minimo_defecto'),
   ('12_stock_minimo',         'productos.stock_minimo',         'columna',  'productos.stock_minimo'),
-  ('13_costo_en_venta',       'detalle_ventas.costo_unitario',  'columna',  'detalle_ventas.costo_unitario'),
+  ('13_costo_en_venta',       'costo congelado por venta (movido en 32)', 'tabla', 'detalle_ventas_costos'),
   ('14_endurecimiento',       'trigger proteger_perfil',        'trigger',  'proteger_perfil'),
   ('14_endurecimiento',       'trigger proteger_sesion_caja',   'trigger',  'proteger_sesion_caja'),
   ('14_endurecimiento',       'ventas.creado_en',               'columna',  'ventas.creado_en'),
@@ -30,7 +30,41 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('15_ventas_atomicas',      'función registrar_venta()',      'funcion',  'registrar_venta'),
   ('15_ventas_atomicas',      'función anular_venta()',         'funcion',  'anular_venta'),
   ('17_proteger_clientes',    'trigger cliente con ventas',     'trigger',  'impedir_borrar_cliente_con_ventas'),
-  ('17_proteger_clientes',    'trigger consumidor final',       'trigger',  'proteger_consumidor_final')
+  ('17_proteger_clientes',    'trigger consumidor final',       'trigger',  'proteger_consumidor_final'),
+  ('19_cambio_contrasena',    'perfiles.debe_cambiar_contrasena', 'columna', 'perfiles.debe_cambiar_contrasena'),
+  ('19_cambio_contrasena',    'función marcar_contrasena_cambiada()', 'funcion', 'marcar_contrasena_cambiada'),
+  ('20_documento_por_negocio', 'trigger consumidor final por negocio', 'trigger', 'crear_consumidor_final'),
+  ('21_entradas_mercancia',   'tabla entradas',                  'tabla',    'entradas'),
+  ('21_entradas_mercancia',   'función registrar_entrada()',     'funcion',  'registrar_entrada'),
+  ('22_ajustes_inventario',   'tabla ajustes',                   'tabla',    'ajustes'),
+  ('22_ajustes_inventario',   'función registrar_ajuste()',      'funcion',  'registrar_ajuste'),
+  ('23_crear_productos',      'función crear_producto()',        'funcion',  'crear_producto'),
+  ('24_importar_productos',   'registrar_entrada: agotados y tope 2.000', 'funcion_contiene', 'registrar_entrada|Máximo 2.000'),
+  ('25_devoluciones',         'tabla devoluciones',              'tabla',    'devoluciones'),
+  ('25_devoluciones',         'función registrar_devolucion()',  'funcion',  'registrar_devolucion'),
+  ('25_devoluciones',         'negocios.devoluciones_vendedor',  'columna',  'negocios.devoluciones_vendedor'),
+  ('26_fiado',                'tabla abonos',                    'tabla',    'abonos'),
+  ('26_fiado',                'clientes.cupo_fiado',             'columna',  'clientes.cupo_fiado'),
+  ('26_fiado',                'función registrar_abono()',       'funcion',  'registrar_abono'),
+  ('26_fiado',                'registrar_venta controla el cupo', 'funcion_contiene', 'registrar_venta|cupo de fiado'),
+  ('27_costos_no_visibles',   'función devuelto_por_linea()',    'funcion',  'devuelto_por_linea'),
+  ('27_costos_no_visibles',   'devoluciones sin costo_total',    'ausente',  'devoluciones.costo_total'),
+  ('28_costos_solo_admin',    'tabla productos_costos',          'tabla',    'productos_costos'),
+  ('28_costos_solo_admin',    'productos sin costo',             'ausente',  'productos.costo'),
+  ('28_costos_solo_admin',    'trigger crear_costo_producto',    'trigger',  'crear_costo_producto'),
+  ('29_codigo_por_negocio',   'productos.codigo',                'columna',  'productos.codigo'),
+  ('29_codigo_por_negocio',   'trigger asignar_codigo_producto', 'trigger',  'asignar_codigo_producto'),
+  ('30_numeros_por_negocio',  'tabla consecutivos',              'tabla',    'consecutivos'),
+  ('30_numeros_por_negocio',  'ventas.numero',                   'columna',  'ventas.numero'),
+  ('30_numeros_por_negocio',  'trigger asignar_numero_venta',    'trigger',  'asignar_numero_venta'),
+  ('31_historial_relacion_ventas', 'relación historial → ventas', 'restriccion', 'producto_historial_venta_id_fkey'),
+  ('32_costo_venta_solo_admin', 'tabla detalle_ventas_costos',     'tabla',    'detalle_ventas_costos'),
+  ('32_costo_venta_solo_admin', 'detalle_ventas sin costo',        'ausente',  'detalle_ventas.costo_unitario'),
+  ('32_costo_venta_solo_admin', 'registrar_venta guarda el costo aparte', 'funcion_contiene', 'registrar_venta|detalle_ventas_costos'),
+  ('33_rotacion_productos',     'función rotacion_productos()',    'funcion',  'rotacion_productos'),
+  ('34_codigo_barras',         'productos.codigo_barras',         'columna',  'productos.codigo_barras'),
+  ('34_codigo_barras',         'crear_producto recibe el código', 'funcion_contiene', 'crear_producto|p_codigo_barras'),
+  ('35_mercancia_quieta',      'función mercancia_quieta()',      'funcion',  'mercancia_quieta')
 )
 select
   migracion,
@@ -62,6 +96,17 @@ select
     when tipo = 'funcion' then
       case when exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
                         where n.nspname='public' and p.proname=nombre)
+           then 'OK' else 'FALTA' end
+    -- nombre = 'funcion|texto': la función existe y su código contiene el texto
+    when tipo = 'funcion_contiene' then
+      case when exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                        where n.nspname='public'
+                          and p.proname = split_part(nombre,'|',1)
+                          and p.prosrc like '%' || split_part(nombre,'|',2) || '%')
+           then 'OK' else 'FALTA' end
+    -- nombre = nombre de la restricción (clave foránea, check...)
+    when tipo = 'restriccion' then
+      case when exists (select 1 from pg_constraint where conname = nombre)
            then 'OK' else 'FALTA' end
     when tipo = 'trigger' then
       case when exists (select 1 from pg_trigger where tgname=nombre)

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { toast } from '../utils/toast'
 import ProductForm from "../components/ProductForm";
 import ProductList from "../components/ProductList";
 import { productService } from "../services/productService";
@@ -6,6 +7,11 @@ import "./ProductsPage.css";
 import { PlusCircle } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { negocioService } from "../services/negocioService";
+import { useDialogo } from "../hooks/useDialogo";
+
+// Ventana para medir si un producto rota. Un mes cubre la compra
+// mensual típica de una tienda sin castigar lo de venta lenta.
+const DIAS_ROTACION = 30;
 
 function ProductsPage() {
   // La RLS es quien realmente lo impide; esto evita mostrar acciones que fallarían
@@ -14,39 +20,44 @@ function ProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [productsPerPage] = useState(1000);
   // Hay cambios escritos sin guardar en el modal
   const [formSucio, setFormSucio] = useState(false);
   // Umbral general del negocio para las alertas de stock bajo
   const [minimoNegocio, setMinimoNegocio] = useState(0);
+  // Unidades vendidas por producto en el último mes: la alerta de stock
+  // solo avisa de lo que rota. null = todavía no cargó o no está la
+  // migración 33, y entonces se avisa solo por umbral.
+  const [rotacion, setRotacion] = useState(null);
 
   useEffect(() => {
-    loadProducts(1);
+    loadProducts();
     negocioService.getMiNegocio().then((n) =>
       setMinimoNegocio(n?.stock_minimo_defecto ?? 0)
     );
+    productService.getRotacion(DIAS_ROTACION).then(setRotacion);
   }, []);
 
-  const loadProducts = async (page) => {
+  // 🔧 Antes se traían máximo 1.000 productos: en un negocio más grande, el
+  // resto no aparecía. Ahora llega el catálogo completo y ProductList pinta
+  // 50 por página.
+  const loadProducts = async () => {
     setLoading(true);
-    const result = await productService.getAllProducts(page, productsPerPage);
+    const result = await productService.getTodosLosProductos();
+    if (result.error) toast.error("No se pudieron cargar los productos. Recarga la página.");
     setProducts(result.data);
-    setTotalProducts(result.total);
     setLoading(false);
   };
 
   const handleCreateProduct = async (formData) => {
     setLoading(true);
-    const newProduct = await productService.createProduct(formData);
+    const { producto: newProduct, error } = await productService.createProduct(formData);
     if (newProduct) {
       setShowForm(false);
       setFormSucio(false);
-      alert("✅ Producto creado exitosamente");
-      loadProducts(1);
+      toast.exito("Producto creado exitosamente");
+      loadProducts();
     } else {
-      alert("❌ Error al crear el producto");
+      toast.error("No se pudo crear el producto: " + (error || "error desconocido"));
     }
     setLoading(false);
     // El formulario necesita saber si guardó para decidir si se limpia
@@ -55,7 +66,7 @@ function ProductsPage() {
 
   const handleUpdateProduct = async (formData) => {
     setLoading(true);
-    const updated = await productService.updateProduct(
+    const { producto: updated, error } = await productService.updateProduct(
       editingProduct.id,
       formData,
     );
@@ -63,16 +74,16 @@ function ProductsPage() {
       setEditingProduct(null);
       setShowForm(false);
       setFormSucio(false);
-      alert("✅ Producto actualizado exitosamente");
-      loadProducts(currentPage);
+      toast.exito("Producto actualizado exitosamente");
+      loadProducts();
     } else {
-      alert("❌ Error al actualizar el producto");
+      toast.error("No se pudo actualizar el producto: " + (error || "error desconocido"));
     }
     setLoading(false);
     return !!updated;
   };
 
-  const closeForm = ({ forzar = false } = {}) => {
+  const closeForm = useCallback(({ forzar = false } = {}) => {
     // Un clic en el fondo o un Escape no deberían borrar lo escrito sin avisar
     if (!forzar && formSucio &&
         !window.confirm("Hay cambios sin guardar. ¿Descartarlos?")) {
@@ -81,24 +92,11 @@ function ProductsPage() {
     setShowForm(false);
     setEditingProduct(null);
     setFormSucio(false);
-  };
+  }, [formSucio]);
 
-  useEffect(() => {
-    if (!showForm) return;
-
-    document.body.style.overflow = "hidden";
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") closeForm();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-    // formSucio va en las dependencias a propósito: sin él, el manejador de
-    // Escape se quedaría con el valor inicial (false) y saltaría la confirmación
-  }, [showForm, formSucio]);
+  // Escape (con la confirmación de cambios sin guardar), foco, Tab y scroll.
+  // El hook siempre usa la versión más reciente de closeForm
+  const refDialogo = useDialogo({ onCerrar: () => closeForm(), activo: showForm });
 
   const handleEdit = (product) => {
     setEditingProduct(product);
@@ -115,7 +113,9 @@ function ProductsPage() {
     <div className="products-page">
       <div className="products-header">
         <h1 className="products-title">📦 Gestión de Productos</h1>
-        {esAdministrador && !showForm && (
+        {/* Siempre montado: si se desmonta al abrir el formulario, al cerrarlo
+            el foco del teclado no tiene a dónde volver */}
+        {esAdministrador && (
           <button onClick={() => setShowForm(true)} className="btn-new-product">
             <PlusCircle size={18} /> Nuevo Producto
           </button>
@@ -128,13 +128,15 @@ function ProductsPage() {
             onEdit={esAdministrador ? handleEdit : null}
             loading={loading}
             minimoNegocio={minimoNegocio}
+            rotacion={rotacion}
+            mostrarCostos={esAdministrador}
           />
         </div>
       </div>
 
       {showForm && (
         <div className="pf-overlay" onClick={() => closeForm()}>
-          <div className="pf-box" onClick={(e) => e.stopPropagation()}>
+          <div className="pf-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={editingProduct ? "Editar producto" : "Nuevo producto"}>
             <ProductForm
               initialData={editingProduct}
               onSubmit={handleSubmit}

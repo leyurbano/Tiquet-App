@@ -1,13 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import './SalesList.css'
 import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
 import AnularVentaModal from './AnularVentaModal'
+import DevolucionModal from './DevolucionModal'
+import { numeroDoc } from '../utils/documento'
 
-function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange }) {
+function SalesList({
+  sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange,
+  // Devoluciones: puedeDevolver lo decide SalesPage según el rol y el negocio
+  puedeDevolver = false, mediosPago = [], esAdministrador = false, negocio = null, onDevuelta
+}) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [filteredSales, setFilteredSales] = useState(sales)
   const [anulando, setAnulando] = useState(null) // 🆕 venta pendiente de anular
+  const [devolviendo, setDevolviendo] = useState(null) // venta de la que se devuelven productos
   const dateInputRef = useRef(null)
 
   const getClientName = (clienteId) => {
@@ -16,14 +22,14 @@ function SalesList({ sales, clients = [], loading = false, onViewInvoice, onDele
     return client ? client.nombre : `Cliente #${clienteId}`
   }
 
-  useEffect(() => {
-    const filtered = sales.filter(sale => {
-      const clientName = getClientName(sale.cliente_id).toLowerCase()
-      return clientName.includes(searchTerm.toLowerCase()) ||
-             sale.cliente_id.toString().includes(searchTerm)
-    })
-    setFilteredSales(filtered)
-  }, [searchTerm, sales, clients])
+  // Filtro derivado: se calcula en cada render en vez de copiarse a un estado
+  // con useEffect, que agregaba un render de retraso
+  const termino = searchTerm.toLowerCase()
+  const filteredSales = sales.filter(sale =>
+    getClientName(sale.cliente_id).toLowerCase().includes(termino) ||
+    // Una venta sin cliente tiene cliente_id null: null.toString() rompía la lista
+    String(sale.cliente_id ?? '').includes(searchTerm)
+  )
 
   const totalDia = filteredSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
 
@@ -64,7 +70,7 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
   const handleDelete = (sale) => setAnulando(sale)
 
   if (loading) {
-    return <div className="loading-text">⏳ Cargando ventas...</div>
+    return <div className="vl-cargando">⏳ Cargando ventas...</div>
   }
 
   return (
@@ -77,7 +83,7 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
           placeholder="Buscar cliente..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
+          className="vl-buscador"
         />
         <div className="date-picker-wrapper">
           <button
@@ -98,15 +104,15 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
       </div>
 
       {filteredSales.length === 0 ? (
-        <p className="empty-message">
+        <p className="vl-vacio">
           📭 No hay ventas para el {formatDateLabel(selectedDate) === 'Hoy' ? 'día de hoy' : formatDateLabel(selectedDate)}
         </p>
       ) : (
         <>
-          <div className="table-wrapper">
+          <div className="vl-tabla-wrap">
             <table className="sales-table">
               <thead>
-                <tr className="table-header">
+                <tr className="vl-cabecera">
                   <th>ID</th>
                   <th>Cliente</th>
                   <th className="amount-cell">Monto</th>
@@ -115,11 +121,11 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
               </thead>
               <tbody>
                 {filteredSales.map(sale => (
-                  <tr key={sale.id} className="table-row">
-                    <td>#{sale.id}</td>
+                  <tr key={sale.id} className="vl-fila">
+                    <td>#{numeroDoc(sale)}</td>
                     <td>{getClientName(sale.cliente_id)}</td>
                     <td className="amount-cell">{formatCOP(sale.total || 0)}</td>
-                    <td className="actions-cell">
+                    <td className="vl-acciones">
                       <div className="actions-buttons">
                         <button
                           onClick={() => onViewInvoice && onViewInvoice(sale)}
@@ -128,6 +134,15 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
                         >
                           📄
                         </button>
+                        {puedeDevolver && (
+                          <button
+                            onClick={() => setDevolviendo(sale)}
+                            className="btn-devolver-sale"
+                            title="Registrar devolución de productos"
+                          >
+                            ↩️
+                          </button>
+                        )}
                         {onDelete && (
                           <button
                             onClick={() => handleDelete(sale)}
@@ -162,6 +177,21 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
             <span className="sales-total-amount">{formatCOP(totalDia)}</span>
           </div>
         </>
+      )}
+
+      {devolviendo && (
+        <DevolucionModal
+          sale={devolviendo}
+          clientName={getClientName(devolviendo.cliente_id)}
+          mediosPago={mediosPago}
+          esAdministrador={esAdministrador}
+          negocio={negocio}
+          onCancel={() => setDevolviendo(null)}
+          onDone={async (devolucion) => {
+            setDevolviendo(null)
+            if (onDevuelta) await onDevuelta(devolucion)
+          }}
+        />
       )}
 
       {anulando && (

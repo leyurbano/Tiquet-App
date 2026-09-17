@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from '../utils/toast'
 import SalesForm from '../components/SalesForm'
 import SalesList from '../components/SalesList'
 import { salesService } from '../services/salesService'
 import { negocioService } from '../services/negocioService'
 import { buildReceiptHTML } from '../utils/receipt'
+import { formatCOP } from '../utils/currencyFormatter'
+import { fiadoService } from '../services/fiadoService'
+import { numeroDoc } from '../utils/documento'
+import { useDialogo } from '../hooks/useDialogo'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
 import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
@@ -29,8 +34,13 @@ function SalesPage() {
   const [loading, setLoading] = useState(false)
   const [lastSale, setLastSale] = useState(null)
   const [showPrintModal, setShowPrintModal] = useState(false)
-  const [finalCustomerId, setFinalCustomerId] = useState(null)
   const [formKey, setFormKey] = useState(0)
+  // Ventana "¿Desea imprimir?": el foco cae en Imprimir (Enter imprime) y
+  // Escape equivale a Saltar
+  const refImprimir = useDialogo({
+    onCerrar: () => { setShowPrintModal(false); setFormKey(k => k + 1) },
+    activo: showPrintModal
+  })
 
   // 🆕 NUEVO: catálogo de medios de pago, necesario para traducir medio_pago_id -> nombre
   // en el recibo que se imprime justo después de registrar la venta (lastSale no trae el join
@@ -40,9 +50,14 @@ function SalesPage() {
   // 🆕 Configuración del negocio (encabezado y pie del tiquete)
   const [negocio, setNegocio] = useState(null)
 
+  // Devoluciones: administradores siempre; vendedores solo si el negocio lo
+  // permite. La base de datos aplica los mismos límites (registrar_devolucion)
+  const puedeDevolver = esAdministrador || esSuperAdmin || !!negocio?.devoluciones_vendedor
+
   // ✅ getTodayColombia() ahora devuelve siempre la fecha correcta en Colombia
   const [selectedDate, setSelectedDate] = useState(getTodayColombia)
 
+  // Carga única de catálogos al montar
   useEffect(() => {
     loadInitialData()
   }, [])
@@ -51,10 +66,11 @@ function SalesPage() {
     loadSalesByDate(selectedDate)
   }, [selectedDate])
 
+  // Solo catálogos: las ventas del día las trae el efecto de selectedDate.
+  // 🔧 Antes también las pedía aquí, así que al abrir se descargaban dos veces
   const loadInitialData = async () => {
-    setLoading(true)
     const [productsData, clientsData, mediosPagoData, negocioData] = await Promise.all([
-      productService.getAllProducts(),
+      productService.getTodosLosProductos(),
       clientService.getAllClients(),
       salesService.getMediosPago(), // 🆕 NUEVO: se carga junto con productos y clientes
       negocioService.getMiNegocio() // 🆕 datos del negocio para el tiquete
@@ -63,14 +79,6 @@ function SalesPage() {
     setClients(clientsData)
     setMediosPago(mediosPagoData)
     setNegocio(negocioData)
-
-    const finalCustomer = clientsData.find(c => c.documento === '222222222')
-    if (finalCustomer) {
-      setFinalCustomerId(finalCustomer.id)
-    }
-
-    await loadSalesByDate(getTodayColombia())
-    setLoading(false)
   }
 
   const loadSalesByDate = async (fecha) => {
@@ -114,12 +122,22 @@ function SalesPage() {
           monto: p.monto
         }))
 
+        // Si hubo fiado, el tiquete muestra cuánto queda debiendo el cliente
+        const huboFiado = (saleData.pagos || []).some(
+          p => mediosPago.find(m => m.id === p.medio_pago_id)?.es_fiado
+        )
+        const saldoFiado = huboFiado && saleData.cliente_id
+          ? await fiadoService.getSaldo(saleData.cliente_id)
+          : null
+
         setLastSale({
           id: newSale.id,
+          numero: numeroDoc(newSale),
           fecha: newSale.fecha,
           total: saleData.total,
           items: itemsWithProductInfo,
           pagos: pagosConNombre, // 🆕 NUEVO: desglose de pagos para el recibo impreso
+          saldoFiado,
           customer: {
             name: saleData.customer_name || 'N/A',
             cedula: saleData.customer_cedula || 'N/A',
@@ -130,20 +148,62 @@ function SalesPage() {
 
         await loadSalesByDate(selectedDate)
         setShowForm(true)
-        alert('✅ Venta registrada exitosamente')
+        toast.exito('Venta registrada exitosamente')
         setLoading(false)
         return newSale // 🔧 CAMBIO: retorno explícito para que SalesForm sepa que sí se guardó
       } else {
-        alert('❌ No se pudo registrar la venta: ' + (errorVenta || 'error desconocido'))
+        toast.error('No se pudo registrar la venta: ' + (errorVenta || 'error desconocido'))
         setLoading(false)
         return null // 🔧 CAMBIO: retorno explícito de fallo
       }
     } catch (error) {
       console.error('Error:', error)
-      alert('❌ Error al registrar la venta')
+      toast.error('Error al registrar la venta')
       setLoading(false)
       return null // 🔧 CAMBIO: también se retorna null si hubo una excepción
     }
+  }
+
+  /**
+   * Abre el documento del tiquete para imprimir.
+   *
+   * 🔧 Antes solo usaba window.open. Si el navegador bloqueaba la ventana
+   * emergente, window.open devolvía null, el código fallaba al escribir en
+   * ella y el cliente se quedaba sin tiquete, sin ningún aviso.
+   *
+   * Ahora intenta la ventana emergente, como siempre, y si el navegador la
+   * bloquea imprime desde un iframe oculto dentro de la misma página, que los
+   * bloqueadores de ventanas no afectan.
+   *
+   * Devuelve la ventana (o la del iframe) sobre la que se imprime.
+   */
+  const abrirDocumentoImpresion = (html, opcionesVentana) => {
+    const ventana = window.open('', '_blank', opcionesVentana)
+    if (ventana) {
+      ventana.document.write(html)
+      ventana.document.close()
+      return ventana
+    }
+
+    const iframe = document.createElement('iframe')
+    iframe.setAttribute('aria-hidden', 'true')
+    Object.assign(iframe.style, {
+      position: 'fixed', right: '0', bottom: '0',
+      width: '0', height: '0', border: '0'
+    })
+    document.body.appendChild(iframe)
+
+    const doc = iframe.contentWindow.document
+    doc.open()
+    doc.write(html)
+    doc.close()
+
+    // Se retira al terminar la impresión, o al minuto si el navegador no avisa
+    const retirar = () => iframe.remove()
+    iframe.contentWindow.addEventListener('afterprint', () => setTimeout(retirar, 500))
+    setTimeout(retirar, 60000)
+
+    return iframe.contentWindow
   }
 
   const printAndCut = (printWindow) => {
@@ -164,13 +224,24 @@ function SalesPage() {
       }
     }
 
-    setTimeout(() => {
+    // 🔧 Antes se asignaba img.onload DESPUÉS de la espera: si el logo ya
+    // había cargado para entonces (lo normal si está en caché), ese evento no
+    // se volvía a disparar y el tiquete nunca se mandaba a imprimir.
+    // Ahora se revisa img.complete; `impreso` evita imprimir dos veces.
+    let impreso = false
+    const imprimir = () => {
+      if (impreso) return
+      impreso = true
       printWindow.focus()
-      if (img) {
-        img.onload = () => printWindow.print()
-        img.onerror = () => printWindow.print()
+      printWindow.print()
+    }
+
+    setTimeout(() => {
+      if (img && !img.complete) {
+        img.onload = imprimir
+        img.onerror = imprimir
       } else {
-        printWindow.print()
+        imprimir()
       }
     }, 500)
   }
@@ -179,7 +250,7 @@ function SalesPage() {
     try {
       const saleDetails = await salesService.getSaleById(sale.id)
       if (!saleDetails) {
-        alert('No se pudieron cargar los detalles de la venta')
+        toast.error('No se pudieron cargar los detalles de la venta')
         return
       }
 
@@ -205,30 +276,29 @@ function SalesPage() {
 
       const html = buildReceiptHTML({
         negocio,
-        venta: { id: sale.id, fechaStr, total: sale.total },
+        venta: { id: sale.id, numero: numeroDoc(sale), fechaStr, total: sale.total },
         cliente: { nombre: clientName, documento: clientDocument, telefono: clientPhone },
         items,
         pagos
       })
 
-      const printWindow = window.open('', '_blank', 'height=900,width=800,top=50,left=50,scrollbars=yes')
-      printWindow.document.write(html)
-      printWindow.document.close()
+      // Esta ventana se abre después de un `await`: es justo el caso en que
+      // los navegadores más bloquean ventanas emergentes. El helper cae al
+      // iframe si pasa.
+      const printWindow = abrirDocumentoImpresion(html, 'height=900,width=800,top=50,left=50,scrollbars=yes')
       printAndCut(printWindow)
 
     } catch (error) {
       console.error('Error:', error)
-      alert('Error al cargar la factura')
+      toast.error('Error al cargar la factura')
     }
   }
 
   const handlePrint = () => {
     if (!lastSale || !lastSale.items || lastSale.items.length === 0) {
-      alert('No hay items para imprimir')
+      toast.aviso('No hay items para imprimir')
       return
     }
-
-    const printWindow = window.open('', '_blank', 'height=600,width=400')
 
     const total = lastSale.items.reduce((sum, item) => {
       const qty = parseInt(item.quantity) || 0
@@ -255,15 +325,22 @@ function SalesPage() {
 
     const html = buildReceiptHTML({
       negocio,
-      venta: { id: lastSale.id, fechaStr, total },
+      venta: { id: lastSale.id, numero: lastSale.numero, fechaStr, total },
       cliente: { nombre: clienteName, documento: clienteCedula, telefono: clientePhone },
       items,
-      pagos: lastSale.pagos || []
+      pagos: lastSale.pagos || [],
+      saldoFiado: lastSale.saldoFiado ?? null
     })
 
-    printWindow.document.write(html)
-    printWindow.document.close()
-    printAndCut(printWindow)
+    try {
+      const printWindow = abrirDocumentoImpresion(html, 'height=600,width=400')
+      printAndCut(printWindow)
+    } catch (error) {
+      // El modal queda abierto para que se pueda reintentar
+      console.error('Error preparando la impresión:', error)
+      toast.error('No se pudo preparar el tiquete para imprimir. Intenta de nuevo.')
+      return
+    }
 
     setShowPrintModal(false)
     setFormKey(k => k + 1)
@@ -279,7 +356,7 @@ function SalesPage() {
 
       {showPrintModal && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" ref={refImprimir} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Imprimir recibo">
             <h2>¿Desea imprimir el recibo?</h2>
             <div className="modal-buttons">
               <button onClick={handlePrint} className="btn-print">
@@ -311,10 +388,9 @@ function SalesPage() {
               <SalesForm
                 key={formKey}
                 products={products}
-                clients={clients}
                 onSubmit={handleCreateSale}
                 onCancel={() => setShowForm(false)}
-                finalCustomerId={finalCustomerId}
+                logoUrl={negocio?.logo_url}
               />
             ) : (
               <div className="caja-cerrada-aviso">
@@ -340,14 +416,27 @@ function SalesPage() {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             onViewInvoice={handleViewInvoice}
+            puedeDevolver={puedeDevolver}
+            mediosPago={mediosPago}
+            esAdministrador={esAdministrador || esSuperAdmin}
+            negocio={negocio}
+            onDevuelta={async (devolucion) => {
+              toast.exito(`Devolución #${numeroDoc(devolucion)} registrada por ${formatCOP(devolucion.total)}`)
+              // El stock cambió: el formulario de venta debe verlo
+              const [, productsData] = await Promise.all([
+                loadSalesByDate(selectedDate),
+                productService.getTodosLosProductos()
+              ])
+              setProducts(productsData.data || [])
+            }}
             onDelete={!esAdministrador ? null : async (id, motivo) => {
               // La confirmación y el motivo se piden en AnularVentaModal
               const result = await salesService.annulSale(id, motivo)
               if (result.success) {
-                alert(`✅ Venta anulada y ${result.itemsRestored} producto(s) restaurado(s)`)
+                toast.exito(`Venta anulada y ${result.itemsRestored} producto(s) restaurado(s)`)
                 await loadSalesByDate(selectedDate)
               } else {
-                alert(`❌ Error al anular la venta: ${result.error}`)
+                toast.error(`Error al anular la venta: ${result.error}`)
               }
             }}
           />

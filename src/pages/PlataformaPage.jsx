@@ -4,6 +4,7 @@ import { perfilService } from '../services/perfilService'
 import { useAuth } from '../contexts/AuthContext'
 import { formatCOP } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
+import { generarContrasenaTemporal } from '../utils/contrasena'
 import './PlataformaPage.css'
 import { Building2, Users, PlusCircle, UserPlus } from 'lucide-react'
 
@@ -134,6 +135,27 @@ function PlataformaPage() {
       texto: `"${n.nombre_comercial}" ${suspender ? 'suspendido' : 'reactivado'}.`
     })
     await cargar()
+  }
+
+  const restablecerContrasena = async (p) => {
+    if (!window.confirm(`¿Restablecer la contraseña de ${p.nombre}? Deberá cambiarla al volver a entrar.`)) return
+
+    setMensaje(null)
+    const temporal = generarContrasenaTemporal()
+    const { error, aviso } = await perfilService.restablecerContrasena(p.id, temporal)
+
+    // El aviso se muestra arriba de la página: se lleva la vista hasta él
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    if (error) {
+      setMensaje({ tipo: 'error', texto: error })
+      return
+    }
+    setMensaje({
+      tipo: 'ok',
+      texto: `Contraseña temporal de ${p.nombre}: ${temporal} — entrégasela; ` +
+             'deberá cambiarla al entrar.' + (aviso ? ` (${aviso})` : '')
+    })
   }
 
   const nombreNegocio = (id) =>
@@ -393,6 +415,7 @@ function PlataformaPage() {
                 <th>Negocio</th>
                 <th>Rol</th>
                 <th className="num">Activo</th>
+                <th>Contraseña</th>
               </tr>
             </thead>
             <tbody>
@@ -420,6 +443,18 @@ function PlataformaPage() {
                       checked={p.activo}
                       onChange={(e) => cambiarPerfil(p, 'activo', e.target.checked)}
                     />
+                  </td>
+                  <td>
+                    {/* La propia cuenta se cambia desde el menú, con la contraseña actual */}
+                    {p.id !== perfil?.id && (
+                      <button
+                        type="button"
+                        onClick={() => restablecerContrasena(p)}
+                        className="plat-btn-sm"
+                      >
+                        Restablecer
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

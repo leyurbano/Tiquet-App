@@ -27,6 +27,24 @@ archivo completo → Run.
 | 15 | `15_ventas_atomicas.sql` | Venta y anulación en una sola transacción: sin ventas a medias ni stock devuelto dos veces. |
 | 16 | `16_venta_requiere_caja.sql` | `registrar_venta` exige una caja abierta: ninguna venta queda fuera de un arqueo. |
 | 17 | `17_proteger_clientes.sql` | Un cliente con ventas no se borra; solo administradores borran clientes; el Consumidor final queda protegido. |
+| 18 | `18_stock_solo_por_ventas.sql` | El vendedor ya no puede fijar el stock a mano: solo cambia al registrar ventas. |
+| 19 | `19_cambio_contrasena.sql` | Cambio de contraseña obligatorio para contraseñas asignadas por el administrador. |
+| 20 | `20_documento_unico_por_negocio.sql` | El documento del cliente es único por negocio; cada negocio tiene su Consumidor final, también los nuevos. |
+| 21 | `21_entradas_mercancia.sql` | Entradas de mercancía: suman al stock, recalculan el costo promedio y quedan en el historial. |
+| 22 | `22_ajustes_inventario.sql` | Ajustes por conteo físico o corrección: fijan el stock en lo contado, con motivo y valor de la diferencia. |
+| 23 | `23_crear_productos.sql` | Productos nuevos desde una entrada o con stock inicial, siempre registrados como entrada; rechaza nombres repetidos. |
+| 24 | `24_importar_productos.sql` | Importación desde Excel: `registrar_entrada` acepta productos nuevos con cantidad 0 (agotados) y máximo 2.000 líneas. |
+| 25 | `25_devoluciones.sql` | Devoluciones parciales (`registrar_devolucion`), límites para vendedores en `negocios`, y `anular_venta` bloqueada si la venta tiene devoluciones. |
+| 26 | `26_fiado.sql` | Fiado: medio de pago `Fiado`, cupo por cliente, abonos (`registrar_abono`), saldo calculado (`saldo_fiado`, `saldos_fiado`), y control de cupo en `registrar_venta`. |
+| 27 | `27_costos_no_visibles.sql` | Costos fuera del alcance del vendedor (fase 1): `detalle_devoluciones` solo admin, `devoluciones` sin `costo_total`, `devuelto_por_linea()` y el historial sin costos en el texto. |
+| 28 | `28_costos_solo_admin.sql` | Fase 2: el costo sale de `productos` y pasa a `productos_costos` (solo admin). `registrar_venta` y `actualizar_inventario` pasan a `SECURITY DEFINER` con filtro de negocio explícito. |
+| 29 | `29_codigo_por_negocio.sql` | `productos.codigo`: número consecutivo por negocio (todos empiezan en 1), con contador en `negocios.ultimo_codigo_producto`. |
+| 30 | `30_numeros_por_negocio.sql` | `numero` por negocio en ventas, devoluciones, entradas, ajustes y abonos, con la tabla `consecutivos` (que absorbe el contador de productos). |
+| 31 | `31_historial_relacion_ventas.sql` | Declara la relación `producto_historial.venta_id → ventas`, que faltaba desde antes de las migraciones, e indexa las referencias del historial. |
+| 32 | `32_costo_venta_solo_admin.sql` | Fase 3: el costo congelado de cada venta sale de `detalle_ventas` y pasa a `detalle_ventas_costos` (solo lectura, solo admin). Lo escribe únicamente `registrar_venta`. |
+| 33 | `33_rotacion_productos.sql` | `rotacion_productos(dias)`: unidades vendidas por producto, para que la alerta de stock bajo avise solo de lo que rota. |
+| 34 | `34_codigo_barras.sql` | `productos.codigo_barras`: único por negocio (solo cuando hay código), solo lo cambia un administrador, y `crear_producto` lo recibe. |
+| 35 | `35_mercancia_quieta.sql` | `mercancia_quieta(dias)`: productos con stock que no se venden y cuánta plata representan al costo. Solo administradores. |
 
 ## Lo que todavía no está aquí
 

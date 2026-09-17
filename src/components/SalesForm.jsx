@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from "react";
+import { toast } from '../utils/toast'
 import "./SalesForm.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import { clientService } from "../services/clientService";
 import { getTodayColombia } from "../utils/dateFormatter";
 import MixedPaymentModal from "./MixedPaymentModal";
 import { salesService } from "../services/salesService";
+import { fiadoService } from "../services/fiadoService";
+import { esConsumidorFinal } from "../utils/clientes";
+import { numeroProducto, coincideNumero } from "../utils/producto";
 
 function SalesForm({
   products,
-  clients = [],
   onSubmit,
   onCancel,
-  finalCustomerId = null,
+  // Logo del negocio (Configuración) para la marca de agua; sin logo, no hay
+  logoUrl = null,
 }) {
   const [saleDate, setSaleDate] = useState(getTodayColombia);
   const [customer, setCustomer] = useState({ name: "", cedula: "", phone: "" });
@@ -29,6 +33,8 @@ function SalesForm({
   const [showMixedModal, setShowMixedModal] = useState(false);
   const [pagosMixtos, setPagosMixtos] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Deuda de fiado del cliente elegido (para avisar si se pasa del cupo)
+  const [saldoInfo, setSaldoInfo] = useState({ clienteId: null, saldo: null });
 
   useEffect(() => {
     const cargarMediosPago = async () => {
@@ -50,15 +56,53 @@ function SalesForm({
       (p) =>
         p.descripcion.toLowerCase().includes(search) ||
         p.name?.toLowerCase().includes(search) ||
-        p.id.toString().includes(search),
+        String(numeroProducto(p)).includes(search) ||
+        (p.codigo_barras || "").toLowerCase().includes(search),
     );
-    setFilteredProducts(filtered);
+    // Con miles de productos, una sola letra coincide con cientos: se
+    // muestran las primeras 30 y se sigue escribiendo para afinar
+    setFilteredProducts(filtered.slice(0, 30));
   };
 
   const selectProductFromSearch = (product) => {
-    setSelectedProduct(product.id.toString());
+    setSelectedProduct(String(numeroProducto(product)));
     setProductSearch(product.descripcion);
     setFilteredProducts([]);
+  };
+
+  /**
+   * Enter en el buscador. Un lector de código de barras es un teclado:
+   * teclea el código de corrido y manda Enter. Si lo tecleado es el código
+   * exacto de un producto, se agrega a la venta y el campo queda limpio
+   * para el siguiente escaneo, sin tocar el mouse.
+   *
+   * La cantidad vacía cuenta como 1: escanear tres veces el mismo producto
+   * suma tres unidades, que es como se usa en la caja.
+   */
+  const manejarEnterBusqueda = async (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const texto = productSearch.trim();
+    if (!texto) return;
+
+    const porCodigo = products.find((p) => (p.codigo_barras || "") === texto);
+    if (porCodigo) {
+      await agregarProducto(porCodigo, parseInt(quantity) || 1);
+      setProductSearch("");
+      setFilteredProducts([]);
+      return;
+    }
+
+    // Escribiendo a mano: si quedó un solo candidato, ese es
+    if (filteredProducts.length === 1) {
+      selectProductFromSearch(filteredProducts[0]);
+      return;
+    }
+
+    if (filteredProducts.length === 0) {
+      setStockError(` Ningún producto coincide con "${texto}".`);
+    }
   };
 
   const searchCustomerByCedula = async (cedula) => {
@@ -93,11 +137,11 @@ function SalesForm({
 
   const addNewCustomer = async () => {
     if (!customer.name.trim() || !customer.cedula.trim()) {
-      alert("Por favor completa nombre y cédula del cliente");
+      toast.aviso("Por favor completa nombre y cédula del cliente");
       return;
     }
     try {
-      const newCustomer = await clientService.createClient({
+      const { cliente: newCustomer, error } = await clientService.createClient({
         nombre: customer.name,
         documento: customer.cedula,
         telefono: customer.phone || "",
@@ -105,36 +149,51 @@ function SalesForm({
       if (newCustomer) {
         setCustomerFound(newCustomer);
         setShowAddCustomerBtn(false);
-        alert("✅ Cliente registrado correctamente");
+        toast.exito("Cliente registrado correctamente");
+      } else {
+        toast.error(error);
       }
     } catch (error) {
       console.error("Error adding customer:", error);
-      alert("❌ Error al registrar el cliente");
+      toast.error("Error al registrar el cliente");
     }
   };
-
-  const getProductById = (productId) => {
-    return products.find((p) => p.id === parseInt(productId));
-  };
-
-  const selectedProductData = selectedProduct
-    ? getProductById(selectedProduct)
-    : null;
 
   const addItem = async () => {
     if (!selectedProduct || !quantity) return;
 
-    // 🔧 CAMBIO — valida stock al agregar el producto
-    const product = products.find((p) => p.id === parseInt(selectedProduct));
+    // El campo "Item" es el número del negocio, no el id interno
+    const product = products.find((p) => coincideNumero(p, selectedProduct));
     if (!product) return;
+
+    await agregarProducto(product, parseInt(quantity));
+  };
+
+  /**
+   * Agrega un producto ya identificado. Separado de addItem porque al
+   * escanear no se puede pasar por el estado: setSelectedProduct no ha
+   * hecho efecto todavía cuando llega el Enter del lector.
+   */
+  const agregarProducto = async (product, cantidadPedida) => {
+    const pedida = parseInt(cantidadPedida) || 0;
+    if (!product || pedida <= 0) return;
 
     if (product.cantidad === 0) {
       setStockError(` El producto "${product.descripcion}" está agotado y no se puede registrar.`);
       return;
     }
 
-    if (parseInt(quantity) > product.cantidad) {
-      setStockError(` Stock insuficiente para "${product.descripcion}". Disponible: ${product.cantidad}, solicitado: ${quantity}.`);
+    // 🔧 Cuenta lo que ya está en el carrito. Antes se comparaba solo la
+    // cantidad de esta vez: escaneando diez veces un producto con cinco
+    // unidades, cada escaneo pasaba la validación y la venta entera fallaba
+    // recién al cobrar.
+    const yaEnCarrito = items.find((i) => i.product_id === product.id)?.quantity || 0;
+    if (yaEnCarrito + pedida > product.cantidad) {
+      setStockError(
+        ` Stock insuficiente para "${product.descripcion}". Disponible: ${product.cantidad}` +
+        (yaEnCarrito ? `, ya agregaste ${yaEnCarrito}` : "") +
+        `, solicitado: ${pedida}.`
+      );
       return;
     }
 
@@ -145,26 +204,27 @@ function SalesForm({
       await searchCustomerByCedula("222222222");
     }
 
-    const existingItem = items.find((item) => item.product_id === product.id);
-    if (existingItem) {
-      setItems(
-        items.map((item) =>
-          item.product_id === product.id
-            ? { ...item, quantity: item.quantity + parseInt(quantity) }
-            : item,
-        ),
-      );
-    } else {
-      setItems([
-        ...items,
-        {
-          product_id: product.id,
-          product_name: product.descripcion || product.name,
-          unit_price: product.precio_venta || product.price,
-          quantity: parseInt(quantity),
-        },
-      ]);
-    }
+    // 🔧 Actualización funcional: el lector dispara los Enter más rápido de
+    // lo que React vuelve a renderizar, y partiendo de `items` capturado dos
+    // escaneos seguidos perdían el primero.
+    setItems((prev) => {
+      const existente = prev.find((item) => item.product_id === product.id);
+      return existente
+        ? prev.map((item) =>
+            item.product_id === product.id
+              ? { ...item, quantity: item.quantity + pedida }
+              : item,
+          )
+        : [
+            ...prev,
+            {
+              product_id: product.id,
+              product_name: product.descripcion || product.name,
+              unit_price: product.precio_venta || product.price,
+              quantity: pedida,
+            },
+          ];
+    });
     setSelectedProduct("");
     setQuantity("");
     setAutoSetFinalCustomer(true);
@@ -181,11 +241,39 @@ function SalesForm({
     );
   };
 
+  // ---- Fiado: la base de datos exige cliente identificado y cupo; aquí
+  // solo se avisa antes de intentarlo ----
+  const medioFiado = mediosPago.find((m) => m.es_fiado);
+  const montoFiado = !medioFiado
+    ? 0
+    : pagosMixtos
+      ? pagosMixtos
+          .filter((p) => p.medio_pago_id === medioFiado.id)
+          .reduce((s, p) => s + (Number(p.monto) || 0), 0)
+      : paymentMethod === medioFiado.id
+        ? calculateTotal()
+        : 0;
+  const hayFiado = montoFiado > 0;
+  const clienteFiable = !!customerFound && !esConsumidorFinal(customerFound);
+  const clienteIdFiado = hayFiado && clienteFiable ? customerFound.id : null;
+
+  useEffect(() => {
+    if (!clienteIdFiado) return;
+    fiadoService.getSaldo(clienteIdFiado).then((saldo) =>
+      setSaldoInfo({ clienteId: clienteIdFiado, saldo })
+    );
+  }, [clienteIdFiado]);
+
+  const saldoCliente = saldoInfo.clienteId === clienteIdFiado ? saldoInfo.saldo : null;
+  const cupoCliente = Number(customerFound?.cupo_fiado) || 0;
+  const disponibleFiado = Math.max(cupoCliente - (saldoCliente || 0), 0);
+  const superaCupo = clienteIdFiado !== null && saldoCliente !== null && montoFiado > disponibleFiado;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (items.length === 0) {
-      alert("Agrega al menos un producto");
+      toast.aviso("Agrega al menos un producto");
       return;
     }
 
@@ -204,7 +292,12 @@ function SalesForm({
     }
 
     if (!paymentMethod && !pagosMixtos) {
-      alert("Selecciona una forma de pago");
+      toast.aviso("Selecciona una forma de pago");
+      return;
+    }
+
+    if (hayFiado && !clienteFiable) {
+      toast.aviso("Para vender fiado, busca o registra al cliente con su documento");
       return;
     }
 
@@ -244,11 +337,14 @@ function SalesForm({
   return (
     <form onSubmit={handleSubmit} className="sales-form-wrapper">
 
-      <img
-        src="/Fralu.png"
-        alt=""
-        className="marca-agua-form"
-      />
+      {/* 🔧 Antes era /Fralu.png fijo: todos los negocios veían el logo de Fralu */}
+      {logoUrl && (
+        <img
+          src={logoUrl}
+          alt=""
+          className="marca-agua-form"
+        />
+      )}
 
       <h2 className="form-title">📝 Nueva Venta</h2>
 
@@ -333,7 +429,7 @@ function SalesForm({
                   setSelectedProduct(e.target.value);
                   if (e.target.value) {
                     const product = products.find(
-                      (p) => p.id === parseInt(e.target.value),
+                      (p) => coincideNumero(p, e.target.value),
                     );
                     if (product) setProductSearch(product.descripcion);
                   } else {
@@ -348,9 +444,11 @@ function SalesForm({
               <label className="form-label">Descripción</label>
               <input
                 type="text"
-                placeholder="Busca por nombre..."
+                placeholder="Escanea el código o busca por nombre..."
                 value={productSearch}
                 onChange={(e) => handleProductSearch(e.target.value)}
+                onKeyDown={manejarEnterBusqueda}
+                autoComplete="off"
                 className="form-input"
               />
               {filteredProducts.length > 0 && (
@@ -478,6 +576,27 @@ function SalesForm({
           </p>
         )}
       </div>
+
+      {hayFiado && (
+        <div className={`sf-fiado-info ${!clienteFiable || superaCupo ? "sf-fiado-alerta" : ""}`}>
+          {!clienteFiable ? (
+            "Para vender fiado, busca o registra al cliente con su documento. A Consumidor final no se le puede fiar."
+          ) : saldoCliente === null ? (
+            "Consultando el cupo del cliente..."
+          ) : (
+            <>
+              Fiado: <strong>{formatCOP(montoFiado)}</strong> · Cupo {formatCOP(cupoCliente)} ·
+              Debe {formatCOP(saldoCliente)} · Disponible <strong>{formatCOP(disponibleFiado)}</strong>
+              {superaCupo && (
+                <>
+                  <br />
+                  Supera el cupo: la venta será rechazada. Un administrador puede subirle el cupo en Clientes.
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {showMixedModal && (
         <MixedPaymentModal

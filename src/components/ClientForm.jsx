@@ -1,43 +1,58 @@
 import React, { useState, useEffect } from 'react'
+import { parseCOP, formatCOPInput } from '../utils/cashSummary'
+import { formatCOP } from '../utils/currencyFormatter'
 import './ClientForm.css'
 
-function ClientForm({ onSubmit, initialData = null, onCancel, onDirtyChange }) {
-  const [formData, setFormData] = useState({
-    documento: '',
-    nombre: '',
-    telefono: ''
-  })
+const VACIO = { documento: '', nombre: '', telefono: '', cupo_fiado: '' }
+
+/**
+ * mostrarCupo: el fiado está instalado (migración 26).
+ * puedeEditarCupo: además, el usuario es administrador. El cupo solo se
+ * envía en ese caso; la base de datos lo protege igual con un trigger.
+ */
+function ClientForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mostrarCupo = false, puedeEditarCupo = false }) {
+  const [formData, setFormData] = useState(VACIO)
   // Evita el doble envío por doble clic y bloquea el botón mientras guarda
   const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData)
+      setFormData({
+        documento: initialData.documento || '',
+        nombre: initialData.nombre || '',
+        telefono: initialData.telefono || '',
+        cupo_fiado: initialData.cupo_fiado != null ? String(Math.round(Number(initialData.cupo_fiado))) : ''
+      })
     }
   }, [initialData])
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
+  const cambiar = (name, value) => {
     // Avisa al contenedor que hay cambios sin guardar
     onDirtyChange?.(true)
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
+
+  const handleChange = (e) => cambiar(e.target.name, e.target.value)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (enviando) return
 
+    const datos = {
+      documento: formData.documento,
+      nombre: formData.nombre,
+      telefono: formData.telefono,
+      ...(puedeEditarCupo ? { cupo_fiado: Number(formData.cupo_fiado) || 0 } : {})
+    }
+
     setEnviando(true)
-    const guardado = await onSubmit(formData)
+    const guardado = await onSubmit(datos)
     setEnviando(false)
 
     // 🔧 Solo se limpia si el guardado fue exitoso: antes un fallo dejaba
     // el formulario en blanco y había que reescribir todo
     if (guardado === true) {
-      setFormData({ documento: '', nombre: '', telefono: '' })
+      setFormData(VACIO)
       onDirtyChange?.(false)
     }
   }
@@ -47,7 +62,7 @@ function ClientForm({ onSubmit, initialData = null, onCancel, onDirtyChange }) {
       <h2 className="form-title">
         {initialData ? 'Editar Cliente' : 'Nuevo Cliente'}
       </h2>
-      
+
       <input
         type="text"
         name="documento"
@@ -76,6 +91,27 @@ function ClientForm({ onSubmit, initialData = null, onCancel, onDirtyChange }) {
         onChange={handleChange}
         className="form-input"
       />
+
+      {mostrarCupo && (puedeEditarCupo ? (
+        <>
+          <label className="cf-label">Cupo de fiado</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="0"
+            value={formatCOPInput(formData.cupo_fiado)}
+            onChange={(e) => cambiar('cupo_fiado', parseCOP(e.target.value))}
+            className="form-input"
+          />
+          <p className="cf-ayuda">
+            Lo máximo que puede deber este cliente. En 0 no se le fía.
+          </p>
+        </>
+      ) : (
+        <p className="cf-ayuda">
+          Cupo de fiado: {formatCOP(initialData?.cupo_fiado || 0)} (lo asigna un administrador)
+        </p>
+      ))}
 
       <div className="form-buttons">
         <button

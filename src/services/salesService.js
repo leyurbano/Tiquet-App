@@ -17,15 +17,16 @@ export const salesService = {
         .select(`
           *,
           detalle_ventas (
-            *,
-            productos (*)
+            id, producto_id, cantidad, precio, total,
+            productos ( id, descripcion )
           ),
           pagos_venta (
             *,
             medios_pago (*)
           )
-        `) // 🔧 CAMBIO: se agregó pagos_venta con su join a medios_pago,
-           // así cada venta trae de una vez con qué medio(s) se pagó
+        `) // pagos_venta con su join a medios_pago: cada venta trae de una
+           // vez con qué medio(s) se pagó. El detalle NO pide costo_unitario:
+           // el tiquete no lo usa y los reportes tienen su propia consulta
         .is('anulada_en', null) // 🆕 las anuladas no suman dinero
 
       if (fecha) {
@@ -91,19 +92,33 @@ export const salesService = {
 
   /**
    * Ventas de un rango de días (hora Colombia) con su detalle, para reportes.
-   * Incluye costo_unitario y el producto, que es lo que permite calcular el
-   * margen sin consultar productos aparte.
+   * Incluye el costo y el producto, que es lo que permite calcular el margen
+   * sin consultar productos aparte.
+   *
+   * El costo ya no vive en `detalle_ventas` sino en `detalle_ventas_costos`,
+   * que solo los administradores pueden leer (migración 32). Aquí se aplana
+   * a `costo_unitario` para que el resto del código no se entere del cambio.
    */
   async getSalesForReport(desde, hasta) {
     try {
       const inicio = dayjs.tz(`${desde} 00:00:00`, COLOMBIA_TZ).toISOString()
       const fin    = dayjs.tz(`${hasta} 23:59:59`, COLOMBIA_TZ).toISOString()
 
-      const { data, error } = await supabase
+      // Si la migración 32 todavía no se corrió, el join no existe y la
+      // consulta entera falla: se reintenta sin costos antes que dejar la
+      // pantalla de reportes en blanco
+      let conCostos = true
+
+      const consulta = () => supabase
         .from('ventas')
         .select(`
-          id, fecha, total,
-          detalle_ventas ( producto_id, cantidad, precio, costo_unitario, productos ( descripcion ) ),
+          id, numero, fecha, total, medio_pago_id, user_id,
+          clientes ( nombre, documento ),
+          detalle_ventas (
+            producto_id, cantidad, precio,
+            productos ( descripcion )
+            ${conCostos ? ', detalle_ventas_costos ( costo_unitario )' : ''}
+          ),
           pagos_venta ( monto, medios_pago ( pago ) )
         `)
         .is('anulada_en', null)
@@ -111,8 +126,25 @@ export const salesService = {
         .lte('fecha', fin)
         .order('fecha', { ascending: false })
 
+      let { data, error } = await consulta()
+
+      if (error && conCostos) {
+        console.warn('Sin acceso a detalle_ventas_costos, el margen queda aproximado:', error.message)
+        conCostos = false
+        ;({ data, error } = await consulta())
+      }
+
       if (error) throw error
-      return data || []
+
+      // PostgREST devuelve el 1-1 como objeto o como arreglo según el caso
+      return (data || []).map((venta) => ({
+        ...venta,
+        detalle_ventas: (venta.detalle_ventas || []).map((linea) => {
+          const costos = linea.detalle_ventas_costos
+          const fila = Array.isArray(costos) ? costos[0] : costos
+          return { ...linea, costo_unitario: fila ? fila.costo_unitario : null }
+        })
+      }))
     } catch (error) {
       console.error('Error fetching report sales:', error.message || error)
       return null
@@ -127,14 +159,14 @@ export const salesService = {
         .select(`
           *,
           detalle_ventas (
-            *,
-            productos (*)
+            id, producto_id, cantidad, precio, total,
+            productos ( id, descripcion )
           ),
           pagos_venta (
             *,
             medios_pago (*)
           )
-        `) // 🔧 CAMBIO: mismo join agregado aquí, por consistencia con getAllSales
+        `) // Mismo join que getAllSales, y sin costo_unitario por lo mismo
         .eq('id', id)
         .single()
 
@@ -190,11 +222,10 @@ export const salesService = {
     try {
       const { data, error } = await supabase
         .from('medios_pago')
-        .select('id, pago')
+        .select('*') // incluye es_fiado (migración 26) cuando existe
         .neq('id', 3)
         .order('id', { ascending: true })
 
-      console.log('medios_pago =>', data, error)
       if (error) throw error
       return data || []
     } catch (error) {

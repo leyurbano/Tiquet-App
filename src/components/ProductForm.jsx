@@ -1,63 +1,60 @@
 import React, { useState, useEffect } from 'react'
 import './ProductForm.css'
 
+const VACIO = {
+  descripcion: '',
+  codigo_barras: '',
+  cantidad: '',
+  costo: '',
+  precio_venta: '',
+  stock_minimo: ''
+}
+
+// Deja solo los dígitos de lo que escribe el usuario (quita puntos y símbolos)
+const parseCOP = (value) =>
+  value.toString().replace(/\./g, '').replace(/[^0-9]/g, '')
+
+// Formato de presentación únicamente: nunca cambia el valor guardado
+const formatDisplay = (value) => {
+  if (value === '' || value === null || value === undefined) return ''
+  const numero = parseFloat(value)
+  if (isNaN(numero)) return ''
+  return new Intl.NumberFormat('es-CO').format(numero)
+}
+
 function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, minimoNegocio = 0 }) {
-  const [formData, setFormData] = useState({
-    descripcion: '',
-    cantidad: '',
-    costo: '',
-    costo_total: '',
-    precio_venta: '',
-    stock_minimo: ''
-  })
+  const [formData, setFormData] = useState(VACIO)
   // Evita el doble envío por doble clic y bloquea el botón mientras guarda
   const [enviando, setEnviando] = useState(false)
 
-  // Deja solo los dígitos de lo que escribe el usuario (quita puntos de miles y símbolos)
-  const parseCOP = (value) => {
-    return value.toString().replace(/\./g, '').replace(/[^0-9]/g, '')
-  }
-
-  // Formato de presentación únicamente: nunca modifica el valor guardado en el estado
-  const formatDisplay = (value) => {
-    if (value === '' || value === null || value === undefined) return ''
-    const numero = parseFloat(value)
-    if (isNaN(numero)) return ''
-    return new Intl.NumberFormat('es-CO').format(numero)
-  }
-
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData)
+      setFormData({
+        descripcion: initialData.descripcion || '',
+        codigo_barras: initialData.codigo_barras || '',
+        cantidad: initialData.cantidad ?? '',
+        costo: initialData.costo ?? '',
+        precio_venta: initialData.precio_venta ?? '',
+        stock_minimo: initialData.stock_minimo ?? ''
+      })
     }
   }, [initialData])
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    let newValue = value
-
+  const cambiar = (name, value) => {
     // Avisa al contenedor que hay cambios sin guardar, para que pueda
     // confirmar antes de cerrar y no descartarlos por un clic mal puesto
     onDirtyChange?.(true)
-
-    // Calcular costo_total automáticamente cuando cambia cantidad o costo
-    if (name === 'cantidad' || name === 'costo') {
-      const cantidad = name === 'cantidad' ? parseFloat(value) || 0 : parseFloat(formData.cantidad) || 0
-      const costo = name === 'costo' ? parseFloat(value) || 0 : parseFloat(formData.costo) || 0
-      const nuevoFormData = {
-        ...formData,
-        [name]: value,
-        costo_total: (cantidad * costo).toFixed(2)
-      }
-      setFormData(nuevoFormData)
-      return
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      [name]: newValue
-    }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
+
+  const handleChange = (e) => cambiar(e.target.name, e.target.value)
+
+  const cantidad = parseFloat(formData.cantidad) || 0
+  const costo = parseFloat(formData.costo) || 0
+  const precio = parseFloat(formData.precio_venta) || 0
+  const valorInventario = cantidad * costo
+  // Aviso, no bloqueo: hay negocios que venden algo a pérdida a propósito
+  const vendeAPerdida = costo > 0 && precio > 0 && precio < costo
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -71,14 +68,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
     // inmediato, así que un fallo de red dejaba el modal abierto con todos
     // los campos en blanco y el usuario tenía que reescribir la ficha.
     if (guardado === true) {
-      setFormData({
-        descripcion: '',
-        cantidad: '',
-        costo: '',
-        costo_total: '',
-        precio_venta: '',
-        stock_minimo: ''
-      })
+      setFormData(VACIO)
       onDirtyChange?.(false)
     }
   }
@@ -100,9 +90,28 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         className="form-input"
       />
 
+      {/* El lector de código de barras se comporta como un teclado: con el
+          foco aquí, teclea el código y manda Enter. Por eso no se envía el
+          formulario con Enter en este campo: se escanea y se sigue llenando */}
+      <label className="form-label" htmlFor="codigo_barras">
+        Código de barras <span className="form-opcional">(opcional)</span>
+      </label>
+      <input
+        id="codigo_barras"
+        name="codigo_barras"
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="Escanéalo con el lector o escríbelo"
+        value={formData.codigo_barras}
+        onChange={handleChange}
+        onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
+        className="form-input"
+      />
+
       <div className="form-grid-2">
         <div>
-          <label className="form-label">Cantidad en stock</label>
+          <label className="form-label">{initialData ? 'Cantidad en stock' : 'Stock inicial'}</label>
           <input
             type="number"
             name="cantidad"
@@ -110,8 +119,8 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
             value={formData.cantidad}
             onChange={handleChange}
             min="0"
-            required
-            className="form-input"
+            readOnly={!!initialData}
+            className={initialData ? 'form-input form-input-readonly' : 'form-input'}
           />
         </div>
 
@@ -125,28 +134,41 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
               name="costo"
               placeholder="0"
               value={formatDisplay(formData.costo)}
-              onChange={(e) => handleChange({
-                target: { name: 'costo', value: parseCOP(e.target.value) }
-              })}
-              required
-              className="form-input"
+              onChange={(e) => cambiar('costo', parseCOP(e.target.value))}
+              readOnly={!!initialData}
+              className={initialData ? 'form-input form-input-readonly' : 'form-input'}
             />
           </div>
         </div>
       </div>
 
-      <label className="form-label">Costo total</label>
-      <div className="form-input-money">
-        <span className="money-symbol">$</span>
-        <input
-          type="text"
-          name="costo_total"
-          placeholder="Calculado automáticamente"
-          value={formatDisplay(formData.costo_total)}
-          readOnly
-          className="form-input form-input-readonly"
-        />
-      </div>
+      {/* 🔧 Antes ambos eran obligatorios: dar de alta un producto que todavía
+          no llega obligaba a escribir 0 y 0 a mano */}
+      {!initialData && (
+        <p className="form-ayuda">
+          Si el producto todavía no te ha llegado, deja el stock y el costo vacíos.
+          Los llenas después con una entrada de mercancía en Inventario.
+        </p>
+      )}
+
+      {/* Al editar, stock y costo solo se cambian en Inventario: así cada
+          cambio queda registrado con su motivo y no se pisan ventas */}
+      {initialData && (
+        <p className="form-ayuda form-ayuda-bloqueo">
+          El stock y el costo se cambian en <strong>Inventario</strong>: con una entrada
+          de mercancía o con un ajuste. Así queda registrado por qué cambiaron.
+        </p>
+      )}
+
+      {/* 🔧 Antes era un campo de formulario bloqueado, que parecía pendiente
+          de llenar. Es solo una multiplicación: va como texto */}
+      {valorInventario > 0 && (
+        <p className="form-resumen">
+          {initialData ? 'Valor en inventario' : 'Valor del inventario inicial'}:{' '}
+          <strong>${formatDisplay(valorInventario)}</strong>
+          <span> ({cantidad} × ${formatDisplay(costo)})</span>
+        </p>
+      )}
 
       <label className="form-label">Precio de venta</label>
       <div className="form-input-money">
@@ -157,13 +179,19 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
           name="precio_venta"
           placeholder="0"
           value={formatDisplay(formData.precio_venta)}
-          onChange={(e) => handleChange({
-            target: { name: 'precio_venta', value: parseCOP(e.target.value) }
-          })}
+          onChange={(e) => cambiar('precio_venta', parseCOP(e.target.value))}
           required
           className="form-input"
         />
       </div>
+
+      {vendeAPerdida && (
+        <p className="form-aviso-perdida">
+          El precio es menor que el costo: perderías{' '}
+          <strong>${formatDisplay(costo - precio)}</strong> por cada unidad que vendas.
+          Revísalo antes de guardar.
+        </p>
+      )}
 
       <label className="form-label">Alerta de stock bajo</label>
       <input

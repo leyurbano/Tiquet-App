@@ -9,6 +9,10 @@
  *  3. Ninguno de los dos: se acumulan aparte como "sin medio registrado"
  *     en lugar de descartarse en silencio.
  */
+// El medio "Fiado" (migración 26): cuenta como venta, pero ese dinero no
+// llegó, así que no se espera en el cajón ni se valida contra el banco
+export const esMedioFiado = (nombre) => /fiado/i.test(nombre || '')
+
 export const buildCashSummary = (sales = [], mediosPago = []) => {
   const porMedio = {}
   let totalVendido = 0
@@ -42,6 +46,7 @@ export const buildCashSummary = (sales = [], mediosPago = []) => {
   const totalDesglosado =
     Object.values(porMedio).reduce((s, m) => s + m.total, 0) + totalSinMedio
   const claveEfectivo = Object.keys(porMedio).find((n) => /efectivo/i.test(n))
+  const claveFiado = Object.keys(porMedio).find((n) => esMedioFiado(n))
 
   return {
     porMedio,
@@ -53,6 +58,7 @@ export const buildCashSummary = (sales = [], mediosPago = []) => {
     // para poder separarlo de los medios que se validan contra banco/datáfono
     claveEfectivo,
     efectivoVentas: claveEfectivo ? porMedio[claveEfectivo].total : 0,
+    fiadoVentas: claveFiado ? porMedio[claveFiado].total : 0,
     // Distinto de cero significa que hay ventas que no se pudieron clasificar
     descuadre: totalVendido - totalDesglosado
   }

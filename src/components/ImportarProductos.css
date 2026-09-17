@@ -1,0 +1,84 @@
+/* Importar productos desde Excel. Reutiliza las clases inv-* de
+   InventarioPage.css (tarjeta, tabla, botones, campos). */
+
+.imp-texto { font-size: 0.9rem; color: #374151; margin-bottom: 0.5rem; }
+
+.imp-columnas {
+  font-size: 0.85rem;
+  color: #374151;
+  margin: 0 0 0.5rem 1.25rem;
+  line-height: 1.6;
+}
+
+.imp-acciones {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.imp-acciones .inv-btn,
+.imp-acciones .inv-btn-sec {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inv-pie .imp-acciones { margin-top: 0; }
+
+.imp-archivo { margin-top: 1.25rem; font-size: 0.9rem; color: #374151; }
+
+.imp-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.75rem 0;
+}
+
+.imp-chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.imp-nuevo { background: #dbeafe; color: #1e40af; }
+.imp-existente { background: #dcfce7; color: #166534; }
+.imp-omitida { background: #f3f4f6; color: #4b5563; }
+.imp-error { background: #fee2e2; color: #991b1b; }
+
+.imp-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+.imp-tabla-wrap { max-height: 28rem; overflow-y: auto; }
+
+.imp-tabla-wrap thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+
+.imp-fila-error td { background: #fef2f2; }
+
+.imp-obs { font-size: 0.8rem; color: #6b7280; }
+.imp-fila-error .imp-obs { color: #991b1b; }
+
+.imp-proveedor { max-width: 24rem; margin-top: 1rem; }
+
+.imp-alerta {
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}

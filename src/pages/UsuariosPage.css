@@ -1,0 +1,217 @@
+.usr-page {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.usr-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.usr-vacio {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem 1rem;
+}
+
+.usr-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.usr-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.usr-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.75rem;
+}
+
+/* ---- Contraseña temporal recién generada ---- */
+
+.usr-credencial {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  color: #1e3a8a;
+}
+
+.usr-credencial-titulo { font-weight: 700; margin-bottom: 0.5rem; }
+.usr-credencial-dato { font-size: 0.9rem; margin-bottom: 0.25rem; }
+
+.usr-password {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.45rem;
+  letter-spacing: 0.05em;
+}
+
+.usr-credencial-nota {
+  font-size: 0.8rem;
+  color: #1e40af;
+  margin: 0.6rem 0 0.8rem;
+  line-height: 1.4;
+}
+
+.usr-credencial-acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* ---- Formulario ---- */
+
+.usr-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.9rem;
+  align-items: end;
+}
+
+.usr-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.usr-campo > span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Anidado bajo .usr-page: styles.css define input[type="text"|"email"]
+   con especificidad (0,1,1), que le ganaría a una sola clase */
+.usr-page .usr-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fff;
+  color: #111827;
+}
+
+.usr-page .usr-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.usr-page .usr-input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.usr-page .usr-input-sm {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+  width: auto;
+}
+
+/* ---- Botones ---- */
+
+.usr-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.usr-btn:hover:not(:disabled) { background: #1d4ed8; }
+.usr-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+.usr-btn-sec { background: #fff; color: #1e40af; border: 1px solid #bfdbfe; }
+.usr-btn-sec:hover:not(:disabled) { background: #dbeafe; }
+
+.usr-btn-crear { height: fit-content; }
+
+.usr-btn-sm {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  background: #fff;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.usr-btn-sm:hover:not(:disabled) { background: #f0fdf4; }
+
+/* ---- Tabla ---- */
+
+.usr-tabla-wrap { overflow-x: auto; }
+
+.usr-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.usr-tabla th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.usr-tabla td {
+  padding: 0.65rem 0.6rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.usr-tabla .centro { text-align: center; }
+
+.usr-email { font-size: 0.75rem; color: #9ca3af; }
+
+.usr-inactivo td { opacity: 0.55; }
+
+.usr-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  vertical-align: middle;
+}
+
+.usr-badge-plat { background: #ede9fe; color: #5b21b6; }
+
+@media (max-width: 640px) {
+  .usr-title { font-size: 1.5rem; }
+}

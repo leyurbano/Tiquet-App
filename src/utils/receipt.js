@@ -103,8 +103,9 @@ export const getReceiptCSS = (anchoPapel = '55mm') => `
  * @param cliente  { nombre, documento, telefono }
  * @param items    [{ descripcion, cantidad, subtotal }]
  * @param pagos    [{ nombre, monto }]
+ * @param saldoFiado  lo que el cliente queda debiendo, si la venta fue fiada
  */
-export const buildReceiptHTML = ({ negocio, venta, cliente, items = [], pagos = [] }) => {
+export const buildReceiptHTML = ({ negocio, venta, cliente, items = [], pagos = [], saldoFiado = null }) => {
   const n = negocio || {}
 
   const logoHtml = n.logo_url
@@ -143,7 +144,7 @@ export const buildReceiptHTML = ({ negocio, venta, cliente, items = [], pagos = 
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Recibo de Venta${venta.id ? ` #${venta.id}` : ''}</title>
+<title>Recibo de Venta${venta.numero ? ` #${venta.numero}` : ''}</title>
 <style>${getReceiptCSS(n.ancho_papel || '55mm')}</style>
 </head>
 <body>
@@ -183,7 +184,11 @@ ${itemsHtml}
 <div class="items-header">FORMA DE PAGO</div>
 <div class="payment-section">
 ${pagosHtml}
-</div>
+</div>${saldoFiado !== null && saldoFiado !== undefined ? `
+<div class="payment-row">
+  <span class="payment-method">SALDO PENDIENTE</span>
+  <span class="payment-amount">$${money(saldoFiado)}</span>
+</div>` : ''}
 <div class="divider"></div>
 <div class="total-section">
   <div class="total-label">TOTAL</div>

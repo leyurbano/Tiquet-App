@@ -1,21 +1,116 @@
 import { supabase } from './supabaseClient'
 
-export const productService = {
-  // Obtener todos los productos con paginación
-  async getAllProducts(page = 1, limit = 1000) {
-    try {
-      const offset = (page - 1) * limit
-      const { data, error, count } = await supabase
-        .from('productos')
-        .select('*', { count: 'exact' })
-        .order('id', { ascending: true })
-        .range(offset, offset + limit - 1)
+// El costo vive en productos_costos, que solo pueden leer los
+// administradores (migración 28). A un vendedor el join le llega vacío y
+// costo/costo_total quedan en null: la pantalla no muestra esas columnas.
+const conCosto = (fila) => ({
+  ...fila,
+  costo: fila.productos_costos?.costo ?? null,
+  costo_total: fila.productos_costos?.costo_total ?? null,
+  productos_costos: undefined
+})
 
+// El error del índice único no le dice nada al usuario: "duplicate key
+// value violates unique constraint" no explica qué hacer.
+const mensajeDeError = (error) => {
+  if (error?.code === '23505' && String(error?.message).includes('codigo_barras')) {
+    return 'Ese código de barras ya lo tiene otro producto'
+  }
+  return error?.message || 'Error desconocido'
+}
+
+const SELECT_PRODUCTO = '*, productos_costos ( costo, costo_total )'
+
+export const productService = {
+  /**
+   * Mercancía quieta: productos CON stock que no se venden hace `dias`,
+   * y cuánta plata representan al costo (migración 35).
+   *
+   * Solo administradores: el valor se calcula al costo. La función en la
+   * base rechaza a los demás, así que esto devuelve null y la pantalla no
+   * muestra la sección.
+   *
+   * Llega un objeto con los totales ya sumados sobre todo el catálogo y
+   * solo los 100 productos de mayor valor: si devolviera una fila por
+   * producto, el corte de 1.000 filas de Supabase haría que el total
+   * saliera corto sin ningún error visible.
+   */
+  async getMercanciaQuieta(dias = 90) {
+    try {
+      const { data, error } = await supabase.rpc('mercancia_quieta', { p_dias: dias })
       if (error) throw error
-      return { data: data || [], total: count || 0, page, limit }
+      return data || null
+    } catch (error) {
+      console.warn('No se pudo cargar la mercancía quieta:', error.message || error)
+      return null
+    }
+  },
+
+  /**
+   * Unidades vendidas por producto en los últimos `dias`, como
+   * { [producto_id]: unidades }. Alimenta la alerta de stock bajo, que solo
+   * avisa de lo que rota (migración 33).
+   *
+   * La suma la hace Postgres: 30 días de ventas pasan de las 1.000 filas
+   * que devuelve Supabase por consulta, así que sumarlas en el navegador
+   * daría un conteo corto y sin error visible.
+   *
+   * Si la migración 33 no se ha corrido devuelve null, y `estadoStock`
+   * vuelve al comportamiento anterior (avisar por umbral solamente).
+   */
+  async getRotacion(dias = 30) {
+    try {
+      const { data, error } = await supabase.rpc('rotacion_productos', { p_dias: dias })
+      if (error) throw error
+
+      const porProducto = {}
+      for (const fila of data || []) {
+        porProducto[fila.producto_id] = Number(fila.vendidos) || 0
+      }
+      return porProducto
+    } catch (error) {
+      console.warn('Sin datos de rotación, la alerta de stock usa solo el umbral:', error.message || error)
+      return null
+    }
+  },
+
+  /**
+   * Todo el catálogo, en páginas de 1.000 (lo máximo que Supabase devuelve
+   * por consulta). Para buscar productos o comparar contra un archivo
+   * importado, una lista cortada haría ver como "nuevos" a los que ya
+   * existen. Devuelve { data } o { data: [], error }.
+   */
+  async getTodosLosProductos() {
+    const TAM = 1000
+    const todos = []
+    // Si la tabla de costos todavía no existe (migración 28 sin correr) o no
+    // hay permiso para leerla, se reintenta sin ella: el catálogo tiene que
+    // cargar igual. Sin esto, la pantalla de Productos quedaba vacía.
+    let conCostos = true
+    try {
+      for (let desde = 0; ; desde += TAM) {
+        const consulta = () => supabase
+          .from('productos')
+          .select(conCostos ? SELECT_PRODUCTO : '*')
+          .order('id', { ascending: true })
+          .range(desde, desde + TAM - 1)
+
+        let { data, error } = await consulta()
+
+        if (error && conCostos) {
+          console.warn('Sin acceso a productos_costos, se cargan los productos sin costo:', error.message)
+          conCostos = false
+          ;({ data, error } = await consulta())
+        }
+
+        if (error) throw error
+        todos.push(...(data || []).map(conCosto))
+        if (!data || data.length < TAM) break
+      }
+      return { data: todos }
     } catch (error) {
       console.error('❌ Error fetching products:', error.message)
-      return { data: [], total: 0, page, limit }
+      return { data: [], error: error.message }
     }
   },
 
@@ -24,84 +119,76 @@ export const productService = {
     try {
       const { data, error } = await supabase
         .from('productos')
-        .select('*')
+        .select(SELECT_PRODUCTO)
         .eq('id', id)
         .single()
 
       if (error) throw error
-      return data
+      return data ? conCosto(data) : null
     } catch (error) {
       console.error('Error fetching product:', error)
       return null
     }
   },
 
-  // Crear producto
+  /**
+   * Crea un producto mediante la función crear_producto de la base de datos.
+   *
+   * 🔧 Antes era un insert directo: el "stock inicial" entraba sin dejar
+   * rastro. Ahora, si hay stock inicial, queda registrado como una entrada
+   * "Stock inicial" en el historial, con su costo de origen. Además se
+   * rechazan nombres repetidos.
+   *
+   * Devuelve { producto } o { error } con el motivo legible.
+   */
   async createProduct(product) {
     try {
-      const { data, error } = await supabase
-        .from('productos')
-        .insert([{
-          descripcion: product.descripcion,
-          cantidad: product.cantidad,
-          costo: product.costo,
-          costo_total: product.costo_total,
-          precio_venta: product.precio_venta,
-          // vacío = usa el umbral del negocio; 0 = sin alertas
-          stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
-            ? null : Number(product.stock_minimo)
-        }])
-        .select()
+      const { data, error } = await supabase.rpc('crear_producto', {
+        p_descripcion: product.descripcion,
+        p_precio_venta: Number(product.precio_venta) || 0,
+        // vacío = usa el umbral del negocio; 0 = sin alertas
+        p_stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
+          ? null : Number(product.stock_minimo),
+        p_stock_inicial: Number(product.cantidad) || 0,
+        p_costo: Number(product.costo) || 0,
+        p_codigo_barras: product.codigo_barras?.trim() || null
+      })
 
       if (error) throw error
-      return data?.[0]
+      return { producto: data }
     } catch (error) {
-      console.error('Error creating product:', error)
-      return null
+      console.error('Error creating product:', error.message || error)
+      return { error: error.message || 'Error desconocido' }
     }
   },
 
   // Actualizar producto
 async updateProduct(id, product) {
   try {
-    // 🆕 Leer cantidad actual antes de actualizar
-    const productoActual = await this.getProductById(id)
-    const cantidadAnterior = productoActual?.cantidad ?? 0
-
+    // 🔧 Ya NO se envían cantidad, costo ni costo_total. Antes se mandaba el
+    // stock que tenía el formulario al abrirse: si en medio se vendía algo,
+    // al guardar un cambio de precio el stock volvía al valor viejo y esa
+    // venta desaparecía del inventario. Stock y costo cambian solo por
+    // ventas, entradas de mercancía y ajustes (página Inventario).
     const { data, error } = await supabase
       .from('productos')
       .update({
         descripcion: product.descripcion,
-        cantidad: product.cantidad,
-        costo: product.costo,
-        costo_total: product.costo_total,
         precio_venta: product.precio_venta,
         stock_minimo: product.stock_minimo === '' || product.stock_minimo == null
-          ? null : Number(product.stock_minimo)
+          ? null : Number(product.stock_minimo),
+        // Vacío = sin código. Nunca cadena vacía: chocaría contra el
+        // índice único con los demás productos sin código.
+        codigo_barras: product.codigo_barras?.trim() || null
       })
       .eq('id', id)
       .select()
 
     if (error) throw error
-
-    // 🆕 Registrar en historial solo si la cantidad cambió
-    const cantidadNueva = Number(product.cantidad)
-    if (cantidadAnterior !== cantidadNueva) {
-      await supabase
-        .from('producto_historial')
-        .insert([{
-          producto_id: id,
-          tipo_evento: 'actualizacion',
-          cantidad_anterior: cantidadAnterior,
-          cantidad_nueva: cantidadNueva,
-          descripcion: 'Edición manual desde módulo de productos'
-        }])
-    }
-
-    return data?.[0]
+    return { producto: data?.[0] }
   } catch (error) {
     console.error('Error updating product:', error)
-    return null
+    return { error: mensajeDeError(error) }
   }
 },
 
@@ -122,12 +209,32 @@ async updateProduct(id, product) {
   },
   async getProductHistory(productoId) {
   try {
-    const { data, error } = await supabase
+    // Se piden los números de cada documento (consecutivos por negocio) para
+    // no mostrar los ids internos en la columna de referencia
+    const CON_NUMEROS = `
+        *,
+        ventas ( numero ),
+        entradas ( numero ),
+        ajustes ( numero ),
+        devoluciones ( numero )
+      `
+
+    const consulta = (select) => supabase
       .from('producto_historial')
-      .select('*')
+      .select(select)
       .eq('producto_id', productoId)
       .order('created_at', { ascending: false })
       .limit(100)
+
+    let { data, error } = await consulta(CON_NUMEROS)
+
+    // Si alguna de esas relaciones no está declarada en la base de datos, la
+    // consulta entera falla y el historial se veía vacío. Se reintenta sin
+    // los números: es mejor mostrar los movimientos con el id que no mostrarlos
+    if (error) {
+      console.warn('Historial sin números de documento:', error.message)
+      ;({ data, error } = await consulta('*'))
+    }
 
     if (error) throw error
     return data || []

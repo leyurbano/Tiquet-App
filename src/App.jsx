@@ -8,12 +8,15 @@ import ClientsPage from "./pages/ClientsPage";
 import CierreCajaPage from "./pages/CierreCajaPage";
 import ConfiguracionPage from "./pages/ConfiguracionPage";
 import PlataformaPage from "./pages/PlataformaPage";
+import UsuariosPage from "./pages/UsuariosPage";
+import InventarioPage from "./pages/InventarioPage";
 import { useAuth } from "./contexts/AuthContext";
 import CuentaBloqueada from "./components/CuentaBloqueada";
+import CambiarContrasenaModal from "./components/CambiarContrasenaModal";
 import InicioPage from "./pages/InicioPage"; // 🔧 CAMBIO — solo un import, eliminé el duplicado
 
 function App() {
-  const { user, loading, estadoCuenta, esSuperAdmin } = useAuth();
+  const { user, loading, estadoCuenta, esSuperAdmin, debeCambiarContrasena } = useAuth();
 
   // Usuario autenticado que no puede operar. La excepción es el super admin
   // de plataforma sin negocio propio, que solo administra la plataforma.
@@ -30,6 +33,11 @@ function App() {
   }
 
   if (cuentaBloqueada) return <CuentaBloqueada />;
+
+  // Contraseña asignada por el administrador: se cambia antes de operar
+  if (user && estadoCuenta === "activo" && debeCambiarContrasena) {
+    return <CambiarContrasenaModal obligatorio />;
+  }
 
   return (
     <>
@@ -118,6 +126,34 @@ function App() {
             <div className="app-container">
               <Navbar />
               <div className="app-main"><PlataformaPage /></div>
+            </div>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/usuarios"
+        element={
+          user ? (
+            <div className="app-container">
+              <Navbar />
+              <div className="app-main"><UsuariosPage /></div>
+            </div>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/inventario"
+        element={
+          user ? (
+            <div className="app-container">
+              <Navbar />
+              <div className="app-main"><InventarioPage /></div>
             </div>
           ) : (
             <Navigate to="/" replace />
