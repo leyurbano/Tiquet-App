@@ -22,7 +22,7 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('11_permisos_vendedor',    'trigger de columnas',            'trigger',  'proteger_campos_producto'),
   ('12_stock_minimo',         'negocios.stock_minimo_defecto',  'columna',  'negocios.stock_minimo_defecto'),
   ('12_stock_minimo',         'productos.stock_minimo',         'columna',  'productos.stock_minimo'),
-  ('13_costo_en_venta',       'detalle_ventas.costo_unitario',  'columna',  'detalle_ventas.costo_unitario'),
+  ('13_costo_en_venta',       'costo congelado por venta (movido en 32)', 'tabla', 'detalle_ventas_costos'),
   ('14_endurecimiento',       'trigger proteger_perfil',        'trigger',  'proteger_perfil'),
   ('14_endurecimiento',       'trigger proteger_sesion_caja',   'trigger',  'proteger_sesion_caja'),
   ('14_endurecimiento',       'ventas.creado_en',               'columna',  'ventas.creado_en'),
@@ -57,7 +57,10 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('30_numeros_por_negocio',  'tabla consecutivos',              'tabla',    'consecutivos'),
   ('30_numeros_por_negocio',  'ventas.numero',                   'columna',  'ventas.numero'),
   ('30_numeros_por_negocio',  'trigger asignar_numero_venta',    'trigger',  'asignar_numero_venta'),
-  ('31_historial_relacion_ventas', 'relación historial → ventas', 'restriccion', 'producto_historial_venta_id_fkey')
+  ('31_historial_relacion_ventas', 'relación historial → ventas', 'restriccion', 'producto_historial_venta_id_fkey'),
+  ('32_costo_venta_solo_admin', 'tabla detalle_ventas_costos',     'tabla',    'detalle_ventas_costos'),
+  ('32_costo_venta_solo_admin', 'detalle_ventas sin costo',        'ausente',  'detalle_ventas.costo_unitario'),
+  ('32_costo_venta_solo_admin', 'registrar_venta guarda el costo aparte', 'funcion_contiene', 'registrar_venta|detalle_ventas_costos')
 )
 select
   migracion,

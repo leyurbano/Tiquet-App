@@ -4,16 +4,27 @@ export const negocioService = {
   /**
    * Trae el negocio del usuario logueado.
    *
-   * No hace falta pasarle un id: la RLS solo deja ver la fila del negocio
-   * propio, así que un select sin filtro ya devuelve el correcto. Un super
-   * admin sí ve varios, por eso se limita a uno.
+   * 🔧 Antes era un select sin filtro con `limit(1)`, confiando en que la
+   * RLS dejara ver solo el negocio propio. Para un super admin eso es falso:
+   * la política de `negocios` es `id = mi_negocio() or es_super_admin()`, así
+   * que veía todos los negocios y `limit(1)` sin `order by` devolvía uno
+   * cualquiera. Por eso en Fralu salía el nombre y el logo de otro negocio en
+   * el tiquete, y Configuración podía abrir los ajustes del negocio ajeno.
+   *
+   * Se filtra por `mi_negocio()`, que es la misma fuente que usa la RLS en
+   * todas partes, así que no pueden discrepar. Devuelve null si el usuario
+   * no tiene negocio activo; en ese caso `App` ya muestra `CuentaBloqueada`.
    */
   async getMiNegocio() {
     try {
+      const { data: negocioId, error: errorId } = await supabase.rpc('mi_negocio')
+      if (errorId) throw errorId
+      if (!negocioId) return null
+
       const { data, error } = await supabase
         .from('negocios')
         .select('*')
-        .limit(1)
+        .eq('id', negocioId)
         .maybeSingle()
 
       if (error) throw error

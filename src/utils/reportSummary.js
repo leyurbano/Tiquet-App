@@ -1,7 +1,7 @@
 /**
  * Cálculo de rentabilidad a partir de las ventas de un período.
  *
- * El costo sale de `detalle_ventas.costo_unitario`, que se congela con cada
+ * El costo sale de `detalle_ventas_costos`, que se congela con cada
  * venta. Las ventas anteriores a esa columna se rellenaron con el costo que
  * el producto tenía al migrar, así que su margen es aproximado — por eso se
  * cuentan aparte y la pantalla lo advierte.
