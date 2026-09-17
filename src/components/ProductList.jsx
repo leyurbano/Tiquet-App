@@ -56,7 +56,8 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, rot
     if (!termino) return true;
     return (
       (product.descripcion || "").toLowerCase().includes(termino) ||
-      coincideNumero(product, termino)
+      coincideNumero(product, termino) ||
+      (product.codigo_barras || "").toLowerCase().includes(termino)
     );
   });
 

@@ -3,6 +3,7 @@ import './ProductForm.css'
 
 const VACIO = {
   descripcion: '',
+  codigo_barras: '',
   cantidad: '',
   costo: '',
   precio_venta: '',
@@ -30,6 +31,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
     if (initialData) {
       setFormData({
         descripcion: initialData.descripcion || '',
+        codigo_barras: initialData.codigo_barras || '',
         cantidad: initialData.cantidad ?? '',
         costo: initialData.costo ?? '',
         precio_venta: initialData.precio_venta ?? '',
@@ -85,6 +87,25 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         onChange={handleChange}
         rows="2"
         required
+        className="form-input"
+      />
+
+      {/* El lector de código de barras se comporta como un teclado: con el
+          foco aquí, teclea el código y manda Enter. Por eso no se envía el
+          formulario con Enter en este campo: se escanea y se sigue llenando */}
+      <label className="form-label" htmlFor="codigo_barras">
+        Código de barras <span className="form-opcional">(opcional)</span>
+      </label>
+      <input
+        id="codigo_barras"
+        name="codigo_barras"
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="Escanéalo con el lector o escríbelo"
+        value={formData.codigo_barras}
+        onChange={handleChange}
+        onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
         className="form-input"
       />
 

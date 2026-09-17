@@ -66,7 +66,7 @@ function ProductsPage() {
 
   const handleUpdateProduct = async (formData) => {
     setLoading(true);
-    const updated = await productService.updateProduct(
+    const { producto: updated, error } = await productService.updateProduct(
       editingProduct.id,
       formData,
     );
@@ -77,7 +77,7 @@ function ProductsPage() {
       toast.exito("Producto actualizado exitosamente");
       loadProducts();
     } else {
-      toast.error("Error al actualizar el producto");
+      toast.error("No se pudo actualizar el producto: " + (error || "error desconocido"));
     }
     setLoading(false);
     return !!updated;
