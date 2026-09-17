@@ -36,6 +36,11 @@ archivo completo → Run.
 | 24 | `24_importar_productos.sql` | Importación desde Excel: `registrar_entrada` acepta productos nuevos con cantidad 0 (agotados) y máximo 2.000 líneas. |
 | 25 | `25_devoluciones.sql` | Devoluciones parciales (`registrar_devolucion`), límites para vendedores en `negocios`, y `anular_venta` bloqueada si la venta tiene devoluciones. |
 | 26 | `26_fiado.sql` | Fiado: medio de pago `Fiado`, cupo por cliente, abonos (`registrar_abono`), saldo calculado (`saldo_fiado`, `saldos_fiado`), y control de cupo en `registrar_venta`. |
+| 27 | `27_costos_no_visibles.sql` | Costos fuera del alcance del vendedor (fase 1): `detalle_devoluciones` solo admin, `devoluciones` sin `costo_total`, `devuelto_por_linea()` y el historial sin costos en el texto. |
+| 28 | `28_costos_solo_admin.sql` | Fase 2: el costo sale de `productos` y pasa a `productos_costos` (solo admin). `registrar_venta` y `actualizar_inventario` pasan a `SECURITY DEFINER` con filtro de negocio explícito. |
+| 29 | `29_codigo_por_negocio.sql` | `productos.codigo`: número consecutivo por negocio (todos empiezan en 1), con contador en `negocios.ultimo_codigo_producto`. |
+| 30 | `30_numeros_por_negocio.sql` | `numero` por negocio en ventas, devoluciones, entradas, ajustes y abonos, con la tabla `consecutivos` (que absorbe el contador de productos). |
+| 31 | `31_historial_relacion_ventas.sql` | Declara la relación `producto_historial.venta_id → ventas`, que faltaba desde antes de las migraciones, e indexa las referencias del historial. |
 
 ## Lo que todavía no está aquí
 

@@ -4,6 +4,7 @@ import { formatCOP } from '../utils/currencyFormatter'
 import { getTodayColombia } from '../utils/dateFormatter'
 import AnularVentaModal from './AnularVentaModal'
 import DevolucionModal from './DevolucionModal'
+import { numeroDoc } from '../utils/documento'
 
 function SalesList({
   sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange,
@@ -121,7 +122,7 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
               <tbody>
                 {filteredSales.map(sale => (
                   <tr key={sale.id} className="table-row">
-                    <td>#{sale.id}</td>
+                    <td>#{numeroDoc(sale)}</td>
                     <td>{getClientName(sale.cliente_id)}</td>
                     <td className="amount-cell">{formatCOP(sale.total || 0)}</td>
                     <td className="actions-cell">

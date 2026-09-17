@@ -100,13 +100,13 @@ function ProductHistoryModal({ product, onClose }) {
                       </td>
                       <td className="phm-td-ref">
                         {event.venta_id
-                          ? `Venta #${event.venta_id}`
+                          ? `Venta #${event.ventas?.numero ?? event.venta_id}`
                           : event.devolucion_id
-                            ? `Devolución #${event.devolucion_id}`
+                            ? `Devolución #${event.devoluciones?.numero ?? event.devolucion_id}`
                           : event.entrada_id
-                            ? `Entrada #${event.entrada_id}`
+                            ? `Entrada #${event.entradas?.numero ?? event.entrada_id}`
                             : event.ajuste_id
-                              ? `Ajuste #${event.ajuste_id}`
+                              ? `Ajuste #${event.ajustes?.numero ?? event.ajuste_id}`
                               : '—'}
                       </td>
                     </tr>

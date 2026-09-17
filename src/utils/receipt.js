@@ -144,7 +144,7 @@ export const buildReceiptHTML = ({ negocio, venta, cliente, items = [], pagos = 
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Recibo de Venta${venta.id ? ` #${venta.id}` : ''}</title>
+<title>Recibo de Venta${venta.numero ? ` #${venta.numero}` : ''}</title>
 <style>${getReceiptCSS(n.ancho_papel || '55mm')}</style>
 </head>
 <body>

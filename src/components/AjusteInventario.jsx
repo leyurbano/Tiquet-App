@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { productService } from '../services/productService'
+import { numeroProducto, coincideNumero } from '../utils/producto'
 import { inventarioService } from '../services/inventarioService'
 import { toast } from '../utils/toast'
 import { formatCOP } from '../utils/currencyFormatter'
@@ -45,7 +46,7 @@ function AjusteInventario() {
     const t = busqueda.trim().toLowerCase()
     if (!t) return []
     return productos
-      .filter((p) => (p.descripcion || '').toLowerCase().includes(t) || String(p.id) === t)
+      .filter((p) => (p.descripcion || '').toLowerCase().includes(t) || coincideNumero(p, t))
       .slice(0, 8)
   }, [busqueda, productos])
 
@@ -162,7 +163,7 @@ function AjusteInventario() {
               {sugerencias.map((p) => (
                 <li key={p.id}>
                   <button type="button" onClick={() => agregar(p)}>
-                    <span>#{p.id} · {p.descripcion}</span>
+                    <span>#{numeroProducto(p)} · {p.descripcion}</span>
                     <span className="inv-sug-stock">sistema: {p.cantidad ?? 0}</span>
                   </button>
                 </li>

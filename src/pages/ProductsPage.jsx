@@ -119,6 +119,7 @@ function ProductsPage() {
             onEdit={esAdministrador ? handleEdit : null}
             loading={loading}
             minimoNegocio={minimoNegocio}
+            mostrarCostos={esAdministrador}
           />
         </div>
       </div>

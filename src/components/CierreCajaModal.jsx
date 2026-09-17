@@ -13,6 +13,7 @@ import { formatToColombia } from '../utils/dateFormatter'
 import { etiquetaMotivo } from '../utils/motivosAnulacion'
 import { etiquetaMotivoDevolucion } from '../utils/motivosDevolucion'
 import { devolucionService } from '../services/devolucionService'
+import { numeroDoc } from '../utils/documento'
 import { fiadoService } from '../services/fiadoService'
 import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
@@ -88,7 +89,7 @@ function CierreCajaModal({ onCancel, onDone }) {
           key: `abono-${a.id}`,
           ventaId: null,
           abonoId: a.id,
-          etiqueta: `Abono #${a.id}${a.clientes?.nombre ? ` · ${a.clientes.nombre}` : ''}`,
+          etiqueta: `Abono #${numeroDoc(a)}${a.clientes?.nombre ? ` · ${a.clientes.nombre}` : ''}`,
           monto: Number(a.monto) || 0
         })
       })
@@ -397,7 +398,7 @@ function CierreCajaModal({ onCancel, onDone }) {
                   {anuladas.map((v) => (
                     <div className="caja-anulada" key={v.id}>
                       <span>
-                        Venta #{v.id}
+                        Venta #{numeroDoc(v)}
                         <br />
                         <span className="caja-anulada-motivo">
                           {etiquetaMotivo(v.motivo_anulacion)}
@@ -424,7 +425,7 @@ function CierreCajaModal({ onCancel, onDone }) {
                   {devoluciones.map((d) => (
                     <div className="caja-anulada" key={d.id}>
                       <span>
-                        Devolución #{d.id} · venta #{d.venta_id}
+                        Devolución #{numeroDoc(d)} · venta #{d.ventas?.numero ?? d.venta_id}
                         <br />
                         <span className="caja-anulada-motivo">
                           {etiquetaMotivoDevolucion(d.motivo)} · {d.medios_pago?.pago || 'Sin medio'}

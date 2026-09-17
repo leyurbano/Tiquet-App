@@ -60,7 +60,9 @@
   display: grid;
   /* auto-fit en vez de un número fijo: así no hay que tocar el CSS cada vez
      que se agrega o quita una tarjeta */
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  /* Tope de 16rem: con solo dos tarjetas, 1fr las estiraba a media pantalla */
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 16rem));
+  justify-content: start;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }

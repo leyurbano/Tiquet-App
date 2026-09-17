@@ -8,6 +8,7 @@ import MixedPaymentModal from "./MixedPaymentModal";
 import { salesService } from "../services/salesService";
 import { fiadoService } from "../services/fiadoService";
 import { esConsumidorFinal } from "../utils/clientes";
+import { numeroProducto, coincideNumero } from "../utils/producto";
 
 function SalesForm({
   products,
@@ -55,7 +56,7 @@ function SalesForm({
       (p) =>
         p.descripcion.toLowerCase().includes(search) ||
         p.name?.toLowerCase().includes(search) ||
-        p.id.toString().includes(search),
+        String(numeroProducto(p)).includes(search),
     );
     // Con miles de productos, una sola letra coincide con cientos: se
     // muestran las primeras 30 y se sigue escribiendo para afinar
@@ -63,7 +64,7 @@ function SalesForm({
   };
 
   const selectProductFromSearch = (product) => {
-    setSelectedProduct(product.id.toString());
+    setSelectedProduct(String(numeroProducto(product)));
     setProductSearch(product.descripcion);
     setFilteredProducts([]);
   };
@@ -126,7 +127,8 @@ function SalesForm({
     if (!selectedProduct || !quantity) return;
 
     // 🔧 CAMBIO — valida stock al agregar el producto
-    const product = products.find((p) => p.id === parseInt(selectedProduct));
+    // El campo "Item" es el número del negocio, no el id interno
+    const product = products.find((p) => coincideNumero(p, selectedProduct));
     if (!product) return;
 
     if (product.cantidad === 0) {
@@ -370,7 +372,7 @@ function SalesForm({
                   setSelectedProduct(e.target.value);
                   if (e.target.value) {
                     const product = products.find(
-                      (p) => p.id === parseInt(e.target.value),
+                      (p) => coincideNumero(p, e.target.value),
                     );
                     if (product) setProductSearch(product.descripcion);
                   } else {

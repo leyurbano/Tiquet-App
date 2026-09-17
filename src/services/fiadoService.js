@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { numeroDoc } from '../utils/documento'
 
 // La migración 26 todavía no se ha corrido: la función o la tabla no existe.
 // En ese caso el fiado se trata como "no instalado", no como un error que
@@ -71,16 +72,16 @@ export const fiadoService = {
       const [ventas, devoluciones, abonos] = await Promise.all([
         supabase
           .from('ventas')
-          .select('id, fecha, total, pagos_venta ( monto, medios_pago ( es_fiado ) )')
+          .select('id, numero, fecha, total, pagos_venta ( monto, medios_pago ( es_fiado ) )')
           .eq('cliente_id', clienteId)
           .is('anulada_en', null),
         supabase
           .from('devoluciones')
-          .select('id, fecha, total, venta_id, medios_pago ( es_fiado ), ventas!inner ( cliente_id )')
+          .select('id, numero, fecha, total, venta_id, medios_pago ( es_fiado ), ventas!inner ( cliente_id, numero )')
           .eq('ventas.cliente_id', clienteId),
         supabase
           .from('abonos')
-          .select('id, fecha, monto, nota, medios_pago ( pago )')
+          .select('id, numero, fecha, monto, nota, medios_pago ( pago )')
           .eq('cliente_id', clienteId)
       ])
 
@@ -96,7 +97,7 @@ export const fiadoService = {
           .reduce((s, p) => s + (Number(p.monto) || 0), 0)
         if (fiado > 0) {
           movimientos.push({
-            clave: `v-${v.id}`, tipo: 'venta', id: v.id, ventaId: v.id, fecha: v.fecha,
+            clave: `v-${v.id}`, tipo: 'venta', id: numeroDoc(v), ventaId: numeroDoc(v), fecha: v.fecha,
             cargo: fiado, abono: 0, total: Number(v.total) || 0
           })
         }
@@ -106,14 +107,15 @@ export const fiadoService = {
         .filter((d) => d.medios_pago?.es_fiado)
         .forEach((d) => {
           movimientos.push({
-            clave: `d-${d.id}`, tipo: 'devolucion', id: d.id, ventaId: d.venta_id, fecha: d.fecha,
+            clave: `d-${d.id}`, tipo: 'devolucion', id: numeroDoc(d),
+            ventaId: d.ventas?.numero ?? d.venta_id, fecha: d.fecha,
             cargo: 0, abono: Number(d.total) || 0
           })
         })
 
       ;(abonos.data || []).forEach((a) => {
         movimientos.push({
-          clave: `a-${a.id}`, tipo: 'abono', id: a.id, fecha: a.fecha,
+          clave: `a-${a.id}`, tipo: 'abono', id: numeroDoc(a), fecha: a.fecha,
           cargo: 0, abono: Number(a.monto) || 0, medio: a.medios_pago?.pago || null, nota: a.nota
         })
       })
@@ -139,7 +141,7 @@ export const fiadoService = {
     try {
       const { data, error } = await supabase
         .from('abonos')
-        .select('id, cliente_id, fecha, monto, medio_pago_id, medios_pago ( pago ), clientes ( nombre )')
+        .select('id, numero, cliente_id, fecha, monto, medio_pago_id, medios_pago ( pago ), clientes ( nombre )')
         .eq('sesion_caja_id', sesionId)
         .order('fecha', { ascending: false })
 
@@ -157,7 +159,7 @@ export const fiadoService = {
     try {
       const { data, error } = await supabase
         .from('abonos')
-        .select('id, cliente_id, fecha, monto, medios_pago ( pago ), clientes ( nombre )')
+        .select('id, numero, cliente_id, fecha, monto, medios_pago ( pago ), clientes ( nombre )')
         .gte('fecha', inicioISO)
         .lte('fecha', finISO)
         .order('fecha', { ascending: false })

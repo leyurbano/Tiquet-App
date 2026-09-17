@@ -40,7 +40,7 @@ export const inventarioService = {
       const { data, error } = await supabase
         .from('entradas')
         .select(`
-          id, fecha, proveedor, factura, total,
+          id, numero, fecha, proveedor, factura, total,
           detalle_entradas ( cantidad, productos ( descripcion ) )
         `)
         .order('fecha', { ascending: false })

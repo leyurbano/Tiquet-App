@@ -1,5 +1,17 @@
 import { supabase } from './supabaseClient'
 
+// El costo vive en productos_costos, que solo pueden leer los
+// administradores (migración 28). A un vendedor el join le llega vacío y
+// costo/costo_total quedan en null: la pantalla no muestra esas columnas.
+const conCosto = (fila) => ({
+  ...fila,
+  costo: fila.productos_costos?.costo ?? null,
+  costo_total: fila.productos_costos?.costo_total ?? null,
+  productos_costos: undefined
+})
+
+const SELECT_PRODUCTO = '*, productos_costos ( costo, costo_total )'
+
 export const productService = {
   /**
    * Todo el catálogo, en páginas de 1.000 (lo máximo que Supabase devuelve
@@ -10,16 +22,28 @@ export const productService = {
   async getTodosLosProductos() {
     const TAM = 1000
     const todos = []
+    // Si la tabla de costos todavía no existe (migración 28 sin correr) o no
+    // hay permiso para leerla, se reintenta sin ella: el catálogo tiene que
+    // cargar igual. Sin esto, la pantalla de Productos quedaba vacía.
+    let conCostos = true
     try {
       for (let desde = 0; ; desde += TAM) {
-        const { data, error } = await supabase
+        const consulta = () => supabase
           .from('productos')
-          .select('*')
+          .select(conCostos ? SELECT_PRODUCTO : '*')
           .order('id', { ascending: true })
           .range(desde, desde + TAM - 1)
 
+        let { data, error } = await consulta()
+
+        if (error && conCostos) {
+          console.warn('Sin acceso a productos_costos, se cargan los productos sin costo:', error.message)
+          conCostos = false
+          ;({ data, error } = await consulta())
+        }
+
         if (error) throw error
-        todos.push(...(data || []))
+        todos.push(...(data || []).map(conCosto))
         if (!data || data.length < TAM) break
       }
       return { data: todos }
@@ -34,12 +58,12 @@ export const productService = {
     try {
       const { data, error } = await supabase
         .from('productos')
-        .select('*')
+        .select(SELECT_PRODUCTO)
         .eq('id', id)
         .single()
 
       if (error) throw error
-      return data
+      return data ? conCosto(data) : null
     } catch (error) {
       console.error('Error fetching product:', error)
       return null
@@ -120,12 +144,32 @@ async updateProduct(id, product) {
   },
   async getProductHistory(productoId) {
   try {
-    const { data, error } = await supabase
+    // Se piden los números de cada documento (consecutivos por negocio) para
+    // no mostrar los ids internos en la columna de referencia
+    const CON_NUMEROS = `
+        *,
+        ventas ( numero ),
+        entradas ( numero ),
+        ajustes ( numero ),
+        devoluciones ( numero )
+      `
+
+    const consulta = (select) => supabase
       .from('producto_historial')
-      .select('*')
+      .select(select)
       .eq('producto_id', productoId)
       .order('created_at', { ascending: false })
       .limit(100)
+
+    let { data, error } = await consulta(CON_NUMEROS)
+
+    // Si alguna de esas relaciones no está declarada en la base de datos, la
+    // consulta entera falla y el historial se veía vacío. Se reintenta sin
+    // los números: es mejor mostrar los movimientos con el id que no mostrarlos
+    if (error) {
+      console.warn('Historial sin números de documento:', error.message)
+      ;({ data, error } = await consulta('*'))
+    }
 
     if (error) throw error
     return data || []

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { devolucionService } from '../services/devolucionService'
 import { MOTIVOS_DEVOLUCION } from '../utils/motivosDevolucion'
 import { formatCOP } from '../utils/currencyFormatter'
+import { numeroDoc } from '../utils/documento'
 import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
 import './DevolucionModal.css'
@@ -100,8 +101,8 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
 
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
-      <div className="caja-box dev-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Devolución de la venta ${sale.id}`}>
-        <h2 className="caja-title">Devolución · venta #{sale.id}</h2>
+      <div className="caja-box dev-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Devolución de la venta ${numeroDoc(sale)}`}>
+        <h2 className="caja-title">Devolución · venta #{numeroDoc(sale)}</h2>
         <p className="caja-subtitle">
           {clientName} · {formatCOP(sale.total || 0)}
           <br />
