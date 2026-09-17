@@ -7,7 +7,32 @@ import { Pencil, History, Package, AlertTriangle } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
 import { numeroProducto, coincideNumero } from "../utils/producto";
 
-const POR_PAGINA = 50;
+// 25 y no 50: sin scroll interno, 50 filas son casi tres pantallas y la
+// paginación queda al fondo. Para buscar algo puntual está el buscador
+const POR_PAGINA = 25;
+
+// El orden lo elige el usuario. Por defecto, por número: es la costumbre de
+// quien ya se sabe el catálogo. "Más recientes" evita que un producto recién
+// creado quede escondido en la última página.
+const ORDENES = {
+  numero: {
+    etiqueta: "Número (1, 2, 3…)",
+    comparar: (a, b) => numeroProducto(a) - numeroProducto(b),
+  },
+  recientes: {
+    etiqueta: "Más recientes",
+    comparar: (a, b) => numeroProducto(b) - numeroProducto(a),
+  },
+  nombre: {
+    etiqueta: "Nombre (A → Z)",
+    comparar: (a, b) =>
+      (a.descripcion || "").localeCompare(b.descripcion || "", "es"),
+  },
+  stock: {
+    etiqueta: "Menos stock primero",
+    comparar: (a, b) => (a.cantidad || 0) - (b.cantidad || 0),
+  },
+};
 
 /**
  * Lista del catálogo. Recibe TODOS los productos (los totales y las alertas
@@ -16,6 +41,7 @@ const POR_PAGINA = 50;
  */
 function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mostrarCostos = false }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [orden, setOrden] = useState("numero");
   const [historyProduct, setHistoryProduct] = useState(null);
   const [soloBajos, setSoloBajos] = useState(false);
   const [pagina, setPagina] = useState(1);
@@ -34,10 +60,13 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
     );
   });
 
+  // Copia antes de ordenar: sort modifica el arreglo original
+  const ordenados = [...filteredProducts].sort(ORDENES[orden].comparar);
+
   // Si la lista se achica (búsqueda, filtro, recarga), la página se ajusta sola
-  const totalPaginas = Math.max(Math.ceil(filteredProducts.length / POR_PAGINA), 1);
+  const totalPaginas = Math.max(Math.ceil(ordenados.length / POR_PAGINA), 1);
   const paginaActual = Math.min(pagina, totalPaginas);
-  const visibles = filteredProducts.slice(
+  const visibles = ordenados.slice(
     (paginaActual - 1) * POR_PAGINA,
     paginaActual * POR_PAGINA,
   );
@@ -72,11 +101,26 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
             setSearchTerm(e.target.value);
             setPagina(1);
           }}
-          className="search-input"
+          className="pl-buscador"
         />
+        <label className="orden-campo">
+          <span className="orden-etiqueta">Ordenar por</span>
+          <select
+            value={orden}
+            onChange={(e) => {
+              setOrden(e.target.value);
+              setPagina(1);
+            }}
+            className="orden-select"
+          >
+            {Object.entries(ORDENES).map(([clave, o]) => (
+              <option key={clave} value={clave}>{o.etiqueta}</option>
+            ))}
+          </select>
+        </label>
         <div className="stats-container">
           <div className="stat-label">
-            <span className="stat-label-text">Total Productos:</span>
+            <span className="stat-label-text">Unidades en stock:</span>
             <span className="stat-value">{totalProducts}</span>
           </div>
           {mostrarCostos && (
@@ -113,19 +157,19 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
       )}
 
       {loading ? (
-        <div className="loading-text">⏳ Cargando productos...</div>
+        <div className="pl-cargando">⏳ Cargando productos...</div>
       ) : filteredProducts.length === 0 ? (
-        <p className="empty-message">
+        <p className="pl-vacio">
           {soloBajos
             ? "No hay productos por agotarse"
             : "No hay productos disponibles"}
         </p>
       ) : (
         <>
-          <div className="table-wrapper">
+          <div className="pl-tabla-wrap">
             <table className="products-table">
               <thead>
-                <tr className="table-header">
+                <tr className="pl-cabecera">
                   <th style={{ textAlign: 'right' }}>#</th>
                   <th style={{ textAlign: 'left' }}>Descripción</th>
                   <th style={{ textAlign: 'right' }}>Stock</th>
@@ -143,7 +187,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
                 {visibles.map((product) => {
                   const estado = estadoStock(product, minimoNegocio);
                   return (
-                  <tr key={product.id} className={`table-row fila-${estado}`}>
+                  <tr key={product.id} className={`pl-fila fila-${estado}`}>
                     <td className="cell-numeric">{numeroProducto(product)}</td>
                     <td className="cell-description">
                       {(product.descripcion || "")

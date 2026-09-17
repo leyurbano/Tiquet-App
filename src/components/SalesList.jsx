@@ -70,7 +70,7 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
   const handleDelete = (sale) => setAnulando(sale)
 
   if (loading) {
-    return <div className="loading-text">⏳ Cargando ventas...</div>
+    return <div className="vl-cargando">⏳ Cargando ventas...</div>
   }
 
   return (
@@ -83,7 +83,7 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
           placeholder="Buscar cliente..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
+          className="vl-buscador"
         />
         <div className="date-picker-wrapper">
           <button
@@ -104,15 +104,15 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
       </div>
 
       {filteredSales.length === 0 ? (
-        <p className="empty-message">
+        <p className="vl-vacio">
           📭 No hay ventas para el {formatDateLabel(selectedDate) === 'Hoy' ? 'día de hoy' : formatDateLabel(selectedDate)}
         </p>
       ) : (
         <>
-          <div className="table-wrapper">
+          <div className="vl-tabla-wrap">
             <table className="sales-table">
               <thead>
-                <tr className="table-header">
+                <tr className="vl-cabecera">
                   <th>ID</th>
                   <th>Cliente</th>
                   <th className="amount-cell">Monto</th>
@@ -121,11 +121,11 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
               </thead>
               <tbody>
                 {filteredSales.map(sale => (
-                  <tr key={sale.id} className="table-row">
+                  <tr key={sale.id} className="vl-fila">
                     <td>#{numeroDoc(sale)}</td>
                     <td>{getClientName(sale.cliente_id)}</td>
                     <td className="amount-cell">{formatCOP(sale.total || 0)}</td>
-                    <td className="actions-cell">
+                    <td className="vl-acciones">
                       <div className="actions-buttons">
                         <button
                           onClick={() => onViewInvoice && onViewInvoice(sale)}

@@ -12,7 +12,7 @@
   color: #111827;
 }
 
-.search-input {
+.cl-buscador {
   width: 100%;
   padding: 0.5rem 1rem;
   border: 1px solid #e5e7eb;
@@ -22,36 +22,36 @@
   transition: border-color 0.2s, outline-color 0.2s;
 }
 
-.search-input:focus {
+.cl-buscador:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.search-input:invalid {
+.cl-buscador:invalid {
   border-color: #e5e7eb;
 }
 
-.search-input:invalid:focus {
+.cl-buscador:invalid:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.empty-message {
+.cl-vacio {
   text-align: center;
   color: #6b7280;
   padding: 2rem;
   font-size: 0.9375rem;
 }
 
-.loading-text {
+.cl-cargando {
   text-align: center;
   padding: 2rem;
   color: #6b7280;
   font-size: 0.9375rem;
 }
 
-.table-wrapper {
+.cl-tabla-wrap {
   overflow-x: auto;
 }
 
@@ -61,12 +61,12 @@
   font-size: 0.9375rem;
 }
 
-.table-header {
+.cl-cabecera {
   background-color: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.table-header th {
+.cl-cabecera th {
   padding: 0.75rem 1rem;
   text-align: left;
   font-weight: 600;
@@ -74,12 +74,12 @@
   text-transform: none;
 }
 
-.table-row {
+.cl-fila {
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s;
 }
 
-.table-row:hover {
+.cl-fila:hover {
   background-color: #f9fafb;
 }
 
@@ -98,13 +98,13 @@
   font-size: 0.875rem;
 }
 
-.actions-header {
+.cl-acciones-th {
   text-align: center;
   padding: 0.75rem 1rem;
 }
 
 /* Una sola línea: las acciones que no son del día a día viven en el menú "⋯" */
-.actions-cell {
+.cl-acciones {
   padding: 0.75rem 1rem;
   display: flex;
   justify-content: center;
@@ -161,7 +161,7 @@
     font-size: 1.25rem;
   }
 
-  .table-wrapper {
+  .cl-tabla-wrap {
     font-size: 0.8125rem;
   }
 
@@ -171,7 +171,7 @@
     padding: 0.5rem 0.75rem;
   }
 
-  .actions-cell {
+  .cl-acciones {
     padding: 0.5rem 0.5rem;
     gap: 0.25rem;
   }

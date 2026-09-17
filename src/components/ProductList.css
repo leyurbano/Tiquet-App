@@ -26,15 +26,18 @@
 .search-and-stats-wrapper {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
-.search-input {
-  flex: 1;
-  min-width: 300px;
-  max-width: 400px;
+/* Empuja las cifras al extremo derecho, separadas de los controles */
+.search-and-stats-wrapper .stats-container { margin-left: auto; }
+
+.pl-buscador {
+  flex: 1 1 18rem;
+  min-width: 0;
+  max-width: 24rem;
   padding: 0.375rem 0.75rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
@@ -42,7 +45,7 @@
   transition: border-color 0.2s;
 }
 
-.search-input:focus {
+.pl-buscador:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -80,25 +83,26 @@
   text-align: center;
 }
 
-.empty-message {
+.pl-vacio {
   text-align: center;
   color: #6b7280;
   padding: 2rem;
   font-size: 0.9375rem;
 }
 
-.loading-text {
+.pl-cargando {
   text-align: center;
   padding: 2rem;
   color: #6b7280;
 }
 
-.table-wrapper {
-  overflow-x: auto;
-  overflow-y: auto;
+/* Sin overflow en escritorio: basta con declarar UN eje en auto para que el
+   navegador active el otro, y eso volvía a crear un scroll interno con el
+   encabezado pegado a la tarjeta en vez de a la ventana */
+/* Clase propia: `pl-tabla-wrap` también la define ClientList.css, y como los
+   CSS de la app son globales, el último en cargarse le devolvía el scroll */
+.pl-tabla-wrap {
   margin-bottom: 1.5rem;
-  max-height: 600px;
-  position: relative;
 }
 
 .products-table {
@@ -117,21 +121,22 @@
   vertical-align: middle;
 }
 
+/* Se pega bajo la barra de navegación (4rem) al bajar por la lista */
 .products-table thead {
   position: sticky;
-  top: 0;
+  top: 4rem;
   z-index: 1;
   background-color: #f3f4f6;
 }
 
-.table-header {
+.pl-cabecera {
   background-color: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
   display: table-row;
 }
 
 /* Pon esto en su lugar */
-.table-header th {
+.pl-cabecera th {
   padding: 0.75rem 1rem;
   font-weight: 600;
   color: #374151;
@@ -139,13 +144,13 @@
   text-align: right;
 }
 
-.table-row {
+.pl-fila {
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s;
   display: table-row;
 }
 
-.table-row:hover {
+.pl-fila:hover {
   background-color: #f9fafb;
 }
 
@@ -286,7 +291,7 @@
     gap: 1rem;
   }
 
-  .search-input {
+  .pl-buscador {
     min-width: 100%;
     max-width: 100%;
   }
@@ -412,3 +417,84 @@
 }
 
 .fila-agotado { background: #fffbfb; }
+
+/* ---- Selector de orden ---- */
+
+/* En línea, no en columna: con la etiqueta encima, el selector nunca quedaba
+   a la misma altura que el buscador, que no tiene etiqueta */
+.orden-campo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.orden-etiqueta {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Anidado bajo el contenedor: styles.css define select con más peso */
+.product-list-container .orden-select {
+  padding: 0.375rem 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #111827;
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.product-list-container .orden-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+@media (max-width: 768px) {
+  .orden-campo { width: 100%; }
+  .product-list-container .orden-select { width: 100%; }
+}
+
+/* ---- Cabecera compacta en celular ----
+   Antes, entre título, buscador, selector y cifras había que bajar casi dos
+   pantallas para ver el primer producto */
+@media (max-width: 768px) {
+  .search-and-stats-wrapper {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  .search-and-stats-wrapper .pl-buscador {
+    flex: 1 1 55%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .orden-campo { flex: 1 1 40%; width: auto; }
+  .product-list-container .orden-select { width: 100%; }
+
+  .search-and-stats-wrapper .stats-container {
+    width: 100%;
+    margin-left: 0;
+    gap: 0.5rem;
+  }
+
+  .stat-label {
+    height: auto;
+    padding: 0.4rem 0.5rem;
+    min-width: 0;
+  }
+
+  .stat-label-text { font-size: 0.65rem; }
+  .stat-value { font-size: 0.95rem; }
+
+  /* El scroll horizontal se permite solo en pantallas chicas, y con el
+     encabezado quieto: pegado dentro de un contenedor con scroll queda
+     flotando sobre las filas */
+  .pl-tabla-wrap { overflow-x: auto; }
+  .products-table thead { position: static; }
+}
