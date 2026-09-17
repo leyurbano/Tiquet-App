@@ -41,6 +41,7 @@ archivo completo → Run.
 | 29 | `29_codigo_por_negocio.sql` | `productos.codigo`: número consecutivo por negocio (todos empiezan en 1), con contador en `negocios.ultimo_codigo_producto`. |
 | 30 | `30_numeros_por_negocio.sql` | `numero` por negocio en ventas, devoluciones, entradas, ajustes y abonos, con la tabla `consecutivos` (que absorbe el contador de productos). |
 | 31 | `31_historial_relacion_ventas.sql` | Declara la relación `producto_historial.venta_id → ventas`, que faltaba desde antes de las migraciones, e indexa las referencias del historial. |
+| 32 | `32_costo_venta_solo_admin.sql` | Fase 3: el costo congelado de cada venta sale de `detalle_ventas` y pasa a `detalle_ventas_costos` (solo lectura, solo admin). Lo escribe únicamente `registrar_venta`. |
 
 ## Lo que todavía no está aquí
 
