@@ -16,9 +16,10 @@ import { etiquetaMotivoDevolucion } from '../utils/motivosDevolucion'
 import { numeroDoc } from '../utils/documento'
 import { fiadoService } from '../services/fiadoService'
 import { clientService } from '../services/clientService'
+import { productService } from '../services/productService'
 import dayjs from 'dayjs'
 import './CierreCajaPage.css'
-import { Wallet, Receipt, AlertTriangle, Package, ArrowRight, Users } from 'lucide-react'
+import { Wallet, Receipt, AlertTriangle, Package, PackageX, ArrowRight, Users } from 'lucide-react'
 
 const TZ = 'America/Bogota'
 const TOPE_LISTA = 8      // cuántos movimientos se muestran antes de "ver todos"
@@ -140,6 +141,12 @@ function CierreCajaPage() {
   const [hasta, setHasta] = useState(hoy)
   const [rangoActivo, setRangoActivo] = useState('hoy')
 
+  // Mercancía quieta. No depende del rango de fechas de arriba: siempre se
+  // mira "a hoy, qué lleva sin venderse", que es la pregunta que importa
+  // para decidir si liquidar algo.
+  const [diasQuieta, setDiasQuieta] = useState(90)
+  const [quieta, setQuieta] = useState(null)
+
   useEffect(() => {
     if (!esAdministrador) return
     salesService.getMediosPago().then(setMediosPago)
@@ -147,6 +154,11 @@ function CierreCajaPage() {
     fiadoService.getSaldos().then(setSaldos)
     clientService.getAllClients().then(setClientes)
   }, [esAdministrador])
+
+  useEffect(() => {
+    if (!esAdministrador) return
+    productService.getMercanciaQuieta(diasQuieta).then(setQuieta)
+  }, [esAdministrador, diasQuieta])
 
   useEffect(() => {
     if (esAdministrador) cargar(desde, hasta)
@@ -532,6 +544,77 @@ function CierreCajaPage() {
                       </li>
                     ))}
                   </ul>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ---------- Mercancía quieta ---------- */}
+          {quieta && (
+            <div className="cierre-card">
+              <div className="cierre-card-head">
+                <h2 className="cierre-card-title">
+                  <PackageX size={18} /> Mercancía quieta
+                </h2>
+                <div className="quieta-dias" role="group" aria-label="Días sin venderse">
+                  {[30, 90, 180].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`rango-btn ${diasQuieta === d ? 'rango-activo' : ''}`}
+                      aria-pressed={diasQuieta === d}
+                      onClick={() => setDiasQuieta(d)}
+                    >
+                      {d} días
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {quieta.productos === 0 ? (
+                <p className="cierre-hint">
+                  Todo lo que tienes en inventario se ha vendido en los últimos{' '}
+                  {quieta.dias} días. No hay plata detenida.
+                </p>
+              ) : (
+                <>
+                  <p className="cierre-frase">
+                    Tienes <strong>{formatCOP(quieta.valor_total)}</strong> detenidos en{' '}
+                    <strong>{quieta.productos} producto{quieta.productos !== 1 ? 's' : ''}</strong>{' '}
+                    ({quieta.unidades} unidades) que no se venden hace {quieta.dias} días.
+                    {quieta.nunca > 0 && (
+                      <> De esos, <strong>{quieta.nunca}</strong> no se han vendido nunca.</>
+                    )}
+                  </p>
+
+                  <p className="cierre-hint">
+                    Es plata que ya pagaste y todavía no ha vuelto. Lo de más valor
+                    primero: son los que más conviene rematar, devolver al proveedor o
+                    dejar de comprar.
+                  </p>
+
+                  <ul className="cierre-lista">
+                    {quieta.items.slice(0, TOPE_LISTA).map((it) => (
+                      <li className="cierre-lista-item" key={it.producto_id}>
+                        <span className="cierre-lista-texto">
+                          <strong>{it.descripcion}</strong>
+                          <span>
+                            {it.cantidad} unid. ·{' '}
+                            {it.ultima_venta
+                              ? `última venta ${dayjs(it.ultima_venta).format('DD/MM/YYYY')}`
+                              : 'nunca se ha vendido'}
+                          </span>
+                        </span>
+                        <span className="cierre-lista-monto">{formatCOP(it.valor)}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {quieta.productos > TOPE_LISTA && (
+                    <p className="cierre-hint">
+                      Se muestran los {TOPE_LISTA} de mayor valor, de {quieta.productos}.
+                    </p>
+                  )}
                 </>
               )}
             </div>

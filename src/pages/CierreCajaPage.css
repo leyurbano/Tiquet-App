@@ -623,3 +623,16 @@
   border-color: #e5e7eb;
   cursor: not-allowed;
 }
+
+/* Selector de días de la mercancía quieta. Va en la cabecera de la tarjeta,
+   al lado del título, y se baja solo cuando no cabe */
+.quieta-dias {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.quieta-dias .rango-btn {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
