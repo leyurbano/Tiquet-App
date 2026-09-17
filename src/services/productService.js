@@ -23,6 +23,30 @@ const SELECT_PRODUCTO = '*, productos_costos ( costo, costo_total )'
 
 export const productService = {
   /**
+   * Mercancía quieta: productos CON stock que no se venden hace `dias`,
+   * y cuánta plata representan al costo (migración 35).
+   *
+   * Solo administradores: el valor se calcula al costo. La función en la
+   * base rechaza a los demás, así que esto devuelve null y la pantalla no
+   * muestra la sección.
+   *
+   * Llega un objeto con los totales ya sumados sobre todo el catálogo y
+   * solo los 100 productos de mayor valor: si devolviera una fila por
+   * producto, el corte de 1.000 filas de Supabase haría que el total
+   * saliera corto sin ningún error visible.
+   */
+  async getMercanciaQuieta(dias = 90) {
+    try {
+      const { data, error } = await supabase.rpc('mercancia_quieta', { p_dias: dias })
+      if (error) throw error
+      return data || null
+    } catch (error) {
+      console.warn('No se pudo cargar la mercancía quieta:', error.message || error)
+      return null
+    }
+  },
+
+  /**
    * Unidades vendidas por producto en los últimos `dias`, como
    * { [producto_id]: unidades }. Alimenta la alerta de stock bajo, que solo
    * avisa de lo que rota (migración 33).

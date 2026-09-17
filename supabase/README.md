@@ -44,6 +44,7 @@ archivo completo → Run.
 | 32 | `32_costo_venta_solo_admin.sql` | Fase 3: el costo congelado de cada venta sale de `detalle_ventas` y pasa a `detalle_ventas_costos` (solo lectura, solo admin). Lo escribe únicamente `registrar_venta`. |
 | 33 | `33_rotacion_productos.sql` | `rotacion_productos(dias)`: unidades vendidas por producto, para que la alerta de stock bajo avise solo de lo que rota. |
 | 34 | `34_codigo_barras.sql` | `productos.codigo_barras`: único por negocio (solo cuando hay código), solo lo cambia un administrador, y `crear_producto` lo recibe. |
+| 35 | `35_mercancia_quieta.sql` | `mercancia_quieta(dias)`: productos con stock que no se venden y cuánta plata representan al costo. Solo administradores. |
 
 ## Lo que todavía no está aquí
 

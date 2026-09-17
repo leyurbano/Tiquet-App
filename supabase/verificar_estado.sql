@@ -63,7 +63,8 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('32_costo_venta_solo_admin', 'registrar_venta guarda el costo aparte', 'funcion_contiene', 'registrar_venta|detalle_ventas_costos'),
   ('33_rotacion_productos',     'función rotacion_productos()',    'funcion',  'rotacion_productos'),
   ('34_codigo_barras',         'productos.codigo_barras',         'columna',  'productos.codigo_barras'),
-  ('34_codigo_barras',         'crear_producto recibe el código', 'funcion_contiene', 'crear_producto|p_codigo_barras')
+  ('34_codigo_barras',         'crear_producto recibe el código', 'funcion_contiene', 'crear_producto|p_codigo_barras'),
+  ('35_mercancia_quieta',      'función mercancia_quieta()',      'funcion',  'mercancia_quieta')
 )
 select
   migracion,
