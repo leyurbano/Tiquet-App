@@ -9,6 +9,29 @@ import { numeroProducto, coincideNumero } from "../utils/producto";
 
 const POR_PAGINA = 50;
 
+// El orden lo elige el usuario. Por defecto, por número: es la costumbre de
+// quien ya se sabe el catálogo. "Más recientes" evita que un producto recién
+// creado quede escondido en la última página.
+const ORDENES = {
+  numero: {
+    etiqueta: "Número (1, 2, 3…)",
+    comparar: (a, b) => numeroProducto(a) - numeroProducto(b),
+  },
+  recientes: {
+    etiqueta: "Más recientes",
+    comparar: (a, b) => numeroProducto(b) - numeroProducto(a),
+  },
+  nombre: {
+    etiqueta: "Nombre (A → Z)",
+    comparar: (a, b) =>
+      (a.descripcion || "").localeCompare(b.descripcion || "", "es"),
+  },
+  stock: {
+    etiqueta: "Menos stock primero",
+    comparar: (a, b) => (a.cantidad || 0) - (b.cantidad || 0),
+  },
+};
+
 /**
  * Lista del catálogo. Recibe TODOS los productos (los totales y las alertas
  * de stock se calculan sobre el catálogo completo) y pinta 50 por página:
@@ -16,6 +39,7 @@ const POR_PAGINA = 50;
  */
 function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mostrarCostos = false }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [orden, setOrden] = useState("numero");
   const [historyProduct, setHistoryProduct] = useState(null);
   const [soloBajos, setSoloBajos] = useState(false);
   const [pagina, setPagina] = useState(1);
@@ -34,10 +58,13 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
     );
   });
 
+  // Copia antes de ordenar: sort modifica el arreglo original
+  const ordenados = [...filteredProducts].sort(ORDENES[orden].comparar);
+
   // Si la lista se achica (búsqueda, filtro, recarga), la página se ajusta sola
-  const totalPaginas = Math.max(Math.ceil(filteredProducts.length / POR_PAGINA), 1);
+  const totalPaginas = Math.max(Math.ceil(ordenados.length / POR_PAGINA), 1);
   const paginaActual = Math.min(pagina, totalPaginas);
-  const visibles = filteredProducts.slice(
+  const visibles = ordenados.slice(
     (paginaActual - 1) * POR_PAGINA,
     paginaActual * POR_PAGINA,
   );
@@ -74,9 +101,24 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
           }}
           className="search-input"
         />
+        <label className="orden-campo">
+          <span className="orden-etiqueta">Ordenar por</span>
+          <select
+            value={orden}
+            onChange={(e) => {
+              setOrden(e.target.value);
+              setPagina(1);
+            }}
+            className="orden-select"
+          >
+            {Object.entries(ORDENES).map(([clave, o]) => (
+              <option key={clave} value={clave}>{o.etiqueta}</option>
+            ))}
+          </select>
+        </label>
         <div className="stats-container">
           <div className="stat-label">
-            <span className="stat-label-text">Total Productos:</span>
+            <span className="stat-label-text">Unidades en stock:</span>
             <span className="stat-value">{totalProducts}</span>
           </div>
           {mostrarCostos && (
@@ -122,7 +164,7 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, mos
         </p>
       ) : (
         <>
-          <div className="table-wrapper">
+          <div className="pl-tabla-wrap">
             <table className="products-table">
               <thead>
                 <tr className="table-header">
