@@ -60,7 +60,8 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('31_historial_relacion_ventas', 'relación historial → ventas', 'restriccion', 'producto_historial_venta_id_fkey'),
   ('32_costo_venta_solo_admin', 'tabla detalle_ventas_costos',     'tabla',    'detalle_ventas_costos'),
   ('32_costo_venta_solo_admin', 'detalle_ventas sin costo',        'ausente',  'detalle_ventas.costo_unitario'),
-  ('32_costo_venta_solo_admin', 'registrar_venta guarda el costo aparte', 'funcion_contiene', 'registrar_venta|detalle_ventas_costos')
+  ('32_costo_venta_solo_admin', 'registrar_venta guarda el costo aparte', 'funcion_contiene', 'registrar_venta|detalle_ventas_costos'),
+  ('33_rotacion_productos',     'función rotacion_productos()',    'funcion',  'rotacion_productos')
 )
 select
   migracion,

@@ -9,6 +9,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { negocioService } from "../services/negocioService";
 import { useDialogo } from "../hooks/useDialogo";
 
+// Ventana para medir si un producto rota. Un mes cubre la compra
+// mensual típica de una tienda sin castigar lo de venta lenta.
+const DIAS_ROTACION = 30;
+
 function ProductsPage() {
   // La RLS es quien realmente lo impide; esto evita mostrar acciones que fallarían
   const { esAdministrador } = useAuth();
@@ -20,12 +24,17 @@ function ProductsPage() {
   const [formSucio, setFormSucio] = useState(false);
   // Umbral general del negocio para las alertas de stock bajo
   const [minimoNegocio, setMinimoNegocio] = useState(0);
+  // Unidades vendidas por producto en el último mes: la alerta de stock
+  // solo avisa de lo que rota. null = todavía no cargó o no está la
+  // migración 33, y entonces se avisa solo por umbral.
+  const [rotacion, setRotacion] = useState(null);
 
   useEffect(() => {
     loadProducts();
     negocioService.getMiNegocio().then((n) =>
       setMinimoNegocio(n?.stock_minimo_defecto ?? 0)
     );
+    productService.getRotacion(DIAS_ROTACION).then(setRotacion);
   }, []);
 
   // 🔧 Antes se traían máximo 1.000 productos: en un negocio más grande, el
@@ -119,6 +128,7 @@ function ProductsPage() {
             onEdit={esAdministrador ? handleEdit : null}
             loading={loading}
             minimoNegocio={minimoNegocio}
+            rotacion={rotacion}
             mostrarCostos={esAdministrador}
           />
         </div>
