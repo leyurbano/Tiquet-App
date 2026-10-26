@@ -4,7 +4,9 @@ import {
   costoPromedio,
   motivosDe,
   buscarMotivo,
-  MOTIVOS_SALIDA
+  MOTIVOS_SALIDA,
+  detalleMovimiento,
+  motivoCorto
 } from './movimientosStock'
 
 describe('calcularMovimiento — entrada', () => {
@@ -120,5 +122,92 @@ describe('motivos', () => {
 
   it('un motivo inexistente no se inventa', () => {
     expect(buscarMotivo('salida', 'compra')).toBe(null)
+  })
+})
+
+
+describe('detalleMovimiento', () => {
+  it('una entrada muestra la nota, que es el motivo del movimiento rápido', () => {
+    expect(detalleMovimiento({
+      tipo_evento: 'entrada',
+      descripcion: 'Entrada #12 - +24 unidad(es)',
+      entradas: { numero: 12, nota: 'Compra a proveedor - factura 1042' }
+    })).toBe('Compra a proveedor - factura 1042')
+  })
+
+  it('una entrada sin nota es una compra: es lo único que suma por ahí', () => {
+    expect(detalleMovimiento({
+      tipo_evento: 'entrada',
+      descripcion: 'Entrada #9 - +10 unidad(es)',
+      entradas: { numero: 9, nota: null }
+    })).toBe('Compra a proveedor')
+  })
+
+  it('un ajuste saca el motivo del texto, aunque no tenga nota', () => {
+    expect(detalleMovimiento({
+      tipo_evento: 'ajuste',
+      descripcion: 'Ajuste #4 (perdida): -3 unidad(es)',
+      ajustes: { numero: 4, nota: null }
+    })).toBe('Pérdida o faltante')
+  })
+
+  it('un ajuste del movimiento rápido no repite la etiqueta del motivo', () => {
+    expect(detalleMovimiento({
+      tipo_evento: 'ajuste',
+      descripcion: 'Ajuste #5 (dano): -2 unidad(es)',
+      ajustes: { numero: 5, nota: 'Daño - se rompió en la bodega' }
+    })).toBe('Daño - se rompió en la bodega')
+  })
+
+  it('un ajuste de Inventario suma el motivo de la línea y la nota del conteo', () => {
+    expect(detalleMovimiento({
+      tipo_evento: 'ajuste',
+      descripcion: 'Ajuste #7 (conteo): -1 unidad(es)',
+      ajustes: { numero: 7, nota: 'conteo mensual de septiembre' }
+    })).toBe('Conteo físico · conteo mensual de septiembre')
+  })
+
+  it('a un vendedor la relación le llega vacía y no se inventa nada', () => {
+    // entradas/ajustes son tablas de administradores: la RLS devuelve null
+    expect(detalleMovimiento({
+      tipo_evento: 'ajuste',
+      descripcion: 'Ajuste #4 (perdida): -3 unidad(es)',
+      ajustes: null
+    })).toBe('Pérdida o faltante')
+  })
+
+  it('una venta no tiene motivo que mostrar', () => {
+    expect(detalleMovimiento({ tipo_evento: 'venta', descripcion: 'Venta #30' })).toBe('')
+  })
+
+  it('no truena con un evento vacío ni con uno sin texto', () => {
+    expect(detalleMovimiento(null)).toBe('')
+    expect(detalleMovimiento({ tipo_evento: 'ajuste' })).toBe('')
+  })
+})
+
+
+describe('motivoCorto', () => {
+  it('una entrada es una compra', () => {
+    expect(motivoCorto({ tipo_evento: 'entrada', descripcion: 'Entrada #12 - +24 unidad(es)' }))
+      .toBe('Compra')
+  })
+
+  it('abrevia el motivo del ajuste para que quepa en una línea', () => {
+    expect(motivoCorto({ tipo_evento: 'ajuste', descripcion: 'Ajuste #4 (perdida): -3 unidad(es)' }))
+      .toBe('Pérdida')
+    expect(motivoCorto({ tipo_evento: 'ajuste', descripcion: 'Ajuste #5 (dano): -2 unidad(es)' }))
+      .toBe('Daño')
+  })
+
+  it('un motivo que no reconoce no deja la celda sin nada que decir', () => {
+    expect(motivoCorto({ tipo_evento: 'ajuste', descripcion: 'Ajuste #6: -1 unidad(es)' }))
+      .toBe('Ajuste')
+  })
+
+  it('una venta o una reversión no llevan motivo', () => {
+    expect(motivoCorto({ tipo_evento: 'venta', descripcion: 'Venta #30' })).toBe('')
+    expect(motivoCorto({ tipo_evento: 'reversion', descripcion: 'Reversión' })).toBe('')
+    expect(motivoCorto(null)).toBe('')
   })
 })

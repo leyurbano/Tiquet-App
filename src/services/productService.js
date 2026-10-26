@@ -211,11 +211,14 @@ async updateProduct(id, product) {
   try {
     // Se piden los números de cada documento (consecutivos por negocio) para
     // no mostrar los ids internos en la columna de referencia
+    // La nota de la entrada o del ajuste es el motivo que se ve en la
+    // columna "Motivo". Son tablas solo de administradores: a un vendedor la
+    // relación le llega en null y la columna queda vacía.
     const CON_NUMEROS = `
         *,
         ventas ( numero ),
-        entradas ( numero ),
-        ajustes ( numero ),
+        entradas ( numero, nota ),
+        ajustes ( numero, nota ),
         devoluciones ( numero )
       `
 
