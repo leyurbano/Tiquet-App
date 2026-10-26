@@ -130,6 +130,8 @@ function ProductsPage() {
             minimoNegocio={minimoNegocio}
             rotacion={rotacion}
             mostrarCostos={esAdministrador}
+            puedeMoverStock={esAdministrador}
+            onMovimientoRegistrado={loadProducts}
           />
         </div>
       </div>

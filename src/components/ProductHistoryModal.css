@@ -140,3 +140,13 @@
   font-size: 0.78rem;
   color: #9ca3af;
 }
+/* Motivo abreviado, debajo del número del documento en la misma celda de
+   referencia: evita una columna más en una tabla que ya va justa. El texto
+   completo (la nota de la entrada o del ajuste) está en el title */
+.phm-motivo {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
