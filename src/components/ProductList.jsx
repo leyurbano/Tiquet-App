@@ -2,8 +2,9 @@ import React, { useState, useRef } from "react";
 import "./ProductList.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import ProductHistoryModal from "./ProductHistoryModal";
+import MovimientoStockModal from "./MovimientoStockModal";
 import Paginacion from "./Paginacion";
-import { Pencil, History, Package, AlertTriangle } from "lucide-react";
+import { Pencil, History, Package, AlertTriangle, ArrowUpDown } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
 import { numeroProducto, coincideNumero } from "../utils/producto";
 
@@ -39,10 +40,21 @@ const ORDENES = {
  * de stock se calculan sobre el catálogo completo) y pinta 50 por página:
  * pintar miles de filas a la vez es lo que volvía lenta la pantalla.
  */
-function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, rotacion = null, mostrarCostos = false }) {
+function ProductList({
+  products,
+  onEdit,
+  loading = false,
+  minimoNegocio = 0,
+  rotacion = null,
+  mostrarCostos = false,
+  puedeMoverStock = false,
+  onMovimientoRegistrado = null,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [orden, setOrden] = useState("numero");
   const [historyProduct, setHistoryProduct] = useState(null);
+  // Producto al que se le están sumando o bajando unidades (o null)
+  const [movimientoProduct, setMovimientoProduct] = useState(null);
   const [soloBajos, setSoloBajos] = useState(false);
   const [pagina, setPagina] = useState(1);
   const inicioLista = useRef(null);
@@ -238,6 +250,18 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, rot
                           <Pencil size={14} aria-hidden="true" /> <span>Editar</span>
                         </button>
                       )}
+                      {/* Reponer es lo que más se hace desde esta lista: antes
+                          obligaba a irse a Inventario y buscar el producto otra vez */}
+                      {puedeMoverStock && (
+                        <button
+                          onClick={() => setMovimientoProduct(product)}
+                          className="btn-stock"
+                          title="Sumar o bajar unidades"
+                          aria-label={`Mover stock de ${product.descripcion}`}
+                        >
+                          <ArrowUpDown size={14} aria-hidden="true" /> <span>Stock</span>
+                        </button>
+                      )}
                       {/* Botón eliminar deshabilitado: evita romper el historial de productos con ventas asociadas */}
                       <button
                         onClick={() => setHistoryProduct(product)}
@@ -263,6 +287,17 @@ function ProductList({ products, onEdit, loading = false, minimoNegocio = 0, rot
             onCambiar={cambiarPagina}
           />
         </>
+      )}
+
+      {movimientoProduct && (
+        <MovimientoStockModal
+          producto={movimientoProduct}
+          onCancel={() => setMovimientoProduct(null)}
+          onRegistrado={() => {
+            setMovimientoProduct(null);
+            onMovimientoRegistrado?.();
+          }}
+        />
       )}
 
       {historyProduct && (
