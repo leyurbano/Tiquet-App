@@ -34,6 +34,56 @@ export const inventarioService = {
     }
   },
 
+  /**
+   * Movimiento rápido de un solo producto, desde la lista de Productos.
+   *
+   * No es una función nueva de la base de datos: según el motivo reusa la
+   * que corresponde, con una sola línea.
+   *
+   *  - 'entrada' (compra) → registrar_entrada: suma y recalcula el costo
+   *    como promedio ponderado.
+   *  - 'ajuste' (todo lo demás, y todas las salidas) → registrar_ajuste:
+   *    fija el stock en lo que queda y guarda la diferencia con su motivo.
+   *    `stockActual` es la foto de lo que mostraba la pantalla: la base de
+   *    datos rechaza la línea si una venta movió el stock en medio.
+   *
+   * Devuelve { movimiento } o { error } con el motivo legible.
+   */
+  async registrarMovimientoStock({
+    rpc,
+    productoId,
+    stockActual,
+    stockFinal,
+    unidades,
+    motivo,
+    etiquetaMotivo,
+    costoUnitario,
+    nota
+  }) {
+    const detalle = [etiquetaMotivo, nota?.trim()].filter(Boolean).join(' · ') || null
+
+    if (rpc === 'entrada') {
+      const { entrada, error } = await this.registrarEntrada({
+        nota: detalle,
+        items: [{ producto_id: productoId, cantidad: unidades, costo_unitario: costoUnitario }]
+      })
+      return error ? { error } : { movimiento: entrada }
+    }
+
+    const { ajuste, error } = await this.registrarAjuste({
+      nota: detalle,
+      items: [{
+        producto_id: productoId,
+        stock_sistema: stockActual,
+        stock_contado: stockFinal,
+        // null = el ajuste no toca el costo. Solo una compra lo cambia.
+        costo_unitario: null,
+        motivo
+      }]
+    })
+    return error ? { error } : { movimiento: ajuste }
+  },
+
   // Últimas entradas del negocio, para consultarlas debajo del formulario
   async getEntradasRecientes(limite = 20) {
     try {

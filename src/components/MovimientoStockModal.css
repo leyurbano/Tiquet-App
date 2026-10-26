@@ -1,0 +1,166 @@
+/* Movimiento rápido de stock desde la lista de Productos.
+   Reusa la caja y los botones de CajaModal.css; aquí va solo lo propio.
+
+   Los selectores de los campos van anidados bajo .mov-box a propósito:
+   styles.css estiliza input[type="text"|"number"|…] con especificidad
+   (0,1,1) y le ganaría a una sola clase. */
+
+.mov-box {
+  max-width: 420px;
+}
+
+.mov-producto {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: #111827;
+  text-transform: capitalize;
+}
+
+.mov-numero {
+  font-variant-numeric: tabular-nums;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.mov-estado {
+  font-size: 0.85rem;
+  color: #4b5563;
+  margin-bottom: 1rem;
+}
+
+/* ---------- Entraron / Salieron ---------- */
+
+.mov-direccion {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.mov-box .mov-dir-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 0.5rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.6rem;
+  background: #fff;
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mov-box .mov-dir-btn:hover:not(:disabled) {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.mov-box .mov-dir-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* El color dice de qué lado está: verde entra, rojo sale */
+.mov-box .mov-dir-entrada {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.mov-box .mov-dir-salida {
+  border-color: #dc2626;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* ---------- Campos ---------- */
+
+.mov-box .mov-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  color: #111827;
+  background: #fff;
+  margin-bottom: 0.9rem;
+}
+
+.mov-box .mov-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Las unidades son el dato principal del formulario */
+.mov-box .mov-input-unidades {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.mov-money {
+  margin-bottom: 0.5rem;
+}
+
+.mov-opcional {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.mov-hint {
+  font-size: 0.78rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0 0 0.9rem;
+}
+
+/* ---------- Resultado y acciones ---------- */
+
+.mov-resumen {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+  margin: 0.25rem 0 1rem;
+}
+
+.mov-resumen-salida {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.mov-error {
+  margin-bottom: 1rem;
+}
+
+.mov-acciones {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.mov-acciones button {
+  flex: 1;
+}
+
+.mov-pie {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  line-height: 1.45;
+  margin: 0.9rem 0 0;
+}
+
+@media (max-width: 480px) {
+  .mov-acciones {
+    flex-direction: column-reverse;
+  }
+}

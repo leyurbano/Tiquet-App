@@ -3,6 +3,7 @@ import { productService } from '../services/productService'
 import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus, ClipboardCheck, RotateCcw } from 'lucide-react'
 import './ProductHistoryModal.css'
 import { useDialogo } from '../hooks/useDialogo'
+import { detalleMovimiento, motivoCorto } from '../utils/movimientosStock'
 
 const TIPO_CONFIG = {
   venta:        { icon: ShoppingCart, label: 'Venta',        color: '#dc2626' },
@@ -108,6 +109,15 @@ function ProductHistoryModal({ product, onClose }) {
                             : event.ajuste_id
                               ? `Ajuste #${event.ajustes?.numero ?? event.ajuste_id}`
                               : '—'}
+                        {/* El motivo va aquí, abreviado y debajo del número:
+                            antes solo decía "Entrada" y no se veía por qué
+                            habían entrado o salido las unidades. El detalle
+                            completo (la nota) va en el title */}
+                        {motivoCorto(event) && (
+                          <span className="phm-motivo" title={detalleMovimiento(event)}>
+                            {motivoCorto(event)}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   )
