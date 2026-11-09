@@ -346,35 +346,35 @@ function SalesForm({
         />
       )}
 
-      <h2 className="form-title">📝 Nueva Venta</h2>
+      <h2 className="sf-title">📝 Nueva Venta</h2>
 
       <div className="sf-section">
-        <div className="form-row-2">
-          <div className="form-group">
-            <label className="form-label">Fecha</label>
+        <div className="sf-row-2">
+          <div className="sf-group">
+            <label className="sf-label">Fecha</label>
             <input
               type="date"
               value={saleDate}
               onChange={(e) => setSaleDate(e.target.value)}
               required
-              className="form-input"
+              className="sf-input"
             />
           </div>
         </div>
       </div>
 
       <div className="sf-section">
-        <h3 className="form-section-title">Datos del Cliente</h3>
-        <div className="form-row-3">
-          <div className="form-group">
-            <label className="form-label">N° Documento</label>
+        <h3 className="sf-section-title">Datos del Cliente</h3>
+        <div className="sf-row-3">
+          <div className="sf-group">
+            <label className="sf-label">N° Documento</label>
             <input
               type="text"
               placeholder="CC, CE, NIT"
               value={customer.cedula}
               onChange={(e) => searchCustomerByCedula(e.target.value)}
               maxLength="10"
-              className="form-input"
+              className="sf-input"
             />
             {showAddCustomerBtn && customer.cedula.trim().length > 0 && (
               <button
@@ -386,8 +386,8 @@ function SalesForm({
               </button>
             )}
           </div>
-          <div className="form-group">
-            <label className="form-label">Nombre Completo</label>
+          <div className="sf-group">
+            <label className="sf-label">Nombre Completo</label>
             <input
               type="text"
               placeholder="Nombre del cliente"
@@ -396,11 +396,11 @@ function SalesForm({
                 setCustomer({ ...customer, name: e.target.value })
               }
               required
-              className="form-input"
+              className="sf-input"
             />
           </div>
-          <div className="form-group">
-            <label className="form-label">Celular</label>
+          <div className="sf-group">
+            <label className="sf-label">Celular</label>
             <input
               type="tel"
               placeholder="3100000000"
@@ -409,18 +409,18 @@ function SalesForm({
                 setCustomer({ ...customer, phone: e.target.value })
               }
               maxLength="10"
-              className="form-input"
+              className="sf-input"
             />
           </div>
         </div>
       </div>
 
       <div className="sf-section">
-        <h3 className="form-section-title">🛒 Agregar Productos</h3>
+        <h3 className="sf-section-title">🛒 Agregar Productos</h3>
         <div className="add-product-section">
-          <div className="form-row-add-item">
-            <div className="form-group">
-              <label className="form-label">Item</label>
+          <div className="sf-row-item">
+            <div className="sf-group">
+              <label className="sf-label">Item</label>
               <input
                 type="number"
                 placeholder="producto"
@@ -437,11 +437,11 @@ function SalesForm({
                   }
                 }}
                 maxLength="5"
-                className="form-input"
+                className="sf-input"
               />
             </div>
-            <div className="form-group product-search-group">
-              <label className="form-label">Descripción</label>
+            <div className="sf-group product-search-group">
+              <label className="sf-label">Descripción</label>
               <input
                 type="text"
                 placeholder="Escanea el código o busca por nombre..."
@@ -449,7 +449,7 @@ function SalesForm({
                 onChange={(e) => handleProductSearch(e.target.value)}
                 onKeyDown={manejarEnterBusqueda}
                 autoComplete="off"
-                className="form-input"
+                className="sf-input"
               />
               {filteredProducts.length > 0 && (
                 <div className="product-dropdown">
@@ -470,8 +470,8 @@ function SalesForm({
                 </div>
               )}
             </div>
-            <div className="form-group">
-              <label className="form-label">Cantidad</label>
+            <div className="sf-group">
+              <label className="sf-label">Cantidad</label>
               <input
                 type="number"
                 placeholder="Cantidad"
@@ -485,7 +485,7 @@ function SalesForm({
                 }}
                 min="1"
                 maxLength="5"
-                className="form-input"
+                className="sf-input"
               />
             </div>
           </div>
@@ -502,7 +502,7 @@ function SalesForm({
 
       {items.length > 0 && (
         <div className="sf-section">
-          <h3 className="form-section-title">📦 Productos en la Venta</h3>
+          <h3 className="sf-section-title">📦 Productos en la Venta</h3>
           <div className="sales-items-table">
             <div className="table-header-sales">
               <div className="col-number">#</div>
@@ -539,9 +539,9 @@ function SalesForm({
         </div>
       )}
 
-      <div className="form-group">
-        <label className="form-label">Forma de Pago</label>
-        <div className="form-pago">
+      <div className="sf-group">
+        <label className="sf-label">Forma de Pago</label>
+        <div className="sf-pago">
           {mediosPago.map((medio) => (
             <button
               key={medio.id}
@@ -611,15 +611,15 @@ function SalesForm({
         />
       )}
 
-      <div className="form-buttons">
+      <div className="sf-buttons">
         <button
           type="submit"
-          className="btn-submit"
+          className="sf-btn-submit"
           disabled={(!paymentMethod && !pagosMixtos) || items.length === 0 || isSubmitting}
         >
           {isSubmitting ? "⏳ Guardando..." : "✅ Registrar Venta"}
         </button>
-        <button type="button" onClick={onCancel} className="btn-cancel">
+        <button type="button" onClick={onCancel} className="sf-btn-cancel">
           ❌ Cancelar
         </button>
       </div>

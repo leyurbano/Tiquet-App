@@ -1,5 +1,11 @@
 /* SalesForm.css */
 
+/* Todas las clases del formulario llevan el prefijo sf-. Antes usaban
+   nombres genéricos (.form-group, .form-input, .btn-submit...) que también
+   definen ProductForm, ClientForm e InicioPage: como Vite carga todo el CSS
+   a la vez, sus márgenes se sumaban aquí (unos 40px de más por fila) y los
+   estilos de este archivo se filtraban a esas pantallas. */
+
 .sales-form-wrapper {
   background-color: white;
   border-radius: 0.5rem;
@@ -11,7 +17,7 @@
   box-sizing: border-box;
 }
 
-.form-title {
+.sf-title {
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 1rem;
@@ -31,50 +37,53 @@
   border-bottom: none;
 }
 
-.form-section-title {
+/* margin-top en 0: resetea el margen nativo del h3 */
+.sf-section-title {
   font-size: 1rem;
   font-weight: 600;
+  margin-top: 0;
   margin-bottom: 0.5rem;
   color: #374151;
 }
 
 /* Layout de filas */
-.form-row-2 {
+.sf-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   width: 100%;
 }
 
-.form-row-3 {
+.sf-row-3 {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
   gap: 0.75rem;
   width: 100%;
 }
 
-.form-row-add-item {
+.sf-row-item {
   display: grid;
   grid-template-columns: 0.6fr 2fr 0.4fr;
   gap: 0.75rem;
   width: 100%;
 }
 
-.form-group {
+.sf-group {
   display: flex;
   flex-direction: column;
   width: 100%;
 }
 
-.form-label {
+.sf-label {
   font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
   color: #374151;
 }
 
-.form-input,
-.form-select {
+/* Anidado bajo el wrapper: styles.css estiliza input[type="text"|...] con
+   especificidad (0,1,1), que le gana a una sola clase */
+.sales-form-wrapper .sf-input {
   padding: 0.6rem 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
@@ -82,11 +91,11 @@
   transition: border-color 0.2s, box-shadow 0.2s;
   font-family: inherit;
   width: 100%;
+  margin: 0;
   box-sizing: border-box;
 }
 
-.form-input:focus,
-.form-select:focus {
+.sales-form-wrapper .sf-input:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -97,43 +106,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.form-row-add-product {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  align-items: flex-start;
-}
-
-.product-display {
-  padding: 0.6rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  background-color: #f9fafb;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-height: 3rem;
-  justify-content: center;
-}
-
-.product-name {
-  font-weight: 600;
-  color: #111827;
-  text-transform: capitalize;
-  word-wrap: break-word;
-}
-
-.product-price {
-  font-size: 0.875rem;
-  color: #059669;
-  font-weight: 600;
-}
-
-.product-empty {
-  color: #9ca3af;
-  font-style: italic;
 }
 
 /* Búsqueda de productos */
@@ -182,30 +154,6 @@
   font-size: 0.875rem;
 }
 
-.add-product-row {
-  display: grid;
-  grid-template-columns: 3fr 1fr auto;
-  gap: 0.5rem;
-  align-items: flex-end;
-}
-
-.btn-add-item {
-  padding: 0.6rem 1.5rem;
-  background-color: #16a34a;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  font-size: 0.95rem;
-}
-
-.btn-add-item:hover {
-  background-color: #15803d;
-  transform: translateY(-1px);
-}
-
 .btn-add-customer {
   background-color: #3b82f6;
   color: white;
@@ -221,12 +169,6 @@
 
 .btn-add-customer:hover {
   background-color: #2563eb;
-}
-
-/* resetea márgenes nativos del navegador en títulos de sección */
-.form-section-title {
-  margin-top: 0;
-  margin-bottom: 0.5rem; /* ya lo tenías, solo asegura que margin-top sea 0 */
 }
 
 /* ============================================
@@ -361,7 +303,7 @@
 }
 
 /* Botones de acción */
-.form-buttons {
+.sf-buttons {
   display: flex;
   gap: 1rem;
   justify-content: center;
@@ -370,8 +312,8 @@
   border-top: 1px solid #e5e7eb;
 }
 
-.btn-submit,
-.btn-cancel {
+.sf-btn-submit,
+.sf-btn-cancel {
   padding: 0.5rem 0;
   width: 40%;
   border: none;
@@ -382,54 +324,54 @@
   font-size: 0.875rem;
 }
 
-.btn-submit {
+.sf-btn-submit {
   background-color: #2563eb;
   color: white;
 }
 
-.btn-submit:hover:not(:disabled) {
+.sf-btn-submit:hover:not(:disabled) {
   background-color: #1d4ed8;
   transform: translateY(-2px);
 }
 
-.btn-submit:active {
+.sf-btn-submit:active {
   transform: translateY(0);
 }
 
 /* 🔧 estado deshabilitado — faltaba completamente */
-.btn-submit:disabled {
+.sf-btn-submit:disabled {
   background-color: #93c5fd;
   cursor: not-allowed;
   transform: none;
 }
 
-.btn-cancel {
+.sf-btn-cancel {
   background-color: #ef4444;
   color: white;
 }
 
-.btn-cancel:hover {
+.sf-btn-cancel:hover {
   background-color: #dc2626;
   transform: translateY(-2px);
 }
 
-.btn-cancel:active {
+.sf-btn-cancel:active {
   transform: translateY(0);
 }
 
 /* Forma de pago */
-.form-pago {
+.sf-pago {
   display: flex;
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.form-pago > div {
+.sf-pago > div {
   display: flex;
 }
 
-.form-pago button {
+.sf-pago button {
   background: #f5f5f5;
   border: 1px solid #d0d0d0;
   padding: 8px 16px;
@@ -441,11 +383,11 @@
   white-space: nowrap;
 }
 
-.form-pago button:hover {
+.sf-pago button:hover {
   background: rgba(22, 39, 192, 0.1);
 }
 
-.form-pago button.active {
+.sf-pago button.active {
   background: #0b5fff;
   color: #fff;
   border-color: #0b5fff;
@@ -466,40 +408,39 @@
     padding-bottom: 0.4rem;
   }
 
-  .form-title {
+  .sf-title {
     font-size: 1.35rem;
     margin-bottom: 0.5rem;
     padding-bottom: 0.4rem;
   }
 
-  .form-section-title {
+  .sf-section-title {
     font-size: 0.9rem;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
   }
 
   /* grids apilados con gap reducido */
-  .form-row-2,
-  .form-row-3,
-  .form-row-add-item {
+  .sf-row-2,
+  .sf-row-3,
+  .sf-row-item {
     grid-template-columns: 1fr;
-    gap: 0.35rem;
+    gap: 0.25rem;
   }
 
   /* menos espacio entre label e input */
-  .form-label {
+  .sf-label {
     font-size: 0.8rem;
     margin-bottom: 0.15rem;
   }
 
   /* inputs más compactos */
-  .form-input,
-  .form-select {
+  .sales-form-wrapper .sf-input {
     padding: 0.45rem 0.6rem;
     font-size: 0.875rem;
   }
 
-  .add-product-row {
-    grid-template-columns: 1fr;
+  .add-product-section {
+    gap: 0.25rem;
   }
 
   /* tabla en móvil */
@@ -523,54 +464,30 @@
   .total-label  { font-size: 0.85rem; }
   .total-amount { font-size: 1.1rem; min-width: 5.5rem; }
 
-  .form-buttons {
+  .sf-buttons {
     flex-direction: column;
     gap: 0.5rem;
     margin-top: 0.75rem;
     padding-top: 0.75rem;
   }
 
-  .btn-submit,
-  .btn-cancel {
+  .sf-btn-submit,
+  .sf-btn-cancel {
     width: 100%;
     padding: 0.55rem 0;
     font-size: 0.875rem;
   }
 
-  .form-pago { gap: 8px; }
+  .sf-pago { gap: 8px; }
 
-  .form-pago button {
+  .sf-pago button {
     padding: 7px 12px;
     font-size: 0.8rem;
   }
-
-  /* elimina margen nativo del h3 que el navegador agrega por defecto (~16px arriba y abajo) */
-.sf-section h3,
-.form-section-title {
-  margin-top: 0;
-  margin-bottom: 0.2rem;
-}
-
-/* reduce el gap entre form-groups apilados */
-.form-row-3,
-.form-row-2,
-.form-row-add-item {
-  gap: 0.25rem; /* antes 0.35rem — reduce el espacio entre campos */
-}
-
-/* reduce el gap interno de add-product-section */
-.add-product-section {
-  gap: 0.25rem;
-}
-
-/* el form-group en sí no necesita margen adicional */
-.form-group {
-  margin-bottom: 0;
-}
 }
 
 @media (max-width: 400px) {
-  .form-title {
+  .sf-title {
     font-size: 1.2rem;
   }
 
