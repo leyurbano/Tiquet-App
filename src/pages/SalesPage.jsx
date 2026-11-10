@@ -15,6 +15,7 @@ import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
 import { useAuth } from '../contexts/AuthContext'
 import { useCashSession } from '../contexts/CashSessionContext'
 import AperturaCajaModal from '../components/AperturaCajaModal'
+import { ShoppingCart, PlusCircle, Printer, SkipForward, Lock } from 'lucide-react'
 import './SalesPage.css'
 
 function SalesPage() {
@@ -360,10 +361,10 @@ function SalesPage() {
             <h2>¿Desea imprimir el recibo?</h2>
             <div className="modal-buttons">
               <button onClick={handlePrint} className="btn-print">
-                🖨️ Imprimir
+                <Printer size={18} aria-hidden="true" /> Imprimir
               </button>
               <button onClick={() => { setShowPrintModal(false); setFormKey(k => k + 1) }} className="btn-skip">
-                ⏭️ Saltar
+                <SkipForward size={18} aria-hidden="true" /> Saltar
               </button>
             </div>
           </div>
@@ -371,10 +372,12 @@ function SalesPage() {
       )}
 
       <div className="sales-header">
-        <h1 className="sales-title">💰 Gestión de Ventas</h1>
+        <h1 className="sales-title">
+          <ShoppingCart size={30} aria-hidden="true" /> Gestión de Ventas
+        </h1>
         {!showForm && (
           <button onClick={() => setShowForm(true)} className="btn-new-sale">
-            ➕ Nueva Venta
+            <PlusCircle size={18} aria-hidden="true" /> Nueva Venta
           </button>
         )}
       </div>
@@ -394,7 +397,9 @@ function SalesPage() {
               />
             ) : (
               <div className="caja-cerrada-aviso">
-                <p className="caja-cerrada-titulo">🔒 Caja cerrada</p>
+                <p className="caja-cerrada-titulo">
+                  <Lock size={18} aria-hidden="true" /> Caja cerrada
+                </p>
                 <p>Para registrar ventas, abre la caja con la base del turno.</p>
                 <button
                   type="button"

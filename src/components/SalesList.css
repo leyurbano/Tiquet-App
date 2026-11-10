@@ -421,3 +421,29 @@
 }
 
 .btn-devolver-sale:hover { background: #fde68a; }
+
+/* Iconos de lucide-react alineados con su texto, como en el resto del sistema */
+.btn-date {
+  gap: 0.35rem;
+}
+
+.vl-cargando,
+.vl-vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btn-invoice,
+.btn-devolver-sale,
+.btn-delete-sale {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* El emoji traía su propio color; el icono toma el del texto del botón */
+.btn-devolver-sale {
+  color: #b45309;
+}

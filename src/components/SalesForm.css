@@ -27,6 +27,43 @@
   padding-bottom: 0.75rem;
 }
 
+/* Iconos de lucide-react alineados con su texto, como en el resto del sistema */
+.sf-title-texto,
+.sf-section-title,
+.total-label,
+.btn-add-customer,
+.sf-btn-submit,
+.sf-btn-cancel,
+.stock-error-msg,
+.sf-pago-nota {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sf-title-texto,
+.sf-btn-submit,
+.sf-btn-cancel,
+.stock-error-msg {
+  justify-content: center;
+}
+
+.sf-section-title,
+.stock-error-msg,
+.sf-pago-nota {
+  display: flex;
+}
+
+.sf-title-texto svg,
+.sf-section-title svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.stock-error-msg svg {
+  flex-shrink: 0;
+}
+
 /* Fecha de hoy bajo el título: solo informativa, no se edita */
 .sf-fecha {
   display: block;
@@ -393,6 +430,24 @@
   background: #0b5fff;
   color: #fff;
   border-color: #0b5fff;
+}
+
+/* Última sección antes de los botones: .sf-buttons ya trae su borde
+   superior, así que esta no lleva el inferior (evita la línea doble) */
+.sf-section-pago {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.sf-pago-nota {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.sf-pago-nota.sf-pago-ok {
+  color: #065f46;
 }
 
 /* ============================================

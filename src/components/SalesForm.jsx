@@ -9,6 +9,13 @@ import { salesService } from "../services/salesService";
 import { fiadoService } from "../services/fiadoService";
 import { esConsumidorFinal } from "../utils/clientes";
 import { numeroProducto, coincideNumero } from "../utils/producto";
+import {
+  ReceiptText, User, UserPlus, ScanBarcode, Package, Trash2, Wallet,
+  CreditCard, CircleCheck, AlertTriangle, Check, X, Loader2,
+} from "lucide-react";
+
+// Item y Cantidad solo aceptan dígitos (también al pegar)
+const soloDigitos = (valor) => valor.replace(/\D/g, "");
 
 function SalesForm({
   products,
@@ -104,7 +111,7 @@ function SalesForm({
     }
 
     if (filteredProducts.length === 0) {
-      setStockError(` Ningún producto coincide con "${texto}".`);
+      setStockError(`Ningún producto coincide con "${texto}".`);
     }
   };
 
@@ -182,7 +189,7 @@ function SalesForm({
     if (!product || pedida <= 0) return;
 
     if (product.cantidad === 0) {
-      setStockError(` El producto "${product.descripcion}" está agotado y no se puede registrar.`);
+      setStockError(`El producto "${product.descripcion}" está agotado y no se puede registrar.`);
       return;
     }
 
@@ -193,7 +200,7 @@ function SalesForm({
     const yaEnCarrito = items.find((i) => i.product_id === product.id)?.quantity || 0;
     if (yaEnCarrito + pedida > product.cantidad) {
       setStockError(
-        ` Stock insuficiente para "${product.descripcion}". Disponible: ${product.cantidad}` +
+        `Stock insuficiente para "${product.descripcion}". Disponible: ${product.cantidad}` +
         (yaEnCarrito ? `, ya agregaste ${yaEnCarrito}` : "") +
         `, solicitado: ${pedida}.`
       );
@@ -285,11 +292,11 @@ function SalesForm({
     for (const item of items) {
       const producto = products.find(p => p.id === item.product_id);
       if (!producto || producto.cantidad === 0) {
-        setStockError(`❌ El producto "${item.product_name}" está agotado y no puede venderse.`);
+        setStockError(`El producto "${item.product_name}" está agotado y no puede venderse.`);
         return;
       }
       if (producto.cantidad < item.quantity) {
-        setStockError(`❌ Stock insuficiente para "${item.product_name}". Disponible: ${producto.cantidad}, solicitado: ${item.quantity}.`);
+        setStockError(`Stock insuficiente para "${item.product_name}". Disponible: ${producto.cantidad}, solicitado: ${item.quantity}.`);
         return;
       }
     }
@@ -349,12 +356,16 @@ function SalesForm({
       )}
 
       <h2 className="sf-title">
-        📝 Nueva Venta
+        <span className="sf-title-texto">
+          <ReceiptText size={22} aria-hidden="true" /> Nueva Venta
+        </span>
         <span className="sf-fecha">{fechaHoy}</span>
       </h2>
 
       <div className="sf-section">
-        <h3 className="sf-section-title">Datos del Cliente</h3>
+        <h3 className="sf-section-title">
+          <User size={18} aria-hidden="true" /> Datos del Cliente
+        </h3>
         <div className="sf-row-3">
           <div className="sf-group">
             <label className="sf-label">N° Documento</label>
@@ -372,7 +383,7 @@ function SalesForm({
                 onClick={addNewCustomer}
                 className="btn-add-customer"
               >
-                ➕ Agregar Cliente
+                <UserPlus size={14} aria-hidden="true" /> Agregar Cliente
               </button>
             )}
           </div>
@@ -406,20 +417,26 @@ function SalesForm({
       </div>
 
       <div className="sf-section">
-        <h3 className="sf-section-title">🛒 Agregar Productos</h3>
+        <h3 className="sf-section-title">
+          <ScanBarcode size={18} aria-hidden="true" /> Agregar Productos
+        </h3>
         <div className="add-product-section">
           <div className="sf-row-item">
             <div className="sf-group">
               <label className="sf-label">Item</label>
+              {/* 🔧 type="text" + inputMode: maxLength no funciona en
+                  type="number", que además acepta "e", "-" y "." */}
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 placeholder="producto"
                 value={selectedProduct}
                 onChange={(e) => {
-                  setSelectedProduct(e.target.value);
-                  if (e.target.value) {
+                  const numero = soloDigitos(e.target.value);
+                  setSelectedProduct(numero);
+                  if (numero) {
                     const product = products.find(
-                      (p) => coincideNumero(p, e.target.value),
+                      (p) => coincideNumero(p, numero),
                     );
                     if (product) setProductSearch(product.descripcion);
                   } else {
@@ -463,17 +480,17 @@ function SalesForm({
             <div className="sf-group">
               <label className="sf-label">Cantidad</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 placeholder="Cantidad"
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                onKeyPress={(e) => {
+                onChange={(e) => setQuantity(soloDigitos(e.target.value))}
+                onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
                     addItem();
                   }
                 }}
-                min="1"
                 maxLength="5"
                 className="sf-input"
               />
@@ -482,8 +499,8 @@ function SalesForm({
 
           {/* 🔧 CAMBIO — mensaje de stock va justo debajo de los campos de producto */}
           {stockError && (
-            <div className="stock-error-msg">
-              {stockError}
+            <div className="stock-error-msg" role="alert">
+              <AlertTriangle size={16} aria-hidden="true" /> {stockError}
             </div>
           )}
 
@@ -492,7 +509,9 @@ function SalesForm({
 
       {items.length > 0 && (
         <div className="sf-section">
-          <h3 className="sf-section-title">📦 Productos en la Venta</h3>
+          <h3 className="sf-section-title">
+            <Package size={18} aria-hidden="true" /> Productos en la Venta
+          </h3>
           <div className="sales-items-table">
             <div className="table-header-sales">
               <div className="col-number">#</div>
@@ -514,8 +533,9 @@ function SalesForm({
                     type="button"
                     onClick={() => removeItem(item.product_id)}
                     className="btn-remove-item"
+                    aria-label={`Quitar ${item.product_name}`}
                   >
-                    🗑️
+                    <Trash2 size={15} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -523,20 +543,25 @@ function SalesForm({
           </div>
 
           <div className="sf-total">
-            <span className="total-label">💰 Total de la Compra:</span>
+            <span className="total-label">
+              <Wallet size={18} aria-hidden="true" /> Total de la Compra:
+            </span>
             <span className="total-amount">{formatCOP(calculateTotal())}</span>
           </div>
         </div>
       )}
 
-      <div className="sf-group">
-        <label className="sf-label">Forma de Pago</label>
+      <div className="sf-section sf-section-pago">
+        <h3 className="sf-section-title">
+          <CreditCard size={18} aria-hidden="true" /> Forma de Pago
+        </h3>
         <div className="sf-pago">
           {mediosPago.map((medio) => (
             <button
               key={medio.id}
               type="button"
               className={paymentMethod === medio.id ? "active" : ""}
+              aria-pressed={paymentMethod === medio.id}
               onClick={() => {
                 setPaymentMethod(medio.id);
                 setPagosMixtos(null);
@@ -548,6 +573,7 @@ function SalesForm({
           <button
             type="button"
             className={pagosMixtos ? "active" : ""}
+            aria-pressed={!!pagosMixtos}
             onClick={() => setShowMixedModal(true)}
           >
             Pago Mixto
@@ -555,38 +581,41 @@ function SalesForm({
         </div>
 
         {pagosMixtos && (
-          <p style={{ color: "#065f46", fontSize: "0.85rem", marginTop: "4px" }}>
-            ✅ Pago mixto configurado ({pagosMixtos.length} medios)
+          <p className="sf-pago-nota sf-pago-ok">
+            <CircleCheck size={14} aria-hidden="true" /> Pago mixto configurado ({pagosMixtos.length} medios)
           </p>
         )}
 
-        {!paymentMethod && !pagosMixtos && (
-          <p style={{ color: "#c0392b", fontSize: "0.85rem", marginTop: "4px" }}>
-            Selecciona una forma de pago
+        {/* 🔧 Antes salía en rojo apenas se abría el formulario, como si fuera
+            un error. Ahora solo aparece cuando ya hay productos, y explica
+            por qué "Registrar Venta" sigue deshabilitado */}
+        {items.length > 0 && !paymentMethod && !pagosMixtos && (
+          <p className="sf-pago-nota">
+            Elige cómo paga el cliente para registrar la venta
           </p>
+        )}
+
+        {hayFiado && (
+          <div className={`sf-fiado-info ${!clienteFiable || superaCupo ? "sf-fiado-alerta" : ""}`}>
+            {!clienteFiable ? (
+              "Para vender fiado, busca o registra al cliente con su documento. A Consumidor final no se le puede fiar."
+            ) : saldoCliente === null ? (
+              "Consultando el cupo del cliente..."
+            ) : (
+              <>
+                Fiado: <strong>{formatCOP(montoFiado)}</strong> · Cupo {formatCOP(cupoCliente)} ·
+                Debe {formatCOP(saldoCliente)} · Disponible <strong>{formatCOP(disponibleFiado)}</strong>
+                {superaCupo && (
+                  <>
+                    <br />
+                    Supera el cupo: la venta será rechazada. Un administrador puede subirle el cupo en Clientes.
+                  </>
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
-
-      {hayFiado && (
-        <div className={`sf-fiado-info ${!clienteFiable || superaCupo ? "sf-fiado-alerta" : ""}`}>
-          {!clienteFiable ? (
-            "Para vender fiado, busca o registra al cliente con su documento. A Consumidor final no se le puede fiar."
-          ) : saldoCliente === null ? (
-            "Consultando el cupo del cliente..."
-          ) : (
-            <>
-              Fiado: <strong>{formatCOP(montoFiado)}</strong> · Cupo {formatCOP(cupoCliente)} ·
-              Debe {formatCOP(saldoCliente)} · Disponible <strong>{formatCOP(disponibleFiado)}</strong>
-              {superaCupo && (
-                <>
-                  <br />
-                  Supera el cupo: la venta será rechazada. Un administrador puede subirle el cupo en Clientes.
-                </>
-              )}
-            </>
-          )}
-        </div>
-      )}
 
       {showMixedModal && (
         <MixedPaymentModal
@@ -607,10 +636,18 @@ function SalesForm({
           className="sf-btn-submit"
           disabled={(!paymentMethod && !pagosMixtos) || items.length === 0 || isSubmitting}
         >
-          {isSubmitting ? "⏳ Guardando..." : "✅ Registrar Venta"}
+          {isSubmitting ? (
+            <>
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Guardando...
+            </>
+          ) : (
+            <>
+              <Check size={16} aria-hidden="true" /> Registrar Venta
+            </>
+          )}
         </button>
         <button type="button" onClick={onCancel} className="sf-btn-cancel">
-          ❌ Cancelar
+          <X size={16} aria-hidden="true" /> Cancelar
         </button>
       </div>
 
