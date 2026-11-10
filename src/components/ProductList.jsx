@@ -6,7 +6,7 @@ import MovimientoStockModal from "./MovimientoStockModal";
 import Paginacion from "./Paginacion";
 import { Pencil, History, Package, AlertTriangle, ArrowUpDown } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
-import { numeroProducto, coincideNumero } from "../utils/producto";
+import { numeroProducto, coincideNumero, nombreProducto } from "../utils/producto";
 
 // 25 y no 50: sin scroll interno, 50 filas son casi tres pantallas y la
 // paginación queda al fondo. Para buscar algo puntual está el buscador
@@ -204,9 +204,7 @@ function ProductList({
                   <tr key={product.id} className={`pl-fila fila-${estado}`}>
                     <td className="cell-numeric">{numeroProducto(product)}</td>
                     <td className="cell-description">
-                      {(product.descripcion || "")
-                        .toLowerCase()
-                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                      {nombreProducto(product.descripcion)}
                     </td>
                     <td className="cell-numeric">
                       <span className={`stock-valor stock-${estado}`}>

@@ -54,6 +54,22 @@ export const formatFechaLargaColombia = (date = new Date()) => {
   }).format(date)
 }
 
+/**
+ * Día, mes y hora en Colombia ("09 nov, 03:45 p. m."), para historiales.
+ * 🔧 El historial de productos usaba toLocaleString sin zona: mostraba la
+ * hora del dispositivo, no la de Colombia.
+ */
+export const formatFechaMovimiento = (date) => {
+  if (!date) return 'N/A'
+  return new Date(date).toLocaleString('es-CO', {
+    timeZone: COLOMBIA_TZ,
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 /*
   Convierte una fecha a formato corto para tablas.
  */
