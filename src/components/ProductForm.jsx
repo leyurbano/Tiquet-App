@@ -79,13 +79,17 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         {initialData ? 'Editar Producto' : 'Nuevo Producto'}
       </h2>
 
+      {/* 🔧 Antes era un textarea de 2 líneas: más alto que los demás campos
+          y Enter metía saltos de línea en el nombre, que salían en el tiquete
+          y estorbaban la búsqueda. Enter no hace nada: solo envía el botón */}
       <label className="pf-label">Descripción</label>
-      <textarea
+      <input
+        type="text"
         name="descripcion"
         placeholder="Descripción del producto"
         value={formData.descripcion}
         onChange={handleChange}
-        rows="2"
+        onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
         required
         className="pf-input"
       />
@@ -170,19 +174,38 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         </p>
       )}
 
-      <label className="pf-label">Precio de venta</label>
-      <div className="pf-money">
-        <span className="money-symbol">$</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          name="precio_venta"
-          placeholder="0"
-          value={formatDisplay(formData.precio_venta)}
-          onChange={(e) => cambiar('precio_venta', parseCOP(e.target.value))}
-          required
-          className="pf-input"
-        />
+      {/* Lado a lado como Stock y Costo: la alerta es un número corto y a
+          todo el ancho quedaba casi vacía */}
+      <div className="pf-grid-2">
+        <div>
+          <label className="pf-label">Precio de venta</label>
+          <div className="pf-money">
+            <span className="money-symbol">$</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              name="precio_venta"
+              placeholder="0"
+              value={formatDisplay(formData.precio_venta)}
+              onChange={(e) => cambiar('precio_venta', parseCOP(e.target.value))}
+              required
+              className="pf-input"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="pf-label">Alerta de stock bajo</label>
+          <input
+            type="number"
+            name="stock_minimo"
+            placeholder={`Por defecto: ${minimoNegocio}`}
+            value={formData.stock_minimo ?? ''}
+            onChange={handleChange}
+            min="0"
+            className="pf-input"
+          />
+        </div>
       </div>
 
       {vendeAPerdida && (
@@ -193,19 +216,10 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         </p>
       )}
 
-      <label className="pf-label">Alerta de stock bajo</label>
-      <input
-        type="number"
-        name="stock_minimo"
-        placeholder={`Por defecto: ${minimoNegocio}`}
-        value={formData.stock_minimo ?? ''}
-        onChange={handleChange}
-        min="0"
-        className="pf-input"
-      />
+      {/* Nombra el campo: al ir bajo la fila ya no queda claro a cuál se refiere */}
       <p className="pf-ayuda">
-        Déjalo vacío para usar el valor general del negocio. Pon 0 para no
-        recibir alertas de este producto.
+        Alerta de stock: déjala vacía para usar el valor general del negocio.
+        Pon 0 para no recibir alertas de este producto.
       </p>
 
       <div className="pf-buttons">

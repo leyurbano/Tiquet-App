@@ -44,8 +44,7 @@
 }
 
 /* Anidado bajo el wrapper: styles.css estiliza input[type="text"|...] con
-   especificidad (0,1,1), que le gana a una sola clase. Cubre también el
-   textarea, que antes tomaba otro padding y otra letra */
+   especificidad (0,1,1), que le gana a una sola clase */
 .product-form-wrapper .pf-input {
   display: block;
   width: 100%;
@@ -73,10 +72,13 @@
   cursor: not-allowed;
 }
 
+/* En dos columnas también en celular. align-items: end mantiene los campos
+   alineados si una etiqueta larga ("Alerta de stock bajo") pasa a 2 líneas */
 .pf-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0 0.75rem;
+  align-items: end;
 }
 
 /* Campo de dinero: el $ va sobre la caja del input */
@@ -201,12 +203,15 @@
     padding: 1rem;
   }
 
-  .pf-grid-2 {
-    grid-template-columns: 1fr;
-  }
-
   .pf-buttons {
     margin-top: 1rem;
     padding-top: 0.75rem;
+  }
+}
+
+/* Solo en pantallas muy angostas cada campo vuelve a ocupar toda la fila */
+@media (max-width: 340px) {
+  .pf-grid-2 {
+    grid-template-columns: 1fr;
   }
 }
