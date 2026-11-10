@@ -40,6 +40,20 @@ export const formatToColombia = (date) => {
     .format('DD/MM/YYYY, h:mm:ss A')
 }
 
+/**
+ * Fecha larga de hoy en Colombia ("lunes, 9 de noviembre de 2026").
+ * Solo para mostrar: la fecha que se guarda la pone el servidor.
+ */
+export const formatFechaLargaColombia = (date = new Date()) => {
+  return new Intl.DateTimeFormat('es-CO', {
+    timeZone: COLOMBIA_TZ,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(date)
+}
+
 /*
   Convierte una fecha a formato corto para tablas.
  */

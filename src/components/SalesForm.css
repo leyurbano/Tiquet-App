@@ -27,6 +27,15 @@
   padding-bottom: 0.75rem;
 }
 
+/* Fecha de hoy bajo el título: solo informativa, no se edita */
+.sf-fecha {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
 .sf-section {
   margin-bottom: 0.75rem;
   padding-bottom: 0.75rem;
@@ -47,13 +56,6 @@
 }
 
 /* Layout de filas */
-.sf-row-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  width: 100%;
-}
-
 .sf-row-3 {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
@@ -420,7 +422,6 @@
   }
 
   /* grids apilados con gap reducido */
-  .sf-row-2,
   .sf-row-3,
   .sf-row-item {
     grid-template-columns: 1fr;

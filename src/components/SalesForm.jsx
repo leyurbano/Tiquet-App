@@ -3,7 +3,7 @@ import { toast } from '../utils/toast'
 import "./SalesForm.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import { clientService } from "../services/clientService";
-import { getTodayColombia } from "../utils/dateFormatter";
+import { formatFechaLargaColombia } from "../utils/dateFormatter";
 import MixedPaymentModal from "./MixedPaymentModal";
 import { salesService } from "../services/salesService";
 import { fiadoService } from "../services/fiadoService";
@@ -17,7 +17,10 @@ function SalesForm({
   // Logo del negocio (Configuración) para la marca de agua; sin logo, no hay
   logoUrl = null,
 }) {
-  const [saleDate, setSaleDate] = useState(getTodayColombia);
+  // 🔧 Antes era un campo editable que no se guardaba: registrar_venta usa
+  // now() del servidor. Ahora solo se muestra, y se refresca tras cada venta
+  // por si el turno pasa la medianoche.
+  const [fechaHoy, setFechaHoy] = useState(formatFechaLargaColombia);
   const [customer, setCustomer] = useState({ name: "", cedula: "", phone: "" });
   const [items, setItems] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -304,7 +307,6 @@ function SalesForm({
     setIsSubmitting(true);
     const resultado = await onSubmit({
       cliente_id: customerFound?.id || null,
-      fecha: saleDate,
       total: calculateTotal(),
       medio_pago_id: pagosMixtos ? null : paymentMethod,
       pagos: pagosMixtos || [
@@ -327,7 +329,7 @@ function SalesForm({
       return;
     }
 
-    setSaleDate(getTodayColombia());
+    setFechaHoy(formatFechaLargaColombia());
     setCustomer({ name: "", cedula: "", phone: "" });
     setItems([]);
     setPaymentMethod("");
@@ -346,22 +348,10 @@ function SalesForm({
         />
       )}
 
-      <h2 className="sf-title">📝 Nueva Venta</h2>
-
-      <div className="sf-section">
-        <div className="sf-row-2">
-          <div className="sf-group">
-            <label className="sf-label">Fecha</label>
-            <input
-              type="date"
-              value={saleDate}
-              onChange={(e) => setSaleDate(e.target.value)}
-              required
-              className="sf-input"
-            />
-          </div>
-        </div>
-      </div>
+      <h2 className="sf-title">
+        📝 Nueva Venta
+        <span className="sf-fecha">{fechaHoy}</span>
+      </h2>
 
       <div className="sf-section">
         <h3 className="sf-section-title">Datos del Cliente</h3>
