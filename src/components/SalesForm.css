@@ -520,8 +520,9 @@
   .total-label  { font-size: 0.85rem; }
   .total-amount { font-size: 1.1rem; min-width: 5.5rem; }
 
+  /* Uno al lado del otro, mitad y mitad, como en escritorio: apilados
+     ocupaban el doble de alto al final del formulario */
   .sf-buttons {
-    flex-direction: column;
     gap: 0.5rem;
     margin-top: 0.75rem;
     padding-top: 0.75rem;
@@ -529,8 +530,9 @@
 
   .sf-btn-submit,
   .sf-btn-cancel {
-    width: 100%;
-    padding: 0.55rem 0;
+    flex: 1;
+    width: auto;
+    padding: 0.65rem 0.5rem;
     font-size: 0.875rem;
   }
 

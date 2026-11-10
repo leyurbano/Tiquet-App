@@ -3,6 +3,7 @@ import { useCashSession } from '../contexts/CashSessionContext'
 import { useAuth } from '../contexts/AuthContext'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import { useDialogo } from '../hooks/useDialogo'
+import { Wallet } from 'lucide-react'
 import './CajaModal.css'
 
 /**
@@ -41,7 +42,9 @@ function AperturaCajaModal({ onOmitir }) {
   return (
     <div className="caja-overlay">
       <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Apertura de caja">
-        <h2 className="caja-title">💰 Apertura de caja</h2>
+        <h2 className="caja-title caja-con-icono">
+          <Wallet size={22} aria-hidden="true" /> Apertura de caja
+        </h2>
         <p className="caja-subtitle">
           Ingresa el dinero en efectivo con el que arranca la caja. Al cerrar sesión
           se usará para cuadrar el arqueo del turno.

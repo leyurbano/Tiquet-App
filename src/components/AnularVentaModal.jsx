@@ -3,6 +3,7 @@ import { MOTIVOS_ANULACION } from '../utils/motivosAnulacion'
 import { formatCOP } from '../utils/currencyFormatter'
 import { numeroDoc } from '../utils/documento'
 import { useDialogo } from '../hooks/useDialogo'
+import { Ban } from 'lucide-react'
 import './CajaModal.css'
 
 /**
@@ -27,7 +28,9 @@ function AnularVentaModal({ sale, clientName, onCancel, onConfirm }) {
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
       <div className="caja-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Anular venta ${numeroDoc(sale)}`}>
-        <h2 className="caja-title">Anular venta #{numeroDoc(sale)}</h2>
+        <h2 className="caja-title caja-con-icono">
+          <Ban size={22} color="#dc2626" aria-hidden="true" /> Anular venta #{numeroDoc(sale)}
+        </h2>
         <p className="caja-subtitle">
           {clientName} · {formatCOP(sale.total || 0)}
           <br />
