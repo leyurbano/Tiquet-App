@@ -213,6 +213,13 @@ function SalesForm({
     // si pasa la validación limpia el error
     setStockError('');
 
+    // $0 es válido (obsequios), pero el cajero tiene que saberlo: puede ser
+    // un producto al que se le olvidó poner precio
+    const precio = Number(product.precio_venta) || 0;
+    if (precio === 0 && !yaEnCarrito) {
+      toast.aviso(`"${product.descripcion}" tiene precio $0: se venderá gratis.`);
+    }
+
     if (!customerFound && !autoSetFinalCustomer && !customer.cedula.trim()) {
       await searchCustomerByCedula("222222222");
     }
@@ -233,7 +240,9 @@ function SalesForm({
             {
               product_id: product.id,
               product_name: product.descripcion || product.name,
-              unit_price: product.precio_venta || product.price,
+              // 🔧 Era `precio_venta || product.price`: con precio 0 quedaba
+              // undefined, el total salía NaN y la base rechazaba la venta
+              unit_price: precio,
               quantity: pedida,
             },
           ];

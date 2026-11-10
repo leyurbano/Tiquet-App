@@ -63,6 +63,9 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
   const valorInventario = cantidad * costo
   // Aviso, no bloqueo: hay negocios que venden algo a pérdida a propósito
   const vendeAPerdida = costo > 0 && precio > 0 && precio < costo
+  // $0 se permite (obsequios, bolsas) pero se avisa: el riesgo es crearlo
+  // "para llenarlo después", olvidarlo y venderlo gratis
+  const precioCero = formData.precio_venta !== '' && precio === 0
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -247,6 +250,13 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
           El precio es menor que el costo: perderías{' '}
           <strong>${formatDisplay(costo - precio)}</strong> por cada unidad que vendas.
           Revísalo antes de guardar.
+        </p>
+      )}
+
+      {precioCero && (
+        <p className="pf-aviso-perdida">
+          Con precio <strong>$0</strong> este producto se venderá gratis. Si es un
+          obsequio, está bien; si todavía no tiene precio, escríbelo antes de guardar.
         </p>
       )}
 
