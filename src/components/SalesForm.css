@@ -9,7 +9,7 @@
 .sales-form-wrapper {
   background-color: white;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1.5rem 2rem;
   width: 100%;
   max-width: 100%;
@@ -489,10 +489,11 @@
     margin-bottom: 0.15rem;
   }
 
-  /* inputs más compactos */
+  /* inputs más compactos. La letra va en 16px y no en 14px: con menos,
+     Safari en iPhone hace zoom al tocar el campo y descuadra la venta */
   .sales-form-wrapper .sf-input {
     padding: 0.45rem 0.6rem;
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
 
   .add-product-section {

@@ -4,7 +4,7 @@ import ProductForm from "../components/ProductForm";
 import ProductList from "../components/ProductList";
 import { productService } from "../services/productService";
 import "./ProductsPage.css";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Package } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { negocioService } from "../services/negocioService";
 import { useDialogo } from "../hooks/useDialogo";
@@ -19,7 +19,8 @@ function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // Solo la primera carga: las recargas después de guardar van por detrás
+  const [loading, setLoading] = useState(true);
   // Hay cambios escritos sin guardar en el modal
   const [formSucio, setFormSucio] = useState(false);
   // Umbral general del negocio para las alertas de stock bajo
@@ -40,16 +41,22 @@ function ProductsPage() {
   // 🔧 Antes se traían máximo 1.000 productos: en un negocio más grande, el
   // resto no aparecía. Ahora llega el catálogo completo y ProductList pinta
   // 50 por página.
+  // 🔧 Antes ponía loading en true en cada recarga: la tabla se cambiaba por
+  // "Cargando productos..." al guardar, parpadeaba y el scroll saltaba arriba,
+  // así que quien editaba el producto 18 de la página 3 tenía que volver a
+  // buscarlo. Ahora la tabla se queda y los datos se cambian por detrás.
   const loadProducts = async () => {
-    setLoading(true);
     const result = await productService.getTodosLosProductos();
-    if (result.error) toast.error("No se pudieron cargar los productos. Recarga la página.");
-    setProducts(result.data);
+    if (result.error) {
+      toast.error("No se pudieron cargar los productos. Recarga la página.");
+    } else {
+      // Si la recarga falla se queda la lista que ya estaba, no una vacía
+      setProducts(result.data);
+    }
     setLoading(false);
   };
 
   const handleCreateProduct = async (formData) => {
-    setLoading(true);
     const { producto: newProduct, error } = await productService.createProduct(formData);
     if (newProduct) {
       setShowForm(false);
@@ -59,13 +66,11 @@ function ProductsPage() {
     } else {
       toast.error("No se pudo crear el producto: " + (error || "error desconocido"));
     }
-    setLoading(false);
     // El formulario necesita saber si guardó para decidir si se limpia
     return !!newProduct;
   };
 
   const handleUpdateProduct = async (formData) => {
-    setLoading(true);
     const { producto: updated, error } = await productService.updateProduct(
       editingProduct.id,
       formData,
@@ -79,7 +84,6 @@ function ProductsPage() {
     } else {
       toast.error("No se pudo actualizar el producto: " + (error || "error desconocido"));
     }
-    setLoading(false);
     return !!updated;
   };
 
@@ -112,7 +116,9 @@ function ProductsPage() {
   return (
     <div className="products-page">
       <div className="products-header">
-        <h1 className="products-title">📦 Gestión de Productos</h1>
+        <h1 className="products-title">
+          <Package size={30} aria-hidden="true" /> Gestión de Productos
+        </h1>
         {/* Siempre montado: si se desmonta al abrir el formulario, al cerrarlo
             el foco del teclado no tiene a dónde volver */}
         {esAdministrador && (

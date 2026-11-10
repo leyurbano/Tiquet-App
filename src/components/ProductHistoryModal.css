@@ -77,6 +77,13 @@
   padding: 2rem 0;
 }
 
+.phm-cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
 /* Tabla */
 .phm-table {
   width: 100%;

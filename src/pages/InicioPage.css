@@ -89,6 +89,17 @@
   border-color: #2563eb;
 }
 
+/* Llegaban sin querer desde ProductForm.css (mismos nombres de clase). Al
+   separarlo se declaran aquí para que el login se siga viendo igual */
+.form-group .form-label {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.form-group .form-input {
+  margin-bottom: 1rem;
+}
+
 .error-message {
   background-color: #fee2e2;
   color: #dc2626;

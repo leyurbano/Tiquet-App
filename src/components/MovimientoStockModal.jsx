@@ -4,10 +4,10 @@ import { useDialogo } from '../hooks/useDialogo'
 import { toast } from '../utils/toast'
 import { formatCOP } from '../utils/currencyFormatter'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
-import { numeroProducto } from '../utils/producto'
+import { numeroProducto, nombreProducto } from '../utils/producto'
 import { numeroDoc } from '../utils/documento'
 import { calcularMovimiento, motivosDe, buscarMotivo } from '../utils/movimientosStock'
-import { PackagePlus, PackageMinus } from 'lucide-react'
+import { PackagePlus, PackageMinus, ArrowUpDown } from 'lucide-react'
 import './CajaModal.css'
 import './MovimientoStockModal.css'
 
@@ -112,10 +112,12 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
         tabIndex={-1}
         aria-label={`Mover stock de ${producto.descripcion}`}
       >
-        <h2 className="caja-title">Mover stock</h2>
+        <h2 className="caja-title caja-con-icono">
+          <ArrowUpDown size={22} aria-hidden="true" /> Mover stock
+        </h2>
         <p className="caja-subtitle mov-producto">
           <span className="mov-numero">#{numeroProducto(producto)}</span>
-          {producto.descripcion}
+          {nombreProducto(producto.descripcion)}
         </p>
         <p className="mov-estado">
           Hoy hay <strong>{stockActual}</strong> {stockActual === 1 ? 'unidad' : 'unidades'}

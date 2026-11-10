@@ -117,6 +117,13 @@
   }
 }
 
+/* Llegaba sin querer desde ProductForm.css (mismo nombre de clase). Al
+   separarlo se declara aquí para que el formulario se siga viendo igual;
+   .cf-ayuda cuenta con este margen */
+.client-form-wrapper .form-input {
+  margin-bottom: 1rem;
+}
+
 /* ---- Cupo de fiado ---- */
 .cf-label {
   display: block;
