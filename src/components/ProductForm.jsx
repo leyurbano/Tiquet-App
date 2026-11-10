@@ -79,7 +79,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         {initialData ? 'Editar Producto' : 'Nuevo Producto'}
       </h2>
 
-      <label className="form-label">Descripción</label>
+      <label className="pf-label">Descripción</label>
       <textarea
         name="descripcion"
         placeholder="Descripción del producto"
@@ -87,14 +87,14 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         onChange={handleChange}
         rows="2"
         required
-        className="form-input"
+        className="pf-input"
       />
 
       {/* El lector de código de barras se comporta como un teclado: con el
           foco aquí, teclea el código y manda Enter. Por eso no se envía el
           formulario con Enter en este campo: se escanea y se sigue llenando */}
-      <label className="form-label" htmlFor="codigo_barras">
-        Código de barras <span className="form-opcional">(opcional)</span>
+      <label className="pf-label" htmlFor="codigo_barras">
+        Código de barras <span className="pf-opcional">(opcional)</span>
       </label>
       <input
         id="codigo_barras"
@@ -106,12 +106,12 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         value={formData.codigo_barras}
         onChange={handleChange}
         onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
-        className="form-input"
+        className="pf-input"
       />
 
-      <div className="form-grid-2">
+      <div className="pf-grid-2">
         <div>
-          <label className="form-label">{initialData ? 'Cantidad en stock' : 'Stock inicial'}</label>
+          <label className="pf-label">{initialData ? 'Cantidad en stock' : 'Stock inicial'}</label>
           <input
             type="number"
             name="cantidad"
@@ -120,13 +120,13 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
             onChange={handleChange}
             min="0"
             readOnly={!!initialData}
-            className={initialData ? 'form-input form-input-readonly' : 'form-input'}
+            className={initialData ? 'pf-input pf-input-readonly' : 'pf-input'}
           />
         </div>
 
         <div>
-          <label className="form-label">Costo unitario</label>
-          <div className="form-input-money">
+          <label className="pf-label">Costo unitario</label>
+          <div className="pf-money">
             <span className="money-symbol">$</span>
             <input
               type="text"
@@ -136,7 +136,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
               value={formatDisplay(formData.costo)}
               onChange={(e) => cambiar('costo', parseCOP(e.target.value))}
               readOnly={!!initialData}
-              className={initialData ? 'form-input form-input-readonly' : 'form-input'}
+              className={initialData ? 'pf-input pf-input-readonly' : 'pf-input'}
             />
           </div>
         </div>
@@ -145,7 +145,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
       {/* 🔧 Antes ambos eran obligatorios: dar de alta un producto que todavía
           no llega obligaba a escribir 0 y 0 a mano */}
       {!initialData && (
-        <p className="form-ayuda">
+        <p className="pf-ayuda">
           Si el producto todavía no te ha llegado, deja el stock y el costo vacíos.
           Los llenas después con una entrada de mercancía en Inventario.
         </p>
@@ -154,7 +154,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
       {/* Al editar, stock y costo solo se cambian en Inventario: así cada
           cambio queda registrado con su motivo y no se pisan ventas */}
       {initialData && (
-        <p className="form-ayuda form-ayuda-bloqueo">
+        <p className="pf-ayuda pf-ayuda-bloqueo">
           El stock y el costo se cambian en <strong>Inventario</strong>: con una entrada
           de mercancía o con un ajuste. Así queda registrado por qué cambiaron.
         </p>
@@ -163,15 +163,15 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
       {/* 🔧 Antes era un campo de formulario bloqueado, que parecía pendiente
           de llenar. Es solo una multiplicación: va como texto */}
       {valorInventario > 0 && (
-        <p className="form-resumen">
+        <p className="pf-resumen">
           {initialData ? 'Valor en inventario' : 'Valor del inventario inicial'}:{' '}
           <strong>${formatDisplay(valorInventario)}</strong>
           <span> ({cantidad} × ${formatDisplay(costo)})</span>
         </p>
       )}
 
-      <label className="form-label">Precio de venta</label>
-      <div className="form-input-money">
+      <label className="pf-label">Precio de venta</label>
+      <div className="pf-money">
         <span className="money-symbol">$</span>
         <input
           type="text"
@@ -181,19 +181,19 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
           value={formatDisplay(formData.precio_venta)}
           onChange={(e) => cambiar('precio_venta', parseCOP(e.target.value))}
           required
-          className="form-input"
+          className="pf-input"
         />
       </div>
 
       {vendeAPerdida && (
-        <p className="form-aviso-perdida">
+        <p className="pf-aviso-perdida">
           El precio es menor que el costo: perderías{' '}
           <strong>${formatDisplay(costo - precio)}</strong> por cada unidad que vendas.
           Revísalo antes de guardar.
         </p>
       )}
 
-      <label className="form-label">Alerta de stock bajo</label>
+      <label className="pf-label">Alerta de stock bajo</label>
       <input
         type="number"
         name="stock_minimo"
@@ -201,22 +201,22 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         value={formData.stock_minimo ?? ''}
         onChange={handleChange}
         min="0"
-        className="form-input"
+        className="pf-input"
       />
-      <p className="form-ayuda">
+      <p className="pf-ayuda">
         Déjalo vacío para usar el valor general del negocio. Pon 0 para no
         recibir alertas de este producto.
       </p>
 
-      <div className="form-buttons">
-        <button type="submit" className="btn-submit" disabled={enviando}>
+      <div className="pf-buttons">
+        <button type="submit" className="pf-btn-submit" disabled={enviando}>
           {enviando ? 'Guardando...' : initialData ? 'Actualizar' : 'Crear Producto'}
         </button>
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="btn-cancel"
+            className="pf-btn-cancel"
             disabled={enviando}
           >
             Cancelar
