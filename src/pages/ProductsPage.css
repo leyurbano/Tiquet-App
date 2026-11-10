@@ -14,7 +14,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .products-title {
@@ -23,9 +23,12 @@
   color: #111827;
 }
 
-@media (max-width: 640px) {
-  .products-title { font-size: 1.6rem; }
+/* Mismo tamaño y mismo corte que el título de Ventas */
+@media (max-width: 768px) {
+  .products-title { font-size: 1.875rem; }
+}
 
+@media (max-width: 640px) {
   /* Compacto, no de ancho completo: así cabe junto al título */
   .btn-new-product {
     padding: 0.45rem 0.9rem;

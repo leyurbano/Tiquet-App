@@ -7,13 +7,19 @@
 }
 
 .product-list-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 1rem;
   color: #111827;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Azul, como el icono de "Historial de Ventas" */
+.product-list-title svg {
+  color: #2563eb;
+  flex-shrink: 0;
 }
 
 .search-and-stats-wrapper {
@@ -135,15 +141,19 @@
   display: table-row;
 }
 
-.pl-cabecera th {
+/* Igual que la cabecera de Ventas: corta, en mayúsculas y en gris, para
+   que se distinga de las filas sin competir con ellas */
+.products-table .pl-cabecera th {
   padding: 0.75rem 1rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #374151;
+  color: #4b5563;
+  text-transform: uppercase;
   text-align: right;
 }
 
-.pl-cabecera .pl-th-izq { text-align: left; }
-.pl-cabecera .pl-th-centro { text-align: center; }
+.products-table .pl-cabecera .pl-th-izq { text-align: left; }
+.products-table .pl-cabecera .pl-th-centro { text-align: center; }
 
 .pl-fila {
   border-bottom: 1px solid #e5e7eb;
@@ -269,10 +279,14 @@
     display: none;
   }
 
-  .products-table th,
   .products-table td {
-    padding: 0.5rem 0.4rem;
     font-size: 0.78rem;
+  }
+
+  .products-table th,
+  .products-table td,
+  .products-table .pl-cabecera th {
+    padding: 0.5rem 0.4rem;
   }
 
   .cell-description,

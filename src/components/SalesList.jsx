@@ -5,7 +5,7 @@ import { getTodayColombia } from '../utils/dateFormatter'
 import AnularVentaModal from './AnularVentaModal'
 import DevolucionModal from './DevolucionModal'
 import { numeroDoc } from '../utils/documento'
-import { Loader2, CalendarDays, Inbox, Receipt, RotateCcw, Ban } from 'lucide-react'
+import { Loader2, CalendarDays, Inbox, Receipt, RotateCcw, Ban, History } from 'lucide-react'
 
 function SalesList({
   sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange,
@@ -78,11 +78,14 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
 
   return (
     <div className="sales-list-container">
-      <h2 className="sales-list-title">Historial de Ventas</h2>
+      <h2 className="sales-list-title">
+        <History size={20} aria-hidden="true" /> Historial de Ventas
+      </h2>
 
       <div className="sales-search-bar">
         <input
           type="text"
+          aria-label="Buscar venta por cliente"
           placeholder="Buscar cliente..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

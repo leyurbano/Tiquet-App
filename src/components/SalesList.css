@@ -3,15 +3,24 @@
 .sales-list-container {
   background-color: white;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1rem;
 }
 
+/* Con icono, igual que "Lista de Productos" */
 .sales-list-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
   color: #111827;
+}
+
+.sales-list-title svg {
+  color: #2563eb;
+  flex-shrink: 0;
 }
 
 /* Barra de búsqueda + botón fecha en una fila */
@@ -22,20 +31,26 @@
   margin-bottom: 0.75rem;
 }
 
-.vl-buscador {
-  width: 55%;
-  padding: 0.35rem 0.65rem;
+/* Anidado bajo el contenedor: styles.css estiliza input[type="text"] con
+   más peso y le ganaba a esta clase (padding, letra y width: 100%). El
+   buscador ocupaba todo el espacio libre: flex: 1 lo deja así a propósito */
+.sales-list-container .vl-buscador {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  padding: 0.375rem 0.75rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  font-family: inherit;
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
 
-.vl-buscador:focus {
+.sales-list-container .vl-buscador:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* Botón fecha */
@@ -317,8 +332,10 @@
 
 
 @media (max-width: 768px) {
-  .vl-buscador {
-    width: 100%;
+  /* 16px: con menos, Safari en iPhone hace zoom al tocar el campo */
+  .sales-list-container .vl-buscador {
+    flex-basis: 100%;
+    font-size: 1rem;
   }
 
   .sales-search-bar {

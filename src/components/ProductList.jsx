@@ -102,7 +102,7 @@ function ProductList({
   return (
     <div className="product-list-container" ref={inicioLista}>
       <h2 className="product-list-title">
-        <Package size={22} aria-hidden="true" /> Lista de Productos ({filteredProducts.length})
+        <Package size={20} aria-hidden="true" /> Lista de Productos ({filteredProducts.length})
       </h2>
 
       <div className="search-and-stats-wrapper">
