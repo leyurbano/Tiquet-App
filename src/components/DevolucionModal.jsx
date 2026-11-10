@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useId } from 'react'
 import { devolucionService } from '../services/devolucionService'
 import { MOTIVOS_DEVOLUCION } from '../utils/motivosDevolucion'
 import { formatCOP } from '../utils/currencyFormatter'
 import { numeroDoc } from '../utils/documento'
 import { useDialogo } from '../hooks/useDialogo'
+import { RotateCcw, Loader2 } from 'lucide-react'
 import './CajaModal.css'
 import './DevolucionModal.css'
 
@@ -29,6 +30,8 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState('')
   // Mientras guarda no se cierra: el resultado quedaría sin mostrarse
+  // Nombra el grupo de motivos para el lector de pantalla
+  const idMotivo = useId()
   const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   useEffect(() => {
@@ -102,7 +105,9 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
       <div className="caja-box dev-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Devolución de la venta ${numeroDoc(sale)}`}>
-        <h2 className="caja-title">Devolución · venta #{numeroDoc(sale)}</h2>
+        <h2 className="caja-title caja-con-icono">
+          <RotateCcw size={22} color="#b45309" aria-hidden="true" /> Devolución · venta #{numeroDoc(sale)}
+        </h2>
         <p className="caja-subtitle">
           {clientName} · {formatCOP(sale.total || 0)}
           <br />
@@ -114,7 +119,9 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
             No se pudo leer lo que ya se devolvió de esta venta. Cierra e inténtalo de nuevo.
           </div>
         ) : devuelto === null ? (
-          <div className="caja-loading">⏳ Cargando...</div>
+          <div className="caja-loading caja-con-icono">
+            <Loader2 size={18} className="animate-spin" aria-hidden="true" /> Cargando...
+          </div>
         ) : nadaDisponible ? (
           <div className="caja-alert">Ya se devolvió todo lo de esta venta.</div>
         ) : (
@@ -179,8 +186,8 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
               </p>
             )}
 
-            <label className="caja-label">Motivo</label>
-            <div className="anular-motivos">
+            <div className="caja-label" id={idMotivo}>Motivo</div>
+            <div className="anular-motivos" role="radiogroup" aria-labelledby={idMotivo}>
               {MOTIVOS_DEVOLUCION.map((m) => (
                 <label className="anular-motivo" key={m.codigo}>
                   <input

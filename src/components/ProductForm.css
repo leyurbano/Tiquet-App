@@ -84,6 +84,42 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Estos estilos llegaban sin querer desde SalesForm.css, que usaba los mismos
+   nombres de clase. Al separarlo se declaran aquí para que el formulario se
+   siga viendo igual. */
+.product-form-wrapper .form-buttons {
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.product-form-wrapper .btn-submit,
+.product-form-wrapper .btn-cancel {
+  font-size: 0.875rem;
+}
+
+.product-form-wrapper .btn-submit:hover:not(:disabled),
+.product-form-wrapper .btn-cancel:hover {
+  transform: translateY(-2px);
+}
+
+.product-form-wrapper .btn-submit:active,
+.product-form-wrapper .btn-cancel:active {
+  transform: translateY(0);
+}
+
+.product-form-wrapper .btn-submit:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .product-form-wrapper .form-buttons {
+    flex-direction: column;
+    padding-top: 0.75rem;
+  }
+}
 .form-label {
   display: block;
   font-size: 0.8rem;

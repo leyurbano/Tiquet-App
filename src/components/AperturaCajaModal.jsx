@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useId } from 'react'
 import { useCashSession } from '../contexts/CashSessionContext'
 import { useAuth } from '../contexts/AuthContext'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import { useDialogo } from '../hooks/useDialogo'
+import { Wallet } from 'lucide-react'
 import './CajaModal.css'
 
 /**
@@ -22,6 +23,8 @@ function AperturaCajaModal({ onOmitir }) {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   // Sin onCerrar: no se descarta con Escape (ver arriba)
+  // Conecta la etiqueta con su campo
+  const idBase = useId()
   const refDialogo = useDialogo()
 
   const handleSubmit = async (e) => {
@@ -41,19 +44,22 @@ function AperturaCajaModal({ onOmitir }) {
   return (
     <div className="caja-overlay">
       <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Apertura de caja">
-        <h2 className="caja-title">💰 Apertura de caja</h2>
+        <h2 className="caja-title caja-con-icono">
+          <Wallet size={22} aria-hidden="true" /> Apertura de caja
+        </h2>
         <p className="caja-subtitle">
           Ingresa el dinero en efectivo con el que arranca la caja. Al cerrar sesión
           se usará para cuadrar el arqueo del turno.
         </p>
 
         <form onSubmit={handleSubmit}>
-          <label className="caja-label">Base inicial</label>
+          <label className="caja-label" htmlFor={idBase}>Base inicial</label>
           <div className="caja-money">
             <span className="caja-money-symbol">$</span>
             <input
               type="text"
               inputMode="numeric"
+              id={idBase}
               placeholder="0"
               value={formatCOPInput(base)}
               onChange={(e) => setBase(parseCOP(e.target.value))}

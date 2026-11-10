@@ -197,3 +197,25 @@ html, body {
 .caja-cerrada-aviso .btn-new-sale {
   margin-top: 1rem;
 }
+
+/* Iconos de lucide-react alineados con su texto, como en el resto del sistema */
+.sales-title,
+.btn-new-sale,
+.btn-print,
+.btn-skip,
+.caja-cerrada-titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sales-title svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+/* El aviso va centrado (text-align no aplica dentro de flex) */
+.caja-cerrada-titulo {
+  display: flex;
+  justify-content: center;
+}

@@ -168,3 +168,19 @@
   background-color: #dc2626;
   transform: translateY(-1px);
 }
+/* Iconos de lucide-react alineados con su texto */
+.mpm-title,
+.mpm-balance-ok span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mpm-title svg {
+  color: #2563eb;
+}
+
+.mpm-close {
+  display: inline-flex;
+  align-items: center;
+}

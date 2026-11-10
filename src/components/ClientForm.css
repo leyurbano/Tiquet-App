@@ -71,6 +71,52 @@
   background-color: #9ca3af;
 }
 
+/* Estos estilos llegaban sin querer desde SalesForm.css, que usaba los mismos
+   nombres de clase. Al separarlo se declaran aquí para que el formulario se
+   siga viendo igual. */
+.client-form-wrapper .form-title {
+  text-align: center;
+  border-bottom: 3px solid #2563eb;
+  padding-bottom: 0.75rem;
+}
+
+.client-form-wrapper .form-buttons {
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.client-form-wrapper .btn-submit,
+.client-form-wrapper .btn-cancel {
+  font-size: 0.875rem;
+}
+
+.client-form-wrapper .btn-submit:hover:not(:disabled),
+.client-form-wrapper .btn-cancel:hover {
+  transform: translateY(-2px);
+}
+
+.client-form-wrapper .btn-submit:active,
+.client-form-wrapper .btn-cancel:active {
+  transform: translateY(0);
+}
+
+.client-form-wrapper .btn-submit:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .client-form-wrapper .form-title {
+    padding-bottom: 0.4rem;
+  }
+
+  .client-form-wrapper .form-buttons {
+    flex-direction: column;
+    padding-top: 0.75rem;
+  }
+}
+
 /* ---- Cupo de fiado ---- */
 .cf-label {
   display: block;
