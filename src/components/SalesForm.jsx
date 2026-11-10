@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useId } from "react";
 import { toast } from '../utils/toast'
 import "./SalesForm.css";
 import { formatCOP } from "../utils/currencyFormatter";
@@ -28,6 +28,9 @@ function SalesForm({
   // now() del servidor. Ahora solo se muestra, y se refresca tras cada venta
   // por si el turno pasa la medianoche.
   const [fechaHoy, setFechaHoy] = useState(formatFechaLargaColombia);
+  // Prefijo de los id que conectan cada etiqueta con su campo: tocar la
+  // etiqueta enfoca el campo y el lector de pantalla lo anuncia por su nombre
+  const idCampo = useId();
   const [customer, setCustomer] = useState({ name: "", cedula: "", phone: "" });
   const [items, setItems] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -368,8 +371,9 @@ function SalesForm({
         </h3>
         <div className="sf-row-3">
           <div className="sf-group">
-            <label className="sf-label">N° Documento</label>
+            <label className="sf-label" htmlFor={`${idCampo}-documento`}>N° Documento</label>
             <input
+              id={`${idCampo}-documento`}
               type="text"
               placeholder="CC, CE, NIT"
               value={customer.cedula}
@@ -388,8 +392,9 @@ function SalesForm({
             )}
           </div>
           <div className="sf-group">
-            <label className="sf-label">Nombre Completo</label>
+            <label className="sf-label" htmlFor={`${idCampo}-nombre`}>Nombre Completo</label>
             <input
+              id={`${idCampo}-nombre`}
               type="text"
               placeholder="Nombre del cliente"
               value={customer.name}
@@ -401,8 +406,9 @@ function SalesForm({
             />
           </div>
           <div className="sf-group">
-            <label className="sf-label">Celular</label>
+            <label className="sf-label" htmlFor={`${idCampo}-celular`}>Celular</label>
             <input
+              id={`${idCampo}-celular`}
               type="tel"
               placeholder="3100000000"
               value={customer.phone}
@@ -423,10 +429,11 @@ function SalesForm({
         <div className="add-product-section">
           <div className="sf-row-item">
             <div className="sf-group">
-              <label className="sf-label">Item</label>
+              <label className="sf-label" htmlFor={`${idCampo}-item`}>Item</label>
               {/* 🔧 type="text" + inputMode: maxLength no funciona en
                   type="number", que además acepta "e", "-" y "." */}
               <input
+                id={`${idCampo}-item`}
                 type="text"
                 inputMode="numeric"
                 placeholder="producto"
@@ -448,8 +455,9 @@ function SalesForm({
               />
             </div>
             <div className="sf-group product-search-group">
-              <label className="sf-label">Descripción</label>
+              <label className="sf-label" htmlFor={`${idCampo}-descripcion`}>Descripción</label>
               <input
+                id={`${idCampo}-descripcion`}
                 type="text"
                 placeholder="Escanea el código o busca por nombre..."
                 value={productSearch}
@@ -478,8 +486,9 @@ function SalesForm({
               )}
             </div>
             <div className="sf-group">
-              <label className="sf-label">Cantidad</label>
+              <label className="sf-label" htmlFor={`${idCampo}-cantidad`}>Cantidad</label>
               <input
+                id={`${idCampo}-cantidad`}
                 type="text"
                 inputMode="numeric"
                 placeholder="Cantidad"
@@ -517,8 +526,10 @@ function SalesForm({
               <div className="col-number">#</div>
               <div className="col-product">Descripción</div>
               <div className="col-qty">Cantidad</div>
-              <div className="col-total">Total del Producto</div>
-              <div className="col-action">Acción</div>
+              <div className="col-total">Subtotal</div>
+              <div className="col-action">
+                <span className="sf-col-action-txt">Acción</span>
+              </div>
             </div>
             {items.map((item, index) => (
               <div key={item.product_id} className="table-row-sales">

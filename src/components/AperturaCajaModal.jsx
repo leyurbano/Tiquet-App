@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useId } from 'react'
 import { useCashSession } from '../contexts/CashSessionContext'
 import { useAuth } from '../contexts/AuthContext'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
@@ -23,6 +23,8 @@ function AperturaCajaModal({ onOmitir }) {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   // Sin onCerrar: no se descarta con Escape (ver arriba)
+  // Conecta la etiqueta con su campo
+  const idBase = useId()
   const refDialogo = useDialogo()
 
   const handleSubmit = async (e) => {
@@ -51,12 +53,13 @@ function AperturaCajaModal({ onOmitir }) {
         </p>
 
         <form onSubmit={handleSubmit}>
-          <label className="caja-label">Base inicial</label>
+          <label className="caja-label" htmlFor={idBase}>Base inicial</label>
           <div className="caja-money">
             <span className="caja-money-symbol">$</span>
             <input
               type="text"
               inputMode="numeric"
+              id={idBase}
               placeholder="0"
               value={formatCOPInput(base)}
               onChange={(e) => setBase(parseCOP(e.target.value))}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useId } from "react";
 import "./MixedPaymentModal.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import { useDialogo } from "../hooks/useDialogo";
@@ -61,6 +61,8 @@ function MixedPaymentModal({ total, mediosPago, onConfirm, onClose }) {
   };
 
   // Escape, foco y Tab dentro de la ventana
+  // Prefijo de los id que conectan cada etiqueta con su campo
+  const idCampo = useId();
   const refDialogo = useDialogo({ onCerrar: onClose });
 
   return (
@@ -88,8 +90,9 @@ function MixedPaymentModal({ total, mediosPago, onConfirm, onClose }) {
         <div className="mpm-inputs">
           {mediosPago.map((medio) => (
             <div className="mpm-input-group" key={medio.id}>
-              <label className="mpm-label">{medio.pago}</label>
+              <label className="mpm-label" htmlFor={`${idCampo}-${medio.id}`}>{medio.pago}</label>
               <input
+                id={`${idCampo}-${medio.id}`}
                 type="text"
                 inputMode="numeric"
                 placeholder="0"

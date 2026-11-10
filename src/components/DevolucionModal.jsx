@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useId } from 'react'
 import { devolucionService } from '../services/devolucionService'
 import { MOTIVOS_DEVOLUCION } from '../utils/motivosDevolucion'
 import { formatCOP } from '../utils/currencyFormatter'
@@ -30,6 +30,8 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState('')
   // Mientras guarda no se cierra: el resultado quedaría sin mostrarse
+  // Nombra el grupo de motivos para el lector de pantalla
+  const idMotivo = useId()
   const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   useEffect(() => {
@@ -184,8 +186,8 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
               </p>
             )}
 
-            <label className="caja-label">Motivo</label>
-            <div className="anular-motivos">
+            <div className="caja-label" id={idMotivo}>Motivo</div>
+            <div className="anular-motivos" role="radiogroup" aria-labelledby={idMotivo}>
               {MOTIVOS_DEVOLUCION.map((m) => (
                 <label className="anular-motivo" key={m.codigo}>
                   <input
