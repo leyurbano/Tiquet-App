@@ -64,7 +64,8 @@ with esperado(migracion, objeto, tipo, nombre) as (values
   ('33_rotacion_productos',     'función rotacion_productos()',    'funcion',  'rotacion_productos'),
   ('34_codigo_barras',         'productos.codigo_barras',         'columna',  'productos.codigo_barras'),
   ('34_codigo_barras',         'crear_producto recibe el código', 'funcion_contiene', 'crear_producto|p_codigo_barras'),
-  ('35_mercancia_quieta',      'función mercancia_quieta()',      'funcion',  'mercancia_quieta')
+  ('35_mercancia_quieta',      'función mercancia_quieta()',      'funcion',  'mercancia_quieta'),
+  ('36_precio_desde_catalogo', 'registrar_venta usa el precio del catálogo', 'funcion_contiene', 'registrar_venta|Precios del catálogo')
 )
 select
   migracion,
