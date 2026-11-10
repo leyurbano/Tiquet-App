@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useId } from 'react'
+import { PackagePlus, Pencil, Save, X, Loader2 } from 'lucide-react'
 import './ProductForm.css'
 
 const VACIO = {
@@ -14,6 +15,10 @@ const VACIO = {
 const parseCOP = (value) =>
   value.toString().replace(/\./g, '').replace(/[^0-9]/g, '')
 
+// Deja solo los dígitos: type="number" acepta "e", "-" y "," y cambia el valor
+// con la rueda del mouse
+const soloDigitos = (valor) => valor.replace(/\D/g, '')
+
 // Formato de presentación únicamente: nunca cambia el valor guardado
 const formatDisplay = (value) => {
   if (value === '' || value === null || value === undefined) return ''
@@ -26,6 +31,9 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
   const [formData, setFormData] = useState(VACIO)
   // Evita el doble envío por doble clic y bloquea el botón mientras guarda
   const [enviando, setEnviando] = useState(false)
+  // Conecta cada etiqueta con su campo: clic en la etiqueta enfoca el campo
+  // y el lector de pantalla lee el nombre
+  const idCampo = useId()
 
   useEffect(() => {
     if (initialData) {
@@ -75,15 +83,35 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
 
   return (
     <form onSubmit={handleSubmit} className="product-form-wrapper">
-      <h2 className="product-form-title">
-        {initialData ? 'Editar Producto' : 'Nuevo Producto'}
-      </h2>
+      <div className="pf-header">
+        <h2 className="product-form-title">
+          {initialData
+            ? <Pencil size={20} aria-hidden="true" />
+            : <PackagePlus size={22} aria-hidden="true" />}
+          {initialData ? 'Editar Producto' : 'Nuevo Producto'}
+        </h2>
+        {/* Solo se cerraba con Cancelar, Escape o clic afuera; en celular la
+            ✕ es lo que se busca primero. Pasa por la misma confirmación de
+            cambios sin guardar */}
+        {onCancel && (
+          <button
+            type="button"
+            className="pf-cerrar"
+            onClick={onCancel}
+            disabled={enviando}
+            aria-label="Cerrar"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
       {/* 🔧 Antes era un textarea de 2 líneas: más alto que los demás campos
           y Enter metía saltos de línea en el nombre, que salían en el tiquete
           y estorbaban la búsqueda. Enter no hace nada: solo envía el botón */}
-      <label className="pf-label">Descripción</label>
+      <label className="pf-label" htmlFor={`${idCampo}-descripcion`}>Descripción</label>
       <input
+        id={`${idCampo}-descripcion`}
         type="text"
         name="descripcion"
         placeholder="Descripción del producto"
@@ -97,11 +125,11 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
       {/* El lector de código de barras se comporta como un teclado: con el
           foco aquí, teclea el código y manda Enter. Por eso no se envía el
           formulario con Enter en este campo: se escanea y se sigue llenando */}
-      <label className="pf-label" htmlFor="codigo_barras">
+      <label className="pf-label" htmlFor={`${idCampo}-codigo-barras`}>
         Código de barras <span className="pf-opcional">(opcional)</span>
       </label>
       <input
-        id="codigo_barras"
+        id={`${idCampo}-codigo-barras`}
         name="codigo_barras"
         type="text"
         inputMode="numeric"
@@ -115,24 +143,28 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
 
       <div className="pf-grid-2">
         <div>
-          <label className="pf-label">{initialData ? 'Cantidad en stock' : 'Stock inicial'}</label>
+          <label className="pf-label" htmlFor={`${idCampo}-cantidad`}>
+            {initialData ? 'Cantidad en stock' : 'Stock inicial'}
+          </label>
           <input
-            type="number"
+            id={`${idCampo}-cantidad`}
+            type="text"
+            inputMode="numeric"
             name="cantidad"
             placeholder="0"
             value={formData.cantidad}
-            onChange={handleChange}
-            min="0"
+            onChange={(e) => cambiar('cantidad', soloDigitos(e.target.value))}
             readOnly={!!initialData}
             className={initialData ? 'pf-input pf-input-readonly' : 'pf-input'}
           />
         </div>
 
         <div>
-          <label className="pf-label">Costo unitario</label>
+          <label className="pf-label" htmlFor={`${idCampo}-costo`}>Costo unitario</label>
           <div className="pf-money">
-            <span className="money-symbol">$</span>
+            <span className="money-symbol" aria-hidden="true">$</span>
             <input
+              id={`${idCampo}-costo`}
               type="text"
               inputMode="numeric"
               name="costo"
@@ -178,10 +210,11 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
           todo el ancho quedaba casi vacía */}
       <div className="pf-grid-2">
         <div>
-          <label className="pf-label">Precio de venta</label>
+          <label className="pf-label" htmlFor={`${idCampo}-precio`}>Precio de venta</label>
           <div className="pf-money">
-            <span className="money-symbol">$</span>
+            <span className="money-symbol" aria-hidden="true">$</span>
             <input
+              id={`${idCampo}-precio`}
               type="text"
               inputMode="numeric"
               name="precio_venta"
@@ -195,14 +228,15 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         </div>
 
         <div>
-          <label className="pf-label">Alerta de stock bajo</label>
+          <label className="pf-label" htmlFor={`${idCampo}-stock-minimo`}>Alerta de stock bajo</label>
           <input
-            type="number"
+            id={`${idCampo}-stock-minimo`}
+            type="text"
+            inputMode="numeric"
             name="stock_minimo"
             placeholder={`Por defecto: ${minimoNegocio}`}
             value={formData.stock_minimo ?? ''}
-            onChange={handleChange}
-            min="0"
+            onChange={(e) => cambiar('stock_minimo', soloDigitos(e.target.value))}
             className="pf-input"
           />
         </div>
@@ -224,7 +258,10 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
 
       <div className="pf-buttons">
         <button type="submit" className="pf-btn-submit" disabled={enviando}>
-          {enviando ? 'Guardando...' : initialData ? 'Actualizar' : 'Crear Producto'}
+          {enviando
+            ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            : <Save size={16} aria-hidden="true" />}
+          {enviando ? 'Guardando...' : initialData ? 'Guardar cambios' : 'Crear producto'}
         </button>
         {onCancel && (
           <button

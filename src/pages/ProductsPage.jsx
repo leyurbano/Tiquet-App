@@ -4,7 +4,7 @@ import ProductForm from "../components/ProductForm";
 import ProductList from "../components/ProductList";
 import { productService } from "../services/productService";
 import "./ProductsPage.css";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Package } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { negocioService } from "../services/negocioService";
 import { useDialogo } from "../hooks/useDialogo";
@@ -112,7 +112,9 @@ function ProductsPage() {
   return (
     <div className="products-page">
       <div className="products-header">
-        <h1 className="products-title">📦 Gestión de Productos</h1>
+        <h1 className="products-title">
+          <Package size={30} aria-hidden="true" /> Gestión de Productos
+        </h1>
         {/* Siempre montado: si se desmonta al abrir el formulario, al cerrarlo
             el foco del teclado no tiene a dónde volver */}
         {esAdministrador && (

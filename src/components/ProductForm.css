@@ -7,18 +7,61 @@
    etiquetas, la descripción se veía distinta a los demás campos, y el margen
    de los campos de aquí se filtraba a Clientes y al login. */
 
+/* Sin sombra propia y con las esquinas del modal (pf-box): antes era una
+   tarjeta con otra sombra y otro redondeo dentro de la tarjeta del modal */
 .product-form-wrapper {
   background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: inherit;
   padding: 1.5rem;
 }
 
+.pf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
 .product-form-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 700;
-  margin: 0 0 0.75rem;
+  margin: 0;
   color: #111827;
+}
+
+.product-form-title svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.pf-cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.pf-cerrar:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.pf-cerrar:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* El espacio entre campos lo pone la etiqueta (arriba), no el campo (abajo):
@@ -31,7 +74,7 @@
   margin: 0.75rem 0 0.3rem;
 }
 
-.product-form-title + .pf-label {
+.pf-header + .pf-label {
   margin-top: 0;
 }
 
@@ -153,6 +196,10 @@
 .pf-btn-submit,
 .pf-btn-cancel {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   padding: 0.6rem 0.75rem;
   border: none;
   border-radius: 0.5rem;
@@ -201,6 +248,23 @@
 @media (max-width: 768px) {
   .product-form-wrapper {
     padding: 1rem;
+  }
+
+  /* 44px: el mínimo cómodo para el dedo. 16px de letra: con menos, Safari
+     en iPhone hace zoom al tocar el campo y descuadra el modal */
+  .product-form-wrapper .pf-input {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .pf-btn-submit,
+  .pf-btn-cancel,
+  .pf-cerrar {
+    min-height: 44px;
+  }
+
+  .pf-cerrar {
+    width: 44px;
   }
 
   .pf-buttons {

@@ -80,6 +80,18 @@
   gap: 0.4rem;
 }
 
+/* Icono de lucide en el título, como en Ventas */
+.products-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.products-title svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
 /* align-items:flex-start + overflow-y:auto en el fondo, y margin:auto en la
    caja: así se centra cuando hay espacio y, cuando no lo hay (móvil en
    horizontal, ventana baja, teclado abierto), el fondo hace scroll en vez de

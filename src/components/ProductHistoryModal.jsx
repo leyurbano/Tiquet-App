@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { productService } from '../services/productService'
-import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus, ClipboardCheck, RotateCcw } from 'lucide-react'
+import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus, ClipboardCheck, RotateCcw, Loader2 } from 'lucide-react'
 import './ProductHistoryModal.css'
 import { useDialogo } from '../hooks/useDialogo'
 import { detalleMovimiento, motivoCorto } from '../utils/movimientosStock'
@@ -53,7 +53,9 @@ function ProductHistoryModal({ product, onClose }) {
 
         <div className="phm-body">
           {loading ? (
-            <p className="phm-empty">⏳ Cargando...</p>
+            <p className="phm-empty phm-cargando">
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Cargando...
+            </p>
           ) : history.length === 0 ? (
             <p className="phm-empty">Sin movimientos registrados aún.</p>
           ) : (
