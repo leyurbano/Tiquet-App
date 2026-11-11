@@ -1,12 +1,13 @@
 import React, { useState, useRef } from "react";
 import "./ProductList.css";
-import { formatCOP } from "../utils/currencyFormatter";
+import { formatCOP, formatNumero } from "../utils/currencyFormatter";
 import ProductHistoryModal from "./ProductHistoryModal";
 import MovimientoStockModal from "./MovimientoStockModal";
 import Paginacion from "./Paginacion";
-import { Pencil, History, Package, AlertTriangle, ArrowUpDown, Loader2 } from "lucide-react";
+import { Pencil, History, Package, AlertTriangle, ArrowUpDown, ArrowDownWideNarrow, Loader2 } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
 import { numeroProducto, coincideNumero, nombreProducto } from "../utils/producto";
+import { useEsCelular } from "../hooks/useEsCelular";
 
 // 25 y no 50: sin scroll interno, 50 filas son casi tres pantallas y la
 // paginación queda al fondo. Para buscar algo puntual está el buscador
@@ -58,6 +59,7 @@ function ProductList({
   const [soloBajos, setSoloBajos] = useState(false);
   const [pagina, setPagina] = useState(1);
   const inicioLista = useRef(null);
+  const esCelular = useEsCelular();
 
   const alertas = contarBajos(products || [], minimoNegocio, rotacion);
   const totalAlertas = alertas.agotados + alertas.bajos;
@@ -106,11 +108,13 @@ function ProductList({
       </h2>
 
       <div className="search-and-stats-wrapper">
-        {/* La búsqueda ya encontraba por código de barras, pero no lo decía */}
+        {/* La búsqueda ya encontraba por código de barras, pero no lo decía.
+            En celular el texto completo no cabe y se cortaba: ahí se omite,
+            aunque se sigue buscando por código */}
         <input
           type="text"
           aria-label="Buscar por nombre, número o código de barras"
-          placeholder="Nombre, número o código de barras"
+          placeholder={esCelular ? "Nombre o número" : "Nombre, número o código de barras"}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -118,9 +122,14 @@ function ProductList({
           }}
           className="pl-buscador"
         />
-        <label className="orden-campo">
+        {/* En celular se ve solo el icono (ver ProductList.css). El
+            aria-label nombra el menú aunque la etiqueta esté oculta */}
+        <label className={`orden-campo ${orden !== "numero" ? "orden-activo" : ""}`}>
           <span className="orden-etiqueta">Ordenar por</span>
+          <ArrowDownWideNarrow size={20} className="orden-icono" aria-hidden="true" />
           <select
+            aria-label="Ordenar por"
+            title={`Ordenar por: ${ORDENES[orden].etiqueta}`}
             value={orden}
             onChange={(e) => {
               setOrden(e.target.value);
@@ -136,7 +145,7 @@ function ProductList({
         <div className="stats-container">
           <div className="stat-label">
             <span className="stat-label-text">Unidades en stock:</span>
-            <span className="stat-value">{totalProducts}</span>
+            <span className="stat-value">{formatNumero(totalProducts)}</span>
           </div>
           {mostrarCostos && (
             <div className="stat-label">
@@ -216,11 +225,11 @@ function ProductList({
                     </td>
                     <td className="cell-numeric">
                       <span className={`stock-valor stock-${estado}`}>
-                        {product.cantidad || 0}
+                        {formatNumero(product.cantidad)}
                       </span>
                       {estado !== "ok" && (
                         <div className="stock-minimo">
-                          mín. {umbralDe(product, minimoNegocio)}
+                          mín. {formatNumero(umbralDe(product, minimoNegocio))}
                         </div>
                       )}
                     </td>

@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useId } from 'react'
 import { inventarioService } from '../services/inventarioService'
 import { useDialogo } from '../hooks/useDialogo'
 import { toast } from '../utils/toast'
-import { formatCOP } from '../utils/currencyFormatter'
+import { formatCOP, formatNumero } from '../utils/currencyFormatter'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import { numeroProducto, nombreProducto } from '../utils/producto'
 import { numeroDoc } from '../utils/documento'
 import { calcularMovimiento, motivosDe, buscarMotivo } from '../utils/movimientosStock'
-import { PackagePlus, PackageMinus, ArrowUpDown } from 'lucide-react'
+import { PackagePlus, PackageMinus, ArrowUpDown, Check, Loader2, X } from 'lucide-react'
 import './CajaModal.css'
 import './MovimientoStockModal.css'
 
@@ -34,6 +34,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
   const [nota, setNota] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
+  const idCampo = useId()
 
   const stockActual = Number(producto.cantidad) || 0
   const costoActual = Math.round(Number(producto.costo) || 0)
@@ -69,7 +70,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
 
   const MENSAJES = {
     unidades: 'Escribe cuántas unidades, en números enteros y mayor que cero',
-    excede: `Solo hay ${stockActual} ${stockActual === 1 ? 'unidad' : 'unidades'} en el sistema: no puedes sacar más`,
+    excede: `Solo hay ${formatNumero(stockActual)} ${stockActual === 1 ? 'unidad' : 'unidades'} en el sistema: no puedes sacar más`,
     costo: 'Escribe a cómo te quedó cada unidad'
   }
 
@@ -95,7 +96,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
 
     const signo = direccion === 'salida' ? '-' : '+'
     toast.exito(
-      `${signo}${resultado.unidades} en ${producto.descripcion}: queda en ${resultado.stockFinal} ` +
+      `${signo}${formatNumero(resultado.unidades)} en ${producto.descripcion}: queda en ${formatNumero(resultado.stockFinal)} ` +
       `(${elegido.rpc === 'entrada' ? 'entrada' : 'ajuste'} #${numeroDoc(movimiento)})`
     )
     onRegistrado?.(movimiento)
@@ -112,15 +113,27 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
         tabIndex={-1}
         aria-label={`Mover stock de ${producto.descripcion}`}
       >
-        <h2 className="caja-title caja-con-icono">
-          <ArrowUpDown size={22} aria-hidden="true" /> Mover stock
-        </h2>
+        {/* Mismo encabezado que Crear/Editar producto: título con icono y ✕ */}
+        <div className="mov-header">
+          <h2 className="caja-title caja-con-icono">
+            <ArrowUpDown size={22} aria-hidden="true" /> Mover stock
+          </h2>
+          <button
+            type="button"
+            className="mov-cerrar"
+            onClick={onCancel}
+            disabled={guardando}
+            aria-label="Cerrar"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
         <p className="caja-subtitle mov-producto">
           <span className="mov-numero">#{numeroProducto(producto)}</span>
           {nombreProducto(producto.descripcion)}
         </p>
         <p className="mov-estado">
-          Hoy hay <strong>{stockActual}</strong> {stockActual === 1 ? 'unidad' : 'unidades'}
+          Hoy hay <strong>{formatNumero(stockActual)}</strong> {stockActual === 1 ? 'unidad' : 'unidades'}
           {costoActual > 0 && <> · costo {formatCOP(costoActual)}</>}
         </p>
 
@@ -146,24 +159,25 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
           </button>
         </div>
 
-        <label className="caja-label" htmlFor="mov-unidades">Unidades</label>
+        {/* Texto con solo dígitos y no type="number": ese acepta "e" y "-",
+            y la rueda del mouse cambiaba las unidades sin querer */}
+        <label className="caja-label" htmlFor={`${idCampo}-unidades`}>Unidades</label>
         <input
-          id="mov-unidades"
-          type="number"
+          id={`${idCampo}-unidades`}
+          type="text"
           inputMode="numeric"
-          min="1"
-          step="1"
+          autoComplete="off"
           placeholder="0"
-          value={unidades}
-          onChange={(e) => { setUnidades(e.target.value); setError('') }}
+          value={formatCOPInput(unidades)}
+          onChange={(e) => { setUnidades(e.target.value.replace(/D/g, '')); setError('') }}
           disabled={guardando}
           autoFocus
           className="mov-input mov-input-unidades"
         />
 
-        <label className="caja-label" htmlFor="mov-motivo">Motivo</label>
+        <label className="caja-label" htmlFor={`${idCampo}-motivo`}>Motivo</label>
         <select
-          id="mov-motivo"
+          id={`${idCampo}-motivo`}
           value={motivo}
           onChange={(e) => { setMotivo(e.target.value); setError('') }}
           disabled={guardando}
@@ -177,11 +191,11 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
         {/* Solo en una compra: es el único movimiento que mueve el costo */}
         {tocaCosto && (
           <>
-            <label className="caja-label" htmlFor="mov-costo">Costo de cada unidad</label>
+            <label className="caja-label" htmlFor={`${idCampo}-costo`}>Costo de cada unidad</label>
             <div className="caja-money mov-money">
-              <span className="caja-money-symbol">$</span>
+              <span className="caja-money-symbol" aria-hidden="true">$</span>
               <input
-                id="mov-costo"
+                id={`${idCampo}-costo`}
                 type="text"
                 inputMode="numeric"
                 placeholder="0"
@@ -199,11 +213,11 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
           </>
         )}
 
-        <label className="caja-label" htmlFor="mov-nota">
+        <label className="caja-label" htmlFor={`${idCampo}-nota`}>
           Detalle <span className="mov-opcional">(opcional)</span>
         </label>
         <input
-          id="mov-nota"
+          id={`${idCampo}-nota`}
           type="text"
           placeholder={direccion === 'salida' ? 'Por ejemplo: se rompió en la bodega' : 'Por ejemplo: factura 1042'}
           value={nota}
@@ -215,7 +229,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
         {/* Lo que quita la duda de "suma o reemplaza": se ve el resultado */}
         {!resultado.error && (
           <p className={`mov-resumen ${direccion === 'salida' ? 'mov-resumen-salida' : ''}`}>
-            Queda en <strong>{resultado.stockFinal}</strong>{' '}
+            Queda en <strong>{formatNumero(resultado.stockFinal)}</strong>{' '}
             {resultado.stockFinal === 1 ? 'unidad' : 'unidades'}
             {tocaCosto && resultado.costoFinal !== costoActual && (
               <> · el costo pasa a <strong>{formatCOP(resultado.costoFinal)}</strong></>
@@ -238,11 +252,16 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
             onClick={confirmar}
             disabled={guardando || !!resultado.error}
           >
-            {guardando ? 'Registrando...' : 'Registrar movimiento'}
+            {guardando
+              ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+              : <Check size={16} aria-hidden="true" />}
+            {guardando ? 'Registrando...' : 'Registrar'}
           </button>
+          {/* Gris sólido y no el ghost subrayado: al lado de un botón azul
+              el enlace parecía otra cosa. Igual que Cancelar en Productos */}
           <button
             type="button"
-            className="caja-btn-ghost"
+            className="caja-btn-secondary"
             onClick={onCancel}
             disabled={guardando}
           >

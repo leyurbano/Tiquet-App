@@ -45,6 +45,7 @@ archivo completo → Run.
 | 33 | `33_rotacion_productos.sql` | `rotacion_productos(dias)`: unidades vendidas por producto, para que la alerta de stock bajo avise solo de lo que rota. |
 | 34 | `34_codigo_barras.sql` | `productos.codigo_barras`: único por negocio (solo cuando hay código), solo lo cambia un administrador, y `crear_producto` lo recibe. |
 | 35 | `35_mercancia_quieta.sql` | `mercancia_quieta(dias)`: productos con stock que no se venden y cuánta plata representan al costo. Solo administradores. |
+| 36 | `36_precio_desde_catalogo.sql` | `registrar_venta` toma el precio de cada línea de `productos.precio_venta`, no del navegador. Si el precio cambió con el carrito abierto, rechaza la venta nombrando el producto. |
 
 ## Lo que todavía no está aquí
 

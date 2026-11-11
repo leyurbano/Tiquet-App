@@ -9,13 +9,53 @@
   max-width: 420px;
 }
 
+/* ---------- Encabezado: título y ✕, como en Crear/Editar producto ---------- */
+
+.mov-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.mov-header .caja-title {
+  margin-bottom: 0;
+}
+
+.mov-box .mov-cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.mov-box .mov-cerrar:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.mov-box .mov-cerrar:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Sin text-transform: el nombre ya llega con nombreProducto() */
 .mov-producto {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
   font-weight: 600;
   color: #111827;
-  text-transform: capitalize;
 }
 
 .mov-numero {
@@ -109,6 +149,23 @@
   margin-bottom: 0.5rem;
 }
 
+/* El costo con el mismo aspecto que Unidades, Motivo y Detalle: el de
+   CajaModal.css (más grande, en negrita y con otro borde) es para contar
+   plata en la caja. Tres clases para ganarle a .caja-money .caja-input */
+.mov-box .caja-money .caja-input {
+  padding: 0.6rem 0.75rem 0.6rem 1.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #111827;
+}
+
+.mov-box .caja-money .caja-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
 .mov-opcional {
   font-weight: 400;
   color: #9ca3af;
@@ -143,6 +200,8 @@
   margin-bottom: 1rem;
 }
 
+/* En fila también en celular, con la acción principal a la izquierda:
+   igual que Crear/Editar producto y que el formulario de Ventas */
 .mov-acciones {
   display: flex;
   gap: 0.6rem;
@@ -150,6 +209,15 @@
 
 .mov-acciones button {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.mov-acciones .caja-btn-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .mov-pie {
@@ -159,8 +227,17 @@
   margin: 0.9rem 0 0;
 }
 
-@media (max-width: 480px) {
-  .mov-acciones {
-    flex-direction: column-reverse;
+/* 44px: el mínimo cómodo para el dedo, como en Crear/Editar producto */
+@media (max-width: 768px) {
+  .mov-box .mov-input,
+  .mov-box .caja-money .caja-input,
+  .mov-box .mov-dir-btn,
+  .mov-acciones button {
+    min-height: 44px;
+  }
+
+  .mov-box .mov-cerrar {
+    width: 44px;
+    height: 44px;
   }
 }
