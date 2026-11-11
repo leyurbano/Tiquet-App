@@ -44,6 +44,26 @@
   color: #374151;
 }
 
+.fiado-despues + .caja-acciones-fila,
+.fiado-fila + .caja-acciones-fila,
+.caja-alert + .caja-acciones-fila {
+  margin-top: 1rem;
+}
+
+/* 16px y 44px en celular: con menos letra, Safari en iPhone hace zoom al
+   tocar el campo */
+@media (max-width: 768px) {
+  .fiado-box .fiado-select,
+  .fiado-box .fiado-input {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .fiado-btn-todo {
+    min-height: 44px;
+  }
+}
+
 .fiado-tabla-wrap { overflow-x: auto; margin: 0.75rem 0; }
 
 .fiado-tabla {

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useId } from 'react'
+import { UserPlus, Pencil, Save, X, Loader2 } from 'lucide-react'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import { formatCOP } from '../utils/currencyFormatter'
+import { esConsumidorFinal } from '../utils/clientes'
 import './ClientForm.css'
 
 const VACIO = { documento: '', nombre: '', telefono: '', cupo_fiado: '' }
@@ -14,6 +16,12 @@ function ClientForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mos
   const [formData, setFormData] = useState(VACIO)
   // Evita el doble envío por doble clic y bloquea el botón mientras guarda
   const [enviando, setEnviando] = useState(false)
+  // Conecta cada etiqueta con su campo
+  const idCampo = useId()
+
+  // La venta rápida busca al Consumidor final por su documento: la base de
+  // datos no deja cambiarlo, así que el campo ni se ofrece
+  const documentoFijo = esConsumidorFinal(initialData)
 
   useEffect(() => {
     if (initialData) {
@@ -59,73 +67,114 @@ function ClientForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mos
 
   return (
     <form onSubmit={handleSubmit} className="client-form-wrapper">
-      <h2 className="form-title">
-        {initialData ? 'Editar Cliente' : 'Nuevo Cliente'}
-      </h2>
+      <div className="cf-header">
+        <h2 className="cf-title">
+          {initialData
+            ? <Pencil size={20} aria-hidden="true" />
+            : <UserPlus size={22} aria-hidden="true" />}
+          {initialData ? 'Editar Cliente' : 'Nuevo Cliente'}
+        </h2>
+        {onCancel && (
+          <button
+            type="button"
+            className="cf-cerrar"
+            onClick={onCancel}
+            disabled={enviando}
+            aria-label="Cerrar"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
+      {/* 🔧 Antes los campos no tenían etiqueta, solo el texto gris de
+          adentro: al escribir desaparecía y al editar un cliente no se sabía
+          qué era cada dato. Y el ejemplo decía "DNI, RUC", que no son
+          documentos colombianos */}
+      <label className="cf-label" htmlFor={`${idCampo}-documento`}>Cédula o NIT</label>
       <input
+        id={`${idCampo}-documento`}
         type="text"
         name="documento"
-        placeholder="Documento (DNI, RUC, etc.)"
+        autoComplete="off"
+        placeholder="Ej: 1020304050 o 900123456-7"
         value={formData.documento}
         onChange={handleChange}
+        readOnly={documentoFijo}
         required
-        className="form-input"
+        className={documentoFijo ? 'cf-input cf-input-readonly' : 'cf-input'}
       />
+      {documentoFijo && (
+        <p className="cf-ayuda">
+          Lo usa la venta rápida: su documento no se puede cambiar.
+        </p>
+      )}
 
+      <label className="cf-label" htmlFor={`${idCampo}-nombre`}>Nombre completo</label>
       <input
+        id={`${idCampo}-nombre`}
         type="text"
         name="nombre"
-        placeholder="Nombre completo"
+        autoComplete="off"
+        placeholder="Nombre y apellido, o razón social"
         value={formData.nombre}
         onChange={handleChange}
         required
-        className="form-input"
+        className="cf-input"
       />
 
+      <label className="cf-label" htmlFor={`${idCampo}-telefono`}>
+        Teléfono <span className="cf-opcional">(opcional)</span>
+      </label>
       <input
+        id={`${idCampo}-telefono`}
         type="tel"
         name="telefono"
-        placeholder="Teléfono"
+        autoComplete="off"
+        placeholder="Ej: 300 123 4567"
         value={formData.telefono}
         onChange={handleChange}
-        className="form-input"
+        className="cf-input"
       />
 
       {mostrarCupo && (puedeEditarCupo ? (
         <>
-          <label className="cf-label">Cupo de fiado</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="0"
-            value={formatCOPInput(formData.cupo_fiado)}
-            onChange={(e) => cambiar('cupo_fiado', parseCOP(e.target.value))}
-            className="form-input"
-          />
+          <label className="cf-label" htmlFor={`${idCampo}-cupo`}>Cupo de fiado</label>
+          <div className="cf-money">
+            <span className="money-symbol" aria-hidden="true">$</span>
+            <input
+              id={`${idCampo}-cupo`}
+              type="text"
+              inputMode="numeric"
+              placeholder="0"
+              value={formatCOPInput(formData.cupo_fiado)}
+              onChange={(e) => cambiar('cupo_fiado', parseCOP(e.target.value))}
+              className="cf-input"
+            />
+          </div>
           <p className="cf-ayuda">
             Lo máximo que puede deber este cliente. En 0 no se le fía.
           </p>
         </>
       ) : (
-        <p className="cf-ayuda">
-          Cupo de fiado: {formatCOP(initialData?.cupo_fiado || 0)} (lo asigna un administrador)
+        <p className="cf-ayuda cf-ayuda-bloqueo">
+          Cupo de fiado: <strong>{formatCOP(initialData?.cupo_fiado || 0)}</strong>. Lo asigna
+          un administrador.
         </p>
       ))}
 
-      <div className="form-buttons">
-        <button
-          type="submit"
-          className="btn-submit"
-          disabled={enviando}
-        >
-          {enviando ? 'Guardando...' : initialData ? 'Actualizar' : 'Crear Cliente'}
+      <div className="cf-buttons">
+        <button type="submit" className="cf-btn-submit" disabled={enviando}>
+          {enviando
+            ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            : <Save size={16} aria-hidden="true" />}
+          {enviando ? 'Guardando...' : initialData ? 'Guardar cambios' : 'Crear cliente'}
         </button>
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="btn-cancel"
+            className="cf-btn-cancel"
             disabled={enviando}
           >
             Cancelar

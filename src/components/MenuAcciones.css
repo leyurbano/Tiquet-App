@@ -19,6 +19,14 @@
   transition: background-color 0.2s, border-color 0.2s;
 }
 
+/* 32px en celular, como los botones de solo ícono de la misma fila */
+@media (max-width: 768px) {
+  .menu-acciones-btn {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
 .menu-acciones-btn:hover,
 .menu-acciones-btn[aria-expanded="true"] {
   background: #f3f4f6;
