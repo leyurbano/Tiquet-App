@@ -18,8 +18,10 @@ const POR_PAGINA = 25
  *
  * 🔧 Antes cada fila podía terminar con cinco botones de colores distintos,
  * que se apilaban en varias líneas (y en celular quedaban en columna). Ahora
- * quedan visibles las dos acciones del día a día —Editar y Abonar— y el
- * resto vive en el menú "⋯", con Eliminar de último.
+ * quedan visibles las acciones del día a día, con los mismos colores y el
+ * mismo orden que en Productos (Editar amarillo, Abonar verde como Stock,
+ * Compras azul como Historial), y el resto vive en el menú "⋯": Ver fiado
+ * y, solo para administradores, Eliminar de último.
  */
 function ClientList({ clients, onEdit, onDelete, loading = false, errorCarga = false, saldos = null, onAbono, onHistorial, onCompras }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -70,12 +72,6 @@ function ClientList({ clients, onEdit, onDelete, loading = false, errorCarga = f
   // Acciones que no son del día a día: van en el menú "⋯"
   const accionesDe = (client) => {
     const acciones = []
-    if (onCompras && !esConsumidorFinal(client)) {
-      acciones.push({
-        clave: 'compras', etiqueta: 'Ver compras', icono: Receipt,
-        onClick: () => onCompras(client)
-      })
-    }
     if (conFiado && saldos[client.id] && onHistorial) {
       acciones.push({
         clave: 'fiado', etiqueta: 'Ver fiado', icono: Wallet,
@@ -201,6 +197,21 @@ function ClientList({ clients, onEdit, onDelete, loading = false, errorCarga = f
                             aria-label={`Registrar un abono de ${client.nombre}`}
                           >
                             <Banknote size={14} aria-hidden="true" /> <span>Abonar</span>
+                          </button>
+                        )}
+
+                        {/* Como "Historial" en Productos: antes estaba en el
+                            menú "⋯" y pedía dos toques para algo que se mira
+                            seguido. El Consumidor final no la tiene: junta
+                            las compras de todos los que no se identifican */}
+                        {onCompras && !esConsumidorFinal(client) && (
+                          <button
+                            onClick={() => onCompras(client)}
+                            className="btn-cliente btn-cliente-compras"
+                            title="Ver lo que ha comprado"
+                            aria-label={`Compras de ${client.nombre}`}
+                          >
+                            <Receipt size={14} aria-hidden="true" /> <span>Compras</span>
                           </button>
                         )}
 

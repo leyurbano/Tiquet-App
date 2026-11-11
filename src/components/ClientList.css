@@ -164,6 +164,15 @@
 
 .btn-cliente-abonar:hover { background-color: #bbf7d0; }
 
+/* Mismo azul que "Historial" en Productos */
+.btn-cliente-compras {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.btn-cliente-compras:hover { background-color: #dbeafe; }
+
 @media (max-width: 768px) {
   .client-list-container {
     padding: 1rem;
