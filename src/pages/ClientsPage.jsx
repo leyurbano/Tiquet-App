@@ -21,6 +21,8 @@ function ClientsPage() {
   // Saldo de fiado por cliente; null = el fiado no está instalado
   const [saldos, setSaldos] = useState(null)
   const [loading, setLoading] = useState(true)
+  // La carga falló: la lista lo dice en vez de "no hay clientes"
+  const [errorCarga, setErrorCarga] = useState(false)
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
   // Hay cambios escritos sin guardar en el modal
@@ -37,11 +39,17 @@ function ClientsPage() {
 
   const loadClients = async () => {
     setLoading(true)
-    const [data, saldosData] = await Promise.all([
-      clientService.getAllClients(),
+    const [resultado, saldosData] = await Promise.all([
+      clientService.cargarClientes(),
       fiadoService.getSaldos()
     ])
-    setClients(data)
+    // 🔧 Antes un fallo (sin internet, por ejemplo) llegaba como lista
+    // vacía y la pantalla decía "No hay clientes", como si no existieran
+    if (resultado.error) {
+      toast.error('No se pudieron cargar los clientes. Recarga la página.')
+    }
+    setErrorCarga(!!resultado.error)
+    setClients(resultado.data)
     setSaldos(saldosData)
     setLoading(false)
   }
@@ -130,6 +138,7 @@ function ClientsPage() {
             onEdit={handleEdit}
             onDelete={esAdministrador ? handleDeleteClient : null}
             loading={loading}
+            errorCarga={errorCarga}
             saldos={saldos}
             onAbono={(cliente, saldo) => setAbonando({ cliente, saldo })}
             onHistorial={setHistorial}

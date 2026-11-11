@@ -5,34 +5,38 @@
   padding: 1.5rem;
 }
 
+/* Mismo título que "Lista de Productos" e "Historial de Ventas" */
 .client-list-title {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 1rem;
   color: #111827;
 }
 
-.cl-buscador {
+.client-list-title svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+/* Anidado bajo el contenedor: styles.css estiliza input[type="text"] con
+   más peso y le cambiaba padding y letra */
+.client-list-container .cl-buscador {
   width: 100%;
-  padding: 0.5rem 1rem;
+  max-width: 24rem;
+  padding: 0.375rem 0.75rem;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
-  font-size: 0.9375rem;
-  transition: border-color 0.2s, outline-color 0.2s;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
 }
 
-.cl-buscador:focus {
+.client-list-container .cl-buscador:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.cl-buscador:invalid {
-  border-color: #e5e7eb;
-}
-
-.cl-buscador:invalid:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
@@ -45,7 +49,10 @@
 }
 
 .cl-cargando {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 2rem;
   color: #6b7280;
   font-size: 0.9375rem;
@@ -53,6 +60,7 @@
 
 .cl-tabla-wrap {
   overflow-x: auto;
+  margin-bottom: 1.5rem;
 }
 
 .clients-table {
@@ -66,12 +74,14 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.cl-cabecera th {
+/* Igual que la cabecera de Ventas y Productos: corta, en mayúsculas y gris */
+.clients-table .cl-cabecera th {
   padding: 0.75rem 1rem;
   text-align: left;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #374151;
-  text-transform: none;
+  color: #4b5563;
+  text-transform: uppercase;
 }
 
 .cl-fila {
@@ -98,14 +108,16 @@
   font-size: 0.875rem;
 }
 
-.cl-acciones-th {
+.clients-table .cl-cabecera .cl-acciones-th {
   text-align: center;
+}
+
+.cl-acciones {
   padding: 0.75rem 1rem;
 }
 
 /* Una sola línea: las acciones que no son del día a día viven en el menú "⋯" */
-.cl-acciones {
-  padding: 0.75rem 1rem;
+.cl-acciones-fila {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -173,16 +185,33 @@
 
   .cl-acciones {
     padding: 0.5rem 0.5rem;
+  }
+
+  .cl-acciones-fila {
     gap: 0.25rem;
   }
 
-  /* Solo íconos: con el texto, tres botones no caben en una línea */
+  .clients-table .cl-cabecera th {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Solo íconos: con el texto, tres botones no caben en una línea.
+     Cuadrados de 32px, como los de Productos */
   .btn-cliente {
-    padding: 0.35rem 0.5rem;
-    font-size: 0.72rem;
+    justify-content: center;
+    min-width: 2rem;
+    min-height: 2rem;
+    padding: 0.35rem;
   }
 
   .btn-cliente span { display: none; }
+
+  /* 16px: con menos, Safari en iPhone hace zoom al tocar el campo */
+  .client-list-container .cl-buscador {
+    max-width: none;
+    min-height: 44px;
+    font-size: 1rem;
+  }
 }
 
 /* Etiqueta del Consumidor final, en lugar del botón de eliminar */

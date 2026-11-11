@@ -23,20 +23,40 @@ const motivoError = (error, accion) => {
 }
 
 export const clientService = {
-  // Obtener todos los clientes
-  async getAllClients() {
+  /**
+   * Todos los clientes del negocio, más recientes primero. Devuelve
+   * { data } o { data: [], error }.
+   *
+   * 🔧 Antes era una sola consulta: Supabase corta en 1.000 filas, así que
+   * un negocio con más clientes no veía a los más antiguos ni los encontraba
+   * en el buscador, sin ningún aviso. Ahora se piden en bloques de 1.000,
+   * como getTodosLosProductos.
+   */
+  async cargarClientes() {
+    const TAM = 1000
+    const todos = []
     try {
-      const { data, error } = await supabase
-        .from('clientes')
-        .select('*')
-        .order('id', { ascending: false })
-      
-      if (error) throw error
-      return data || []
+      for (let desde = 0; ; desde += TAM) {
+        const { data, error } = await supabase
+          .from('clientes')
+          .select('*')
+          .order('id', { ascending: false })
+          .range(desde, desde + TAM - 1)
+
+        if (error) throw error
+        todos.push(...(data || []))
+        if (!data || data.length < TAM) break
+      }
+      return { data: todos }
     } catch (error) {
       console.error('Error fetching clients:', error)
-      return []
+      return { data: [], error: error.message || 'No se pudieron cargar los clientes' }
     }
+  },
+
+  // Lo mismo, solo la lista (Ventas y Cierre, que no muestran el error)
+  async getAllClients() {
+    return (await this.cargarClientes()).data
   },
 
   // Obtener cliente por ID
