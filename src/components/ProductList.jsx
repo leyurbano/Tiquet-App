@@ -7,6 +7,7 @@ import Paginacion from "./Paginacion";
 import { Pencil, History, Package, AlertTriangle, ArrowUpDown, Loader2 } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
 import { numeroProducto, coincideNumero, nombreProducto } from "../utils/producto";
+import { useEsCelular } from "../hooks/useEsCelular";
 
 // 25 y no 50: sin scroll interno, 50 filas son casi tres pantallas y la
 // paginación queda al fondo. Para buscar algo puntual está el buscador
@@ -58,6 +59,7 @@ function ProductList({
   const [soloBajos, setSoloBajos] = useState(false);
   const [pagina, setPagina] = useState(1);
   const inicioLista = useRef(null);
+  const esCelular = useEsCelular();
 
   const alertas = contarBajos(products || [], minimoNegocio, rotacion);
   const totalAlertas = alertas.agotados + alertas.bajos;
@@ -106,11 +108,13 @@ function ProductList({
       </h2>
 
       <div className="search-and-stats-wrapper">
-        {/* La búsqueda ya encontraba por código de barras, pero no lo decía */}
+        {/* La búsqueda ya encontraba por código de barras, pero no lo decía.
+            En celular el texto completo no cabe y se cortaba: ahí se omite,
+            aunque se sigue buscando por código */}
         <input
           type="text"
           aria-label="Buscar por nombre, número o código de barras"
-          placeholder="Nombre, número o código de barras"
+          placeholder={esCelular ? "Nombre o número" : "Nombre, número o código de barras"}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
