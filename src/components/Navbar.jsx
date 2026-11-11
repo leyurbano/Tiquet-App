@@ -7,9 +7,10 @@ import { negocioService } from '../services/negocioService'
 import { formatHoraColombia } from '../utils/dateFormatter'
 import CierreCajaModal from './CierreCajaModal'
 import CambiarContrasenaModal from './CambiarContrasenaModal'
+import AcercaDeModal from './AcercaDeModal'
 import {
   ChevronDown, KeyRound, LogOut, ShoppingCart, Package, Boxes, Warehouse,
-  Users, BarChart3, Store, Settings, UserCog, LayoutGrid
+  Users, BarChart3, Store, Settings, UserCog, LayoutGrid, Info
 } from 'lucide-react'
 
 const iniciales = (texto) =>
@@ -47,6 +48,7 @@ function Navbar() {
   const [abierto, setAbierto] = useState(null) // desplegable abierto: id del grupo o 'cuenta'
   const [showCierre, setShowCierre] = useState(false) // arqueo antes de salir
   const [showContrasena, setShowContrasena] = useState(false)
+  const [showAcerca, setShowAcerca] = useState(false)
   const [nombreNegocio, setNombreNegocio] = useState('')
   const menuRef = useRef(null) // para cerrar al hacer clic afuera
 
@@ -128,6 +130,11 @@ function Navbar() {
   const abrirContrasena = () => {
     cerrarMenus()
     setShowContrasena(true)
+  }
+
+  const abrirAcerca = () => {
+    cerrarMenus()
+    setShowAcerca(true)
   }
 
   const alternar = (id) => setAbierto((actual) => (actual === id ? null : id))
@@ -276,6 +283,9 @@ function Navbar() {
               <button type="button" className="nb-menu-item" onClick={abrirContrasena}>
                 <KeyRound size={16} aria-hidden="true" /> Cambiar contraseña
               </button>
+              <button type="button" className="nb-menu-item" onClick={abrirAcerca}>
+                <Info size={16} aria-hidden="true" /> Acerca de y ayuda
+              </button>
               <button type="button" className="nb-menu-item nb-menu-salir" onClick={handleLogout}>
                 <LogOut size={16} aria-hidden="true" /> {textoSalir}
               </button>
@@ -310,6 +320,9 @@ function Navbar() {
                 </div>
                 <button type="button" role="menuitem" className="nb-menu-item" onClick={abrirContrasena}>
                   <KeyRound size={15} aria-hidden="true" /> Cambiar contraseña
+                </button>
+                <button type="button" role="menuitem" className="nb-menu-item" onClick={abrirAcerca}>
+                  <Info size={15} aria-hidden="true" /> Acerca de y ayuda
                 </button>
                 <button type="button" role="menuitem" className="nb-menu-item nb-menu-salir" onClick={handleLogout}>
                   <LogOut size={15} aria-hidden="true" /> {textoSalir}
@@ -347,6 +360,9 @@ function Navbar() {
     )}
     {showContrasena && (
       <CambiarContrasenaModal onCerrar={() => setShowContrasena(false)} />
+    )}
+    {showAcerca && (
+      <AcercaDeModal onCerrar={() => setShowAcerca(false)} />
     )}
     </>
   )

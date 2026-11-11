@@ -214,6 +214,45 @@
   text-align: center;
 }
 
+/* ── Pie: ayuda y versión ── */
+.login-pie {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.login-pie p {
+  margin: 0;
+}
+
+.login-pie a {
+  display: inline-block;
+  padding: 0.35rem 0.15rem;
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-pie a:hover {
+  text-decoration: underline;
+}
+
+.login-pie a:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.login-pie .login-pie-version {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
 /* Pantallas muy angostas: menos relleno a los lados para que los campos no
    queden apretados. Antes subía el de arriba a 28px y sumaba al hueco */
 @media (max-width: 360px) {

@@ -1,6 +1,7 @@
 import { useState, useId } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mensajeErrorLogin } from '../utils/errorLogin';
+import { VERSION, enlaceWhatsApp, enlaceCorreo } from '../utils/soporte';
 import './InicioPage.css';
 import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 
@@ -137,6 +138,22 @@ function InicioPage() {
 
           </form>
         </div>
+
+        {/* Versión: lo primero que hay que saber para dar soporte, porque
+            la app instalada puede estar atrasada. Y a quién escribir si no
+            se puede entrar, que es justo cuando más se necesita.
+            Términos y política de datos: se agregan aquí cuando estén listos */}
+        <footer className="login-pie">
+          <p>
+            ¿Necesitas ayuda?{' '}
+            <a href={enlaceWhatsApp()} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            {' · '}
+            <a href={enlaceCorreo()}>Correo</a>
+          </p>
+          <p className="login-pie-version">
+            Tiquet-App v{VERSION} · © {new Date().getFullYear()}
+          </p>
+        </footer>
 
       </div>
     </div>
