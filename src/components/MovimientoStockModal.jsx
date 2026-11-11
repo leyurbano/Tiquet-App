@@ -114,13 +114,13 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
         aria-label={`Mover stock de ${producto.descripcion}`}
       >
         {/* Mismo encabezado que Crear/Editar producto: título con icono y ✕ */}
-        <div className="mov-header">
+        <div className="caja-header">
           <h2 className="caja-title caja-con-icono">
             <ArrowUpDown size={22} aria-hidden="true" /> Mover stock
           </h2>
           <button
             type="button"
-            className="mov-cerrar"
+            className="caja-cerrar"
             onClick={onCancel}
             disabled={guardando}
             aria-label="Cerrar"
@@ -245,7 +245,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
 
         {error && <div className="caja-alert mov-error">{error}</div>}
 
-        <div className="mov-acciones">
+        <div className="caja-acciones-fila">
           <button
             type="button"
             className="caja-btn-primary"

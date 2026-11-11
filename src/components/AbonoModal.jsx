@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useId } from 'react'
+import { Banknote, Check, Loader2, X } from 'lucide-react'
 import { fiadoService } from '../services/fiadoService'
 import { salesService } from '../services/salesService'
 import { useCashSession } from '../contexts/CashSessionContext'
@@ -23,6 +24,7 @@ function AbonoModal({ cliente, saldo, onCancel, onDone }) {
   const [nota, setNota] = useState('')
   const [procesando, setProcesando] = useState(false)
   const [error, setError] = useState('')
+  const idCampo = useId()
   const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   useEffect(() => {
@@ -59,7 +61,20 @@ function AbonoModal({ cliente, saldo, onCancel, onDone }) {
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
       <div className="caja-box fiado-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Abono de ${cliente.nombre}`}>
-        <h2 className="caja-title">Abono de {cliente.nombre}</h2>
+        <div className="caja-header">
+          <h2 className="caja-title caja-con-icono">
+            <Banknote size={22} aria-hidden="true" /> Abono de {cliente.nombre}
+          </h2>
+          <button
+            type="button"
+            className="caja-cerrar"
+            onClick={onCancel}
+            disabled={procesando}
+            aria-label="Cerrar"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
         <p className="caja-subtitle">
           Debe <strong>{formatCOP(saldo)}</strong> en fiado.
         </p>
@@ -70,11 +85,12 @@ function AbonoModal({ cliente, saldo, onCancel, onDone }) {
           </div>
         )}
 
-        <label className="caja-label">Monto del abono</label>
+        <label className="caja-label" htmlFor={`${idCampo}-monto`}>Monto del abono</label>
         <div className="fiado-monto">
           <div className="caja-money">
-            <span className="caja-money-symbol">$</span>
+            <span className="caja-money-symbol" aria-hidden="true">$</span>
             <input
+              id={`${idCampo}-monto`}
               type="text"
               inputMode="numeric"
               placeholder="0"
@@ -129,14 +145,21 @@ function AbonoModal({ cliente, saldo, onCancel, onDone }) {
 
         {error && <div className="caja-alert">{error}</div>}
 
-        <div className="caja-buttons">
+        {/* 🔧 Antes el botón era rojo, el color de anular y eliminar: recibir
+            plata no es una acción peligrosa. Y sin el monto en el texto: en
+            celular, a media fila, no cabía; ya se ve arriba y en "queda
+            debiendo" */}
+        <div className="caja-acciones-fila">
           <button
             type="button"
-            className="caja-btn-danger"
+            className="caja-btn-primary"
             onClick={confirmar}
             disabled={procesando || !session || valor <= 0}
           >
-            {procesando ? 'Registrando...' : `Registrar abono ${valor > 0 ? formatCOP(valor) : ''}`}
+            {procesando
+              ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+              : <Check size={16} aria-hidden="true" />}
+            {procesando ? 'Registrando...' : 'Registrar abono'}
           </button>
           <button
             type="button"

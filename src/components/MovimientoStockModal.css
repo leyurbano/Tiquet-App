@@ -9,45 +9,8 @@
   max-width: 420px;
 }
 
-/* ---------- Encabezado: título y ✕, como en Crear/Editar producto ---------- */
-
-.mov-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.35rem;
-}
-
-.mov-header .caja-title {
-  margin-bottom: 0;
-}
-
-.mov-box .mov-cerrar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  flex-shrink: 0;
-  padding: 0;
-  border: none;
-  border-radius: 0.5rem;
-  background: transparent;
-  color: #6b7280;
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.mov-box .mov-cerrar:hover:not(:disabled) {
-  background-color: #f3f4f6;
-  color: #111827;
-}
-
-.mov-box .mov-cerrar:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
+/* El encabezado con ✕ y los botones en fila vienen de CajaModal.css
+   (caja-header, caja-cerrar, caja-acciones-fila) */
 
 /* Sin text-transform: el nombre ya llega con nombreProducto() */
 .mov-producto {
@@ -200,26 +163,6 @@
   margin-bottom: 1rem;
 }
 
-/* En fila también en celular, con la acción principal a la izquierda:
-   igual que Crear/Editar producto y que el formulario de Ventas */
-.mov-acciones {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.mov-acciones button {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.mov-acciones .caja-btn-secondary:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
 .mov-pie {
   font-size: 0.75rem;
   color: #9ca3af;
@@ -231,13 +174,7 @@
 @media (max-width: 768px) {
   .mov-box .mov-input,
   .mov-box .caja-money .caja-input,
-  .mov-box .mov-dir-btn,
-  .mov-acciones button {
+  .mov-box .mov-dir-btn {
     min-height: 44px;
-  }
-
-  .mov-box .mov-cerrar {
-    width: 44px;
-    height: 44px;
   }
 }
