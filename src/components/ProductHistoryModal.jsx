@@ -6,6 +6,7 @@ import { useDialogo } from '../hooks/useDialogo'
 import { detalleMovimiento, motivoCorto } from '../utils/movimientosStock'
 import { nombreProducto } from '../utils/producto'
 import { formatFechaMovimiento } from '../utils/dateFormatter'
+import { formatNumero } from '../utils/currencyFormatter'
 
 const TIPO_CONFIG = {
   venta:        { icon: ShoppingCart, label: 'Venta',        color: '#dc2626' },
@@ -43,7 +44,7 @@ function ProductHistoryModal({ product, onClose }) {
               {nombreProducto(product.descripcion)}
             </h2>
             <p className="phm-subtitle">
-              Stock actual: <strong>{product.cantidad}</strong> unidades
+              Stock actual: <strong>{formatNumero(product.cantidad)}</strong> unidades
             </p>
           </div>
           <button type="button" className="phm-close" onClick={onClose} aria-label="Cerrar historial">
@@ -77,7 +78,7 @@ function ProductHistoryModal({ product, onClose }) {
                   }
                   const Icon = cfg.icon
                   const diff = event.diferencia
-                  const diffLabel = diff > 0 ? `+${diff}` : `${diff}`
+                  const diffLabel = diff > 0 ? `+${formatNumero(diff)}` : formatNumero(diff)
                   const diffColor = diff > 0 ? '#16a34a' : '#dc2626'
 
                   return (
@@ -89,8 +90,8 @@ function ProductHistoryModal({ product, onClose }) {
                           {cfg.label}
                         </span>
                       </td>
-                      <td className="phm-td-num">{event.cantidad_anterior ?? '—'}</td>
-                      <td className="phm-td-num">{event.cantidad_nueva ?? '—'}</td>
+                      <td className="phm-td-num">{event.cantidad_anterior != null ? formatNumero(event.cantidad_anterior) : '—'}</td>
+                      <td className="phm-td-num">{event.cantidad_nueva != null ? formatNumero(event.cantidad_nueva) : '—'}</td>
                       <td className="phm-td-num">
                         <span style={{ color: diffColor, fontWeight: 700 }}>
                           {diff != null ? diffLabel : '—'}

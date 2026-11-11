@@ -2,7 +2,7 @@ import React, { useState, useMemo, useId } from 'react'
 import { inventarioService } from '../services/inventarioService'
 import { useDialogo } from '../hooks/useDialogo'
 import { toast } from '../utils/toast'
-import { formatCOP } from '../utils/currencyFormatter'
+import { formatCOP, formatNumero } from '../utils/currencyFormatter'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import { numeroProducto, nombreProducto } from '../utils/producto'
 import { numeroDoc } from '../utils/documento'
@@ -70,7 +70,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
 
   const MENSAJES = {
     unidades: 'Escribe cuántas unidades, en números enteros y mayor que cero',
-    excede: `Solo hay ${stockActual} ${stockActual === 1 ? 'unidad' : 'unidades'} en el sistema: no puedes sacar más`,
+    excede: `Solo hay ${formatNumero(stockActual)} ${stockActual === 1 ? 'unidad' : 'unidades'} en el sistema: no puedes sacar más`,
     costo: 'Escribe a cómo te quedó cada unidad'
   }
 
@@ -96,7 +96,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
 
     const signo = direccion === 'salida' ? '-' : '+'
     toast.exito(
-      `${signo}${resultado.unidades} en ${producto.descripcion}: queda en ${resultado.stockFinal} ` +
+      `${signo}${formatNumero(resultado.unidades)} en ${producto.descripcion}: queda en ${formatNumero(resultado.stockFinal)} ` +
       `(${elegido.rpc === 'entrada' ? 'entrada' : 'ajuste'} #${numeroDoc(movimiento)})`
     )
     onRegistrado?.(movimiento)
@@ -133,7 +133,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
           {nombreProducto(producto.descripcion)}
         </p>
         <p className="mov-estado">
-          Hoy hay <strong>{stockActual}</strong> {stockActual === 1 ? 'unidad' : 'unidades'}
+          Hoy hay <strong>{formatNumero(stockActual)}</strong> {stockActual === 1 ? 'unidad' : 'unidades'}
           {costoActual > 0 && <> · costo {formatCOP(costoActual)}</>}
         </p>
 
@@ -168,7 +168,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
           inputMode="numeric"
           autoComplete="off"
           placeholder="0"
-          value={unidades}
+          value={formatCOPInput(unidades)}
           onChange={(e) => { setUnidades(e.target.value.replace(/D/g, '')); setError('') }}
           disabled={guardando}
           autoFocus
@@ -229,7 +229,7 @@ function MovimientoStockModal({ producto, onCancel, onRegistrado }) {
         {/* Lo que quita la duda de "suma o reemplaza": se ve el resultado */}
         {!resultado.error && (
           <p className={`mov-resumen ${direccion === 'salida' ? 'mov-resumen-salida' : ''}`}>
-            Queda en <strong>{resultado.stockFinal}</strong>{' '}
+            Queda en <strong>{formatNumero(resultado.stockFinal)}</strong>{' '}
             {resultado.stockFinal === 1 ? 'unidad' : 'unidades'}
             {tocaCosto && resultado.costoFinal !== costoActual && (
               <> · el costo pasa a <strong>{formatCOP(resultado.costoFinal)}</strong></>

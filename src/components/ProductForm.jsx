@@ -155,7 +155,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
             inputMode="numeric"
             name="cantidad"
             placeholder="0"
-            value={formData.cantidad}
+            value={formatDisplay(formData.cantidad)}
             onChange={(e) => cambiar('cantidad', soloDigitos(e.target.value))}
             readOnly={!!initialData}
             className={initialData ? 'pf-input pf-input-readonly' : 'pf-input'}
@@ -205,7 +205,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
         <p className="pf-resumen">
           {initialData ? 'Valor en inventario' : 'Valor del inventario inicial'}:{' '}
           <strong>${formatDisplay(valorInventario)}</strong>
-          <span> ({cantidad} × ${formatDisplay(costo)})</span>
+          <span> ({formatDisplay(cantidad)} × ${formatDisplay(costo)})</span>
         </p>
       )}
 
@@ -238,7 +238,7 @@ function ProductForm({ onSubmit, initialData = null, onCancel, onDirtyChange, mi
             inputMode="numeric"
             name="stock_minimo"
             placeholder={`Por defecto: ${minimoNegocio}`}
-            value={formData.stock_minimo ?? ''}
+            value={formatDisplay(formData.stock_minimo)}
             onChange={(e) => cambiar('stock_minimo', soloDigitos(e.target.value))}
             className="pf-input"
           />

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import "./ProductList.css";
-import { formatCOP } from "../utils/currencyFormatter";
+import { formatCOP, formatNumero } from "../utils/currencyFormatter";
 import ProductHistoryModal from "./ProductHistoryModal";
 import MovimientoStockModal from "./MovimientoStockModal";
 import Paginacion from "./Paginacion";
@@ -145,7 +145,7 @@ function ProductList({
         <div className="stats-container">
           <div className="stat-label">
             <span className="stat-label-text">Unidades en stock:</span>
-            <span className="stat-value">{totalProducts}</span>
+            <span className="stat-value">{formatNumero(totalProducts)}</span>
           </div>
           {mostrarCostos && (
             <div className="stat-label">
@@ -225,11 +225,11 @@ function ProductList({
                     </td>
                     <td className="cell-numeric">
                       <span className={`stock-valor stock-${estado}`}>
-                        {product.cantidad || 0}
+                        {formatNumero(product.cantidad)}
                       </span>
                       {estado !== "ok" && (
                         <div className="stock-minimo">
-                          mín. {umbralDe(product, minimoNegocio)}
+                          mín. {formatNumero(umbralDe(product, minimoNegocio))}
                         </div>
                       )}
                     </td>
