@@ -4,7 +4,7 @@ import { formatCOP } from "../utils/currencyFormatter";
 import ProductHistoryModal from "./ProductHistoryModal";
 import MovimientoStockModal from "./MovimientoStockModal";
 import Paginacion from "./Paginacion";
-import { Pencil, History, Package, AlertTriangle, ArrowUpDown, Loader2 } from "lucide-react";
+import { Pencil, History, Package, AlertTriangle, ArrowUpDown, ArrowDownWideNarrow, Loader2 } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
 import { numeroProducto, coincideNumero, nombreProducto } from "../utils/producto";
 import { useEsCelular } from "../hooks/useEsCelular";
@@ -122,9 +122,14 @@ function ProductList({
           }}
           className="pl-buscador"
         />
-        <label className="orden-campo">
+        {/* En celular se ve solo el icono (ver ProductList.css). El
+            aria-label nombra el menú aunque la etiqueta esté oculta */}
+        <label className={`orden-campo ${orden !== "numero" ? "orden-activo" : ""}`}>
           <span className="orden-etiqueta">Ordenar por</span>
+          <ArrowDownWideNarrow size={20} className="orden-icono" aria-hidden="true" />
           <select
+            aria-label="Ordenar por"
+            title={`Ordenar por: ${ORDENES[orden].etiqueta}`}
             value={orden}
             onChange={(e) => {
               setOrden(e.target.value);
