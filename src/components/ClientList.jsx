@@ -189,6 +189,24 @@ function ClientList({ clients, onEdit, onDelete, loading = false, errorCarga = f
                           <Pencil size={14} aria-hidden="true" /> <span>Editar</span>
                         </button>
 
+                        {/* Como "Historial" en Productos: antes estaba en el
+                            menú "⋯" y pedía dos toques para algo que se mira
+                            seguido. En el Consumidor final muestra las ventas
+                            rápidas, las de quien no se identifica.
+                            Va antes que Abonar: Editar y Compras las tienen
+                            todas las filas, y si van primero quedan en la
+                            misma columna aunque falten las demás */}
+                        {onCompras && (
+                          <button
+                            onClick={() => onCompras(client)}
+                            className="btn-cliente btn-cliente-compras"
+                            title="Ver lo que ha comprado"
+                            aria-label={`Compras de ${client.nombre}`}
+                          >
+                            <Receipt size={14} aria-hidden="true" /> <span>Compras</span>
+                          </button>
+                        )}
+
                         {conFiado && saldo > 0 && onAbono && (
                           <button
                             onClick={() => onAbono(client, saldo)}
@@ -200,29 +218,8 @@ function ClientList({ clients, onEdit, onDelete, loading = false, errorCarga = f
                           </button>
                         )}
 
-                        {/* Como "Historial" en Productos: antes estaba en el
-                            menú "⋯" y pedía dos toques para algo que se mira
-                            seguido. El Consumidor final no la tiene: junta
-                            las compras de todos los que no se identifican */}
-                        {onCompras && !esConsumidorFinal(client) && (
-                          <button
-                            onClick={() => onCompras(client)}
-                            className="btn-cliente btn-cliente-compras"
-                            title="Ver lo que ha comprado"
-                            aria-label={`Compras de ${client.nombre}`}
-                          >
-                            <Receipt size={14} aria-hidden="true" /> <span>Compras</span>
-                          </button>
-                        )}
-
                         {acciones.length > 0 && (
                           <MenuAcciones items={acciones} etiqueta={`Más acciones de ${client.nombre}`} />
-                        )}
-
-                        {esConsumidorFinal(client) && (
-                          <span className="cliente-fijo" title="Lo usa la venta rápida: no se puede eliminar">
-                            Venta rápida
-                          </span>
                         )}
                       </div>
                     </td>

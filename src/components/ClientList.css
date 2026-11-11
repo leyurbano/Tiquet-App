@@ -108,8 +108,10 @@
   font-size: 0.875rem;
 }
 
+/* A la izquierda, como los botones: centrados, una fila con dos botones y
+   otra con cuatro quedaban corridas una respecto de la otra */
 .clients-table .cl-cabecera .cl-acciones-th {
-  text-align: center;
+  text-align: left;
 }
 
 .cl-acciones {
@@ -119,7 +121,7 @@
 /* Una sola línea: las acciones que no son del día a día viven en el menú "⋯" */
 .cl-acciones-fila {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 0.4rem;
   flex-wrap: nowrap;
@@ -221,18 +223,6 @@
     min-height: 44px;
     font-size: 1rem;
   }
-}
-
-/* Etiqueta del Consumidor final, en lugar del botón de eliminar */
-.cliente-fijo {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #6b7280;
-  background: #f3f4f6;
-  border-radius: 0.25rem;
-  padding: 0.2rem 0.45rem;
-  white-space: nowrap;
 }
 
 /* ---- Fiado ---- */
