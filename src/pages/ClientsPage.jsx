@@ -10,7 +10,7 @@ import { toast } from '../utils/toast'
 import { formatCOP } from '../utils/currencyFormatter'
 import { useDialogo } from '../hooks/useDialogo'
 import './ClientsPage.css'
-import { PlusCircle } from 'lucide-react'
+import { PlusCircle, Users } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 function ClientsPage() {
@@ -20,8 +20,6 @@ function ClientsPage() {
   const [clients, setClients] = useState([])
   // Saldo de fiado por cliente; null = el fiado no está instalado
   const [saldos, setSaldos] = useState(null)
-  // Resultado de la última acción, visible en pantalla en vez de un alert
-  const [mensaje, setMensaje] = useState(null)
   const [loading, setLoading] = useState(true)
   const [editingClient, setEditingClient] = useState(null)
   const [showForm, setShowForm] = useState(false)
@@ -94,15 +92,16 @@ function ClientsPage() {
   const handleDeleteClient = async (client) => {
     if (!window.confirm(`¿Eliminar a ${client.nombre}?`)) return
 
-    setMensaje(null)
     const { ok, error } = await clientService.deleteClient(client.id)
 
+    // Notificación como en el resto de la app. Antes era una franja fija en
+    // la página que se quedaba ahí hasta recargar
     if (ok) {
       setClients(clients.filter(c => c.id !== client.id))
-      setMensaje({ tipo: 'ok', texto: `${client.nombre} fue eliminado.` })
+      toast.exito(`${client.nombre} fue eliminado`)
     } else {
       // 🔧 Antes un fallo no mostraba nada: ahora se dice por qué
-      setMensaje({ tipo: 'error', texto: error })
+      toast.error(error)
     }
   }
 
@@ -114,19 +113,15 @@ function ClientsPage() {
   return (
     <div className="clients-page-container">
       <div className="clients-header">
-        <h1 className="clients-title">👥 Gestión de Clientes</h1>
+        <h1 className="clients-title">
+          <Users size={30} aria-hidden="true" /> Gestión de Clientes
+        </h1>
         {/* Siempre montado: si se desmonta al abrir el formulario, al cerrarlo
             el foco del teclado no tiene a dónde volver */}
         <button onClick={() => setShowForm(true)} className="btn-new-client">
           <PlusCircle size={18} /> Nuevo Cliente
         </button>
       </div>
-
-      {mensaje && (
-        <div className={`clients-mensaje ${mensaje.tipo === 'ok' ? 'clients-msg-ok' : 'clients-msg-error'}`}>
-          {mensaje.texto}
-        </div>
-      )}
 
       <div className="clients-grid">
         <div className="clients-list-column">
