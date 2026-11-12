@@ -71,10 +71,11 @@ function AperturaCajaModal({ onOmitir }) {
 
           {error && <div className="caja-alert">{error}</div>}
 
-          {/* Las dos acciones en fila, como en el resto de la app; "Cerrar
-              sesión" va debajo como enlace porque es otra cosa: no abre ni
-              omite la caja, se va. Los textos son cortos para que quepan a
-              media fila en el celular */}
+          {/* Dos botones en fila, como en el resto de la app. El vendedor tiene
+              solo dos salidas, abrir caja o irse, así que "Cerrar sesión" va
+              a su lado con el mismo peso. El administrador tiene tres: la
+              segunda es "Ahora no" y "Cerrar sesión" baja como enlace. Los
+              textos son cortos para que quepan a media fila en el celular */}
           <div className="caja-buttons">
             <div className="caja-acciones-fila">
               <button type="submit" className="caja-btn-primary" disabled={guardando}>
@@ -83,7 +84,7 @@ function AperturaCajaModal({ onOmitir }) {
                   : <Check size={16} aria-hidden="true" />}
                 {guardando ? 'Abriendo...' : 'Abrir caja'}
               </button>
-              {onOmitir && (
+              {onOmitir ? (
                 <button
                   type="button"
                   className="caja-btn-secondary"
@@ -93,16 +94,27 @@ function AperturaCajaModal({ onOmitir }) {
                 >
                   Ahora no
                 </button>
+              ) : (
+                <button
+                  type="button"
+                  className="caja-btn-secondary"
+                  onClick={logout}
+                  disabled={guardando}
+                >
+                  Cerrar sesión
+                </button>
               )}
             </div>
-            <button
-              type="button"
-              className="caja-btn-ghost"
-              onClick={logout}
-              disabled={guardando}
-            >
-              Cerrar sesión
-            </button>
+            {onOmitir && (
+              <button
+                type="button"
+                className="caja-btn-ghost"
+                onClick={logout}
+                disabled={guardando}
+              >
+                Cerrar sesión
+              </button>
+            )}
           </div>
         </form>
       </div>
