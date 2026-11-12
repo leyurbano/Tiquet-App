@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { mensajeErrorLogin } from '../utils/errorLogin';
+import { VERSION, enlaceWhatsApp, enlaceCorreo } from '../utils/soporte';
 import './InicioPage.css';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 
 function InicioPage() {
-  const [mostrarForm, setMostrarForm] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,6 +13,8 @@ function InicioPage() {
   const [verPassword, setVerPassword] = useState(false);
   const [mostrarAyuda, setMostrarAyuda] = useState(false);
   const { login } = useAuth();
+  // Conecta cada etiqueta con su campo
+  const idCampo = useId();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,25 +22,27 @@ function InicioPage() {
     setLoading(true);
 
     try {
-      const result = await login(email, password);
+      // trim: un espacio al final, pegado o del autocorrector del celular,
+      // daba "correo o contraseña incorrectos" sin razón visible
+      const result = await login(email.trim(), password);
 
       if (!result.success) {
-        if (result.error === 'Invalid login credentials') {
-          setError('Correo o contraseña incorrectos');
-        } else {
-          setError(result.error || 'Error al iniciar sesión');
-        }
+        if (result.error) console.warn('Inicio de sesión rechazado:', result.error);
+        setError(mensajeErrorLogin(result.error));
       }
-
-    } catch {
-      setError('Error inesperado, intenta de nuevo');
+    } catch (err) {
+      setError(mensajeErrorLogin(err?.message));
     } finally {
       setLoading(false);
     }
   };
 
+  // 🔧 Antes se veía primero el logo grande con un botón "Ingresar", y solo
+  // al tocarlo aparecía el formulario: un toque de más en cada turno, y un
+  // botón "Cancelar" que solo devolvía a la portada. Como en los demás
+  // sistemas de punto de venta, el formulario ya está a la vista.
   return (
-    <div className={`welcome-container ${mostrarForm ? 'form-activo' : ''}`}>
+    <div className="welcome-container">
       <div className="welcome-card">
 
         <img
@@ -46,94 +51,109 @@ function InicioPage() {
           className="welcome-logo"
         />
 
-        {!mostrarForm && (
-          <button
-            className="welcome-boton"
-            onClick={() => setMostrarForm(true)}
-          >
-            Ingresar
-          </button>
-        )}
+        {/* Título para el lector de pantalla: el logo ya lo dice a la vista */}
+        <h1 className="login-titulo-oculto">Iniciar sesión en Tiquet-App</h1>
 
-        {mostrarForm && (
-          <div className="welcome-form">
-            <form onSubmit={handleSubmit}>
+        <div className="welcome-form">
+          <form onSubmit={handleSubmit}>
 
-              <div className="form-group">
-                <label className="form-label">Correo electrónico</label>
+            {/* autoComplete: el navegador y los gestores de contraseñas
+                ofrecen guardar y llenar los datos. Antes había que escribir
+                todo en cada turno */}
+            <div className="login-campo">
+              <label className="login-label" htmlFor={`${idCampo}-email`}>Correo electrónico</label>
+              <input
+                id={`${idCampo}-email`}
+                type="email"
+                className="login-input"
+                placeholder="tu@email.com"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="login-campo">
+              <label className="login-label" htmlFor={`${idCampo}-password`}>Contraseña</label>
+              <div className="login-password">
                 <input
-                  type="email"
-                  className="form-input"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id={`${idCampo}-password`}
+                  type={verPassword ? 'text' : 'password'}
+                  className="login-input"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  className="login-ver-password"
+                  onClick={() => setVerPassword((v) => !v)}
+                  aria-label={verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-pressed={verPassword}
+                >
+                  {verPassword
+                    ? <EyeOff size={18} aria-hidden="true" />
+                    : <Eye size={18} aria-hidden="true" />}
+                </button>
               </div>
+            </div>
 
-              <div className="form-group">
-                <label className="form-label">Contraseña</label>
-                <div className="input-password-wrapper">
-                  <input
-                    type={verPassword ? 'text' : 'password'}
-                    className="form-input"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="boton-ver-password"
-                    onClick={() => setVerPassword(!verPassword)}
-                  >
-                    {verPassword ?   <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
+            {/* role="alert": el lector de pantalla lo anuncia al aparecer */}
+            {error && <div className="login-error" role="alert">{error}</div>}
 
-              {error && <div className="error-message">{error}</div>}
+            <button
+              type="submit"
+              className="welcome-boton"
+              disabled={loading}
+            >
+              {loading
+                ? <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+                : <LogIn size={18} aria-hidden="true" />}
+              {loading ? 'Ingresando...' : 'Iniciar sesión'}
+            </button>
 
-              <button
-                type="submit"
-                className="welcome-boton"
-                disabled={loading}
-              >
-                {loading ? 'Cargando...' : 'Iniciar Sesión'}
-              </button>
+            {/* No hay correo de recuperación: sin un SMTP propio, Supabase
+                solo envía correos a los miembros del equipo del proyecto */}
+            <button
+              type="button"
+              className="login-olvide"
+              onClick={() => setMostrarAyuda((v) => !v)}
+              aria-expanded={mostrarAyuda}
+              aria-controls={`${idCampo}-ayuda`}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+            {mostrarAyuda && (
+              <p className="login-ayuda" id={`${idCampo}-ayuda`}>
+                Pídele al administrador de tu negocio que te la restablezca.
+                Te dará una contraseña temporal y, al entrar, podrás crear una nueva.
+              </p>
+            )}
 
-              <button
-                type="button"
-                className="boton-cancelar"
-                onClick={() => {
-                  setMostrarForm(false);
-                  setError('');
-                  setEmail('');
-                  setPassword('');
-                }}
-              >
-                Cancelar
-              </button>
+          </form>
+        </div>
 
-              {/* No hay correo de recuperación: sin un SMTP propio, Supabase
-                  solo envía correos a los miembros del equipo del proyecto */}
-              <button
-                type="button"
-                className="boton-olvide"
-                onClick={() => setMostrarAyuda((v) => !v)}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-              {mostrarAyuda && (
-                <p className="ayuda-olvide">
-                  Pídele al administrador de tu negocio que te la restablezca.
-                  Te dará una contraseña temporal y, al entrar, podrás crear una nueva.
-                </p>
-              )}
-
-            </form>
-          </div>
-        )}
+        {/* Versión: lo primero que hay que saber para dar soporte, porque
+            la app instalada puede estar atrasada. Y a quién escribir si no
+            se puede entrar, que es justo cuando más se necesita.
+            Términos y política de datos: se agregan aquí cuando estén listos */}
+        <footer className="login-pie">
+          <p>
+            ¿Necesitas ayuda?{' '}
+            <a href={enlaceWhatsApp()} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            {' · '}
+            <a href={enlaceCorreo()}>Correo</a>
+          </p>
+          <p className="login-pie-version">
+            Tiquet-App v{VERSION} · © {new Date().getFullYear()}
+          </p>
+        </footer>
 
       </div>
     </div>

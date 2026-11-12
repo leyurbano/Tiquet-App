@@ -20,14 +20,16 @@ import './SalesPage.css'
 
 function SalesPage() {
   // Anular mueve stock y dinero: la RLS lo restringe a administradores
-  const { esAdministrador, esSuperAdmin, estadoCuenta } = useAuth()
+  const { esAdministrador, esSuperAdmin, estadoCuenta, saliendo } = useAuth()
 
   // 🆕 La caja se abre al venir a vender, no al iniciar sesión
   const { session, loading: cargandoCaja } = useCashSession()
   const [aperturaOmitida, setAperturaOmitida] = useState(false)
   const puedeOmitirApertura = esAdministrador || esSuperAdmin
+  // !saliendo: al cerrar sesión, la caja se cierra primero y por un momento
+  // no hay caja abierta; sin esto aparecía "Abrir caja" mientras salía
   const mostrarApertura =
-    !cargandoCaja && !session && estadoCuenta === 'activo' && !aperturaOmitida
+    !cargandoCaja && !session && estadoCuenta === 'activo' && !aperturaOmitida && !saliendo
   const [sales, setSales] = useState([])
   const [products, setProducts] = useState([])
   const [clients, setClients] = useState([])

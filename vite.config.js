@@ -1,8 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readFileSync } from 'node:fs'
+
+// La versión que se muestra en la app sale de package.json: se sube allá en
+// cada entrega y aparece sola en el inicio de sesión y en "Acerca de"
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'))
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(version)
+  },
   plugins: [
     react(),
     // App instalable (PWA). Los íconos salen de public/icono.svg con
