@@ -17,7 +17,7 @@ import { numeroDoc } from '../utils/documento'
 import { fiadoService } from '../services/fiadoService'
 import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
-import { AlertTriangle, Lock, LogOut, Loader2, X } from 'lucide-react'
+import { AlertTriangle, Lock, LogOut, Loader2, X, CircleCheck, ArrowUp, ArrowDown } from 'lucide-react'
 
 /**
  * Arqueo del turno, mostrado al presionar "Cerrar Sesión".
@@ -145,9 +145,15 @@ function CierreCajaModal({ onCancel, onDone }) {
       return next
     })
 
+  // Íconos de lucide y no emojis: los emojis cambian de dibujo según el
+  // celular y no toman el color del cuadro (verde, azul o rojo)
   const etiquetaDiferencia = (dif) => {
-    if (dif === 0) return '✅ Cuadra exactamente'
-    return dif > 0 ? `⬆️ Sobran ${formatCOP(dif)}` : `⬇️ Faltan ${formatCOP(Math.abs(dif))}`
+    if (dif === 0) {
+      return <><CircleCheck size={15} aria-hidden="true" /> Cuadra exactamente</>
+    }
+    return dif > 0
+      ? <><ArrowUp size={15} aria-hidden="true" /> Sobran {formatCOP(dif)}</>
+      : <><ArrowDown size={15} aria-hidden="true" /> Faltan {formatCOP(Math.abs(dif))}</>
   }
 
   const claseDiferencia = (dif) =>
