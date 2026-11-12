@@ -17,7 +17,7 @@ import { numeroDoc } from '../utils/documento'
 import { fiadoService } from '../services/fiadoService'
 import { useDialogo } from '../hooks/useDialogo'
 import './CajaModal.css'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Lock, LogOut, Loader2, X } from 'lucide-react'
 
 /**
  * Arqueo del turno, mostrado al presionar "Cerrar Sesión".
@@ -219,7 +219,22 @@ function CierreCajaModal({ onCancel, onDone }) {
   return (
     <div className="caja-overlay">
       <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Cierre de caja">
-        <h2 className="caja-title">🧾 Cierre de caja</h2>
+        {/* ✕ como en los demás modales: equivale a "Volver" y no cierra la
+            caja. Desactivada mientras se registra el cierre */}
+        <div className="caja-header">
+          <h2 className="caja-title caja-con-icono">
+            <Lock size={22} aria-hidden="true" /> Cierre de caja
+          </h2>
+          <button
+            type="button"
+            className="caja-cerrar"
+            onClick={onCancel}
+            disabled={procesando}
+            aria-label="Cerrar sin cerrar la caja"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
         <p className="caja-subtitle">
           {session
             ? `Turno abierto desde el ${formatToColombia(session.abierta_en)}.`
@@ -227,11 +242,13 @@ function CierreCajaModal({ onCancel, onDone }) {
         </p>
 
         {cargando ? (
-          <div className="caja-loading">⏳ Calculando ventas del turno...</div>
+          <div className="caja-loading caja-con-icono">
+            <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Calculando ventas del turno...
+          </div>
         ) : errorCarga ? (
           <>
             <div className="caja-alert">
-              <AlertTriangle size={15} />
+              <AlertTriangle size={15} aria-hidden="true" />
               <span>
                 No se pudieron leer las ventas del turno, así que los totales de abajo
                 serían falsos. <strong>No cierres la caja así.</strong> Revisa la consola
@@ -440,23 +457,34 @@ function CierreCajaModal({ onCancel, onDone }) {
 
             {error && <div className="caja-alert">{error}</div>}
 
+            {/* 🔧 "Cerrar caja" era rojo, el color de anular y eliminar: cerrar
+                el turno es lo normal al final del día, no algo peligroso.
+                Las dos acciones van en fila; "Cerrar sin arquear" debajo como
+                enlace, porque es la excepción y no debe tocarse por error.
+                El ícono de salir dice que también se cierra la sesión */}
             <div className="caja-buttons">
-              <button
-                type="button"
-                className="caja-btn-danger"
-                onClick={() => finalizar(false)}
-                disabled={procesando || !hayConteo}
-              >
-                {procesando ? 'Cerrando...' : 'Cerrar caja y salir'}
-              </button>
-              <button
-                type="button"
-                className="caja-btn-secondary"
-                onClick={onCancel}
-                disabled={procesando}
-              >
-                Seguir trabajando
-              </button>
+              <div className="caja-acciones-fila">
+                <button
+                  type="button"
+                  className="caja-btn-primary"
+                  onClick={() => finalizar(false)}
+                  disabled={procesando || !hayConteo}
+                >
+                  {procesando
+                    ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                    : <LogOut size={16} aria-hidden="true" />}
+                  {procesando ? 'Cerrando...' : 'Cerrar caja'}
+                </button>
+                <button
+                  type="button"
+                  className="caja-btn-secondary"
+                  onClick={onCancel}
+                  disabled={procesando}
+                  title="Volver sin cerrar la caja"
+                >
+                  Volver
+                </button>
+              </div>
               <button
                 type="button"
                 className="caja-btn-ghost"

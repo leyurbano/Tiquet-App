@@ -552,7 +552,11 @@
     height: 44px;
   }
 
+  /* Menos relleno a los lados: a media fila de un celular de 360px, con
+     el relleno normal, "Cerrar caja" y su ícono quedaban justos */
   .caja-acciones-fila button {
     min-height: 44px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
