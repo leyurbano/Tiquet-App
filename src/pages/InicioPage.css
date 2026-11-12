@@ -3,9 +3,22 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  /* dvh: en el celular 100vh cuenta también la barra del navegador que se
+     esconde, y el bloque quedaba más abajo de lo que se ve */
+  min-height: 100dvh;
   background-color: #ffffff;
   padding: 16px;
   box-sizing: border-box;
+}
+
+/* En celular, arriba y no centrado: centrado dejaba un hueco grande sobre
+   el logo, y al abrir el teclado el formulario quedaba tapado. Es lo que
+   hacen las apps de punto de venta en el teléfono */
+@media (max-width: 768px) {
+  .welcome-container {
+    align-items: flex-start;
+    padding-top: 1.5rem;
+  }
 }
 
 .welcome-card {
@@ -22,14 +35,24 @@
   max-width: 400px;
 }
 
+/* La imagen (432×578) tiene mucho blanco arriba y abajo del dibujo. En vez
+   de achicarla entera, que dejaba el carrito diminuto, se recorta ese blanco
+   con object-fit. Antes medía unos 400px de alto: en un celular empujaba el
+   botón de entrar fuera de la pantalla */
 .welcome-logo {
-  width: 85%;
-  max-width: 300px;
-  height: auto;
-  margin-bottom: 2px;
+  width: 220px;
+  max-width: 100%;
+  height: 150px;
+  object-fit: cover;
+  object-position: 50% 53%;
+  margin-bottom: 0.5rem;
 }
 
 .welcome-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   width: 100%;
   padding: 14px;
   font-size: 16px;
@@ -42,134 +65,137 @@
   transition: background-color 0.2s, transform 0.1s;
 }
 
-.welcome-boton:hover {
+.welcome-boton:hover:not(:disabled) {
   background-color: #1d4ed8;
+}
+
+.welcome-boton:disabled {
+  background-color: #93c5fd;
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 .welcome-boton:active {
   transform: scale(0.98);
 }
 
-/* ── Formulario ── */
+/* ── Formulario ──
+   Clases propias login-. Antes usaba .form-group, .form-label y .form-input,
+   los mismos nombres que tenían otros formularios: como Vite carga todo el
+   CSS a la vez, se mezclaban. Y styles.css le ganaba a .form-input
+   (input[type="email"] pesa más que una clase), así que el padding, el borde
+   y la letra que decía este archivo no se aplicaban. */
 .welcome-form {
   width: 100%;
   margin-top: 8px;
-  animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* Solo para el lector de pantalla */
+.login-titulo-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.form-group {
+/* El espacio entre campos lo pone el grupo, y solo el grupo: antes el campo
+   sumaba otros 16px de margen y quedaban 32px entre uno y otro */
+.login-campo {
   display: flex;
   flex-direction: column;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
   text-align: left;
 }
 
-.form-label {
-  font-size: 13px;
+.login-label {
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 6px;
+  margin-bottom: 0.35rem;
 }
 
-.form-input {
-  padding: 10px 12px;
+/* Anidado bajo .welcome-form para ganarle a styles.css. 16px de letra: con
+   menos, Safari en iPhone hace zoom al tocar el campo */
+.welcome-form .login-input {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.6rem 0.85rem;
   border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #111827;
+  background-color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.welcome-form .login-input:focus {
   outline: none;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus {
   border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.error-message {
+.login-error {
   background-color: #fee2e2;
-  color: #dc2626;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 12px;
+  color: #b91c1c;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
   text-align: center;
 }
 
-.boton-cancelar {
-  width: 100%;
-  padding: 10px;
-  margin-top: 8px;
-  font-size: 14px;
-  background-color: transparent;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.boton-cancelar:hover {
-  background-color: #f3f4f6;
-}
-
-@media (max-width: 360px) {
-  .welcome-card {
-    padding: 28px 20px;
-  }
-  .welcome-logo {
-    width: 90%;
-  }
-}
-/* Estado inicial — logo centrado en pantalla */
-.welcome-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;        /* centrado vertical */
-  min-height: 100vh;
-  background-color: #ffffff;
-  padding: 16px;
-  box-sizing: border-box;
-  transition: align-items 0.3s ease; /* no funciona en todos los browsers */
-}
-
-/* Cuando el formulario está activo — sube todo */
-.welcome-container.form-activo {
-  align-items: flex-start;    /* 🔧 pega arriba */
-  padding-top: 40px;          /* pequeño espacio desde el tope */
-}
-
-.input-password-wrapper {
+/* ── Contraseña con el botón del ojo ──
+   El botón ocupa todo el alto del campo y se centra solo. Antes se centraba
+   respecto del campo más su margen de 16px y quedaba unos 8px más abajo */
+.login-password {
   position: relative;
+}
+
+.welcome-form .login-password .login-input {
+  padding-right: 3rem;
+}
+
+.welcome-form .login-ver-password {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 44px;
   display: flex;
   align-items: center;
-}
-
-.input-password-wrapper .form-input {
-  width: 100%;
-  padding-right: 44px; /* espacio para el botón del ojo */
-}
-
-.boton-ver-password {
-  position: absolute;
-  right: 10px;
+  justify-content: center;
+  padding: 0;
   background: none;
   border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 0;
-  line-height: 1;
+  border-radius: 0 0.5rem 0.5rem 0;
   color: #6b7280;
+  cursor: pointer;
 }
-/* ---- ¿Olvidaste tu contraseña? ---- */
 
-.welcome-form .boton-olvide {
+.welcome-form .login-ver-password:hover {
+  color: #111827;
+}
+
+.welcome-form .login-ver-password:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+/* ── ¿Olvidaste tu contraseña? ── */
+
+.welcome-form .login-olvide {
   display: block;
   width: 100%;
-  margin-top: 0.75rem;
+  min-height: 44px;
+  margin-top: 0.5rem;
   background: none;
   border: none;
   color: #2563eb;
@@ -180,10 +206,57 @@
   font-family: inherit;
 }
 
-.ayuda-olvide {
-  margin-top: 0.5rem;
+.login-ayuda {
+  margin-top: 0.25rem;
   font-size: 0.8rem;
   color: #4b5563;
   line-height: 1.45;
   text-align: center;
+}
+
+/* ── Pie: ayuda y versión ── */
+.login-pie {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.login-pie p {
+  margin: 0;
+}
+
+.login-pie a {
+  display: inline-block;
+  padding: 0.35rem 0.15rem;
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-pie a:hover {
+  text-decoration: underline;
+}
+
+.login-pie a:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.login-pie .login-pie-version {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+/* Pantallas muy angostas: menos relleno a los lados para que los campos no
+   queden apretados. Antes subía el de arriba a 28px y sumaba al hueco */
+@media (max-width: 360px) {
+  .welcome-card {
+    padding: 10px 8px 20px;
+  }
 }

@@ -8,11 +8,16 @@
   box-sizing: border-box;
 }
 
+/* overflow-x y max-width vivían en SalesPage.css, pero como Vite carga
+   todo el CSS a la vez aplicaban a toda la app: evitan que un elemento
+   ancho (una tabla, un modal) cree scroll horizontal en la página */
 html, body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f3f4f6;
   color: #1f2937;
   line-height: 1.5;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* ============================================
@@ -775,25 +780,5 @@ select[disabled] {
   opacity: 0.6;
 }
 
-/* ============================================
-   FORM GROUPS
-   ============================================ */
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  color: #374151;
-}
-
-.form-control {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-}
+/* Aquí había .form-group y .form-control. Las usaba solo el login, que
+   ahora tiene sus propias clases (login-): no las usa ninguna pantalla */

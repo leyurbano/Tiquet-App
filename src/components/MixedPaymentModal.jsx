@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useId } from "react";
 import "./MixedPaymentModal.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import { useDialogo } from "../hooks/useDialogo";
+import { CreditCard, X, CircleCheck } from "lucide-react";
 
 /**
  * Modal para registrar un pago mixto (ej. parte en efectivo, parte en transferencia).
@@ -60,20 +61,24 @@ function MixedPaymentModal({ total, mediosPago, onConfirm, onClose }) {
   };
 
   // Escape, foco y Tab dentro de la ventana
+  // Prefijo de los id que conectan cada etiqueta con su campo
+  const idCampo = useId();
   const refDialogo = useDialogo({ onCerrar: onClose });
 
   return (
     <div className="mpm-overlay" onClick={onClose}>
       <div className="mpm-modal" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Pago mixto">
         <div className="mpm-header">
-          <h3 className="mpm-title">💳 Pago Mixto</h3>
+          <h3 className="mpm-title">
+            <CreditCard size={20} aria-hidden="true" /> Pago Mixto
+          </h3>
           <button
             type="button"
             className="mpm-close"
             onClick={onClose}
             aria-label="Cerrar"
           >
-            ✕
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
@@ -85,8 +90,9 @@ function MixedPaymentModal({ total, mediosPago, onConfirm, onClose }) {
         <div className="mpm-inputs">
           {mediosPago.map((medio) => (
             <div className="mpm-input-group" key={medio.id}>
-              <label className="mpm-label">{medio.pago}</label>
+              <label className="mpm-label" htmlFor={`${idCampo}-${medio.id}`}>{medio.pago}</label>
               <input
+                id={`${idCampo}-${medio.id}`}
                 type="text"
                 inputMode="numeric"
                 placeholder="0"
@@ -102,7 +108,9 @@ function MixedPaymentModal({ total, mediosPago, onConfirm, onClose }) {
           className={`mpm-balance ${cuadra ? "mpm-balance-ok" : "mpm-balance-pending"}`}
         >
           {cuadra ? (
-            <span>✅ Cuadra con el total</span>
+            <span>
+              <CircleCheck size={16} aria-hidden="true" /> Cuadra con el total
+            </span>
           ) : sumaActual === 0 ? (
             <span>Ingresa los montos por cada medio de pago</span>
           ) : diferencia > 0 ? (

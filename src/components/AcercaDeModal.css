@@ -1,0 +1,117 @@
+/* Acerca de: versión y soporte. Reusa caja-* de CajaModal.css. */
+
+.caja-box.acerca-box {
+  max-width: 400px;
+}
+
+.acerca-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 1rem 0;
+  text-align: center;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.acerca-app strong {
+  font-size: 1.25rem;
+  color: #111827;
+}
+
+.acerca-version {
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.caja-box .acerca-actualizar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.acerca-resultado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 1.25rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: #15803d;
+  text-align: center;
+}
+
+/* Dos tarjetas que se tocan enteras: en celular son el objetivo grande */
+.acerca-soporte {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.acerca-enlace {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #111827;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.acerca-enlace:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.acerca-enlace:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.acerca-enlace svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.acerca-enlace span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.acerca-enlace small {
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acerca-copy {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+@media (max-width: 400px) {
+  .acerca-soporte {
+    grid-template-columns: 1fr;
+  }
+}

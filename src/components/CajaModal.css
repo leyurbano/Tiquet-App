@@ -327,6 +327,11 @@
 }
 
 .caja-medio-dif {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
   margin-top: 0.4rem;
   padding: 0.35rem 0.5rem;
   border-radius: 0.375rem;
@@ -336,6 +341,10 @@
 }
 
 .caja-diferencia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   padding: 0.75rem;
   border-radius: 0.5rem;
   text-align: center;
@@ -460,4 +469,103 @@
   color: #6b7280;
   padding: 1.5rem 0;
   font-size: 0.9rem;
+}
+
+/* Títulos y textos con icono de lucide-react. Es un modificador aparte
+   porque este archivo lo comparten muchos modales: solo cambia los que
+   lo agregan */
+.caja-con-icono {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.caja-con-icono svg {
+  flex-shrink: 0;
+}
+
+.caja-title.caja-con-icono svg {
+  color: #2563eb;
+}
+
+.caja-loading.caja-con-icono {
+  justify-content: center;
+}
+
+/* ---- Encabezado con ✕ y botones en fila ----
+   Modificadores opcionales, como caja-con-icono: solo cambian los modales
+   que los usan. Es el patrón de Crear/Editar producto y cliente: título con
+   icono a la izquierda, ✕ a la derecha, y la acción principal y Cancelar
+   en una fila, también en celular */
+
+.caja-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.caja-header .caja-title {
+  margin-bottom: 0;
+}
+
+.caja-box .caja-cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.caja-box .caja-cerrar:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.caja-box .caja-cerrar:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.caja-acciones-fila {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.caja-acciones-fila button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.caja-acciones-fila .caja-btn-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* 44px: el mínimo cómodo para el dedo */
+@media (max-width: 768px) {
+  .caja-box .caja-cerrar {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Menos relleno a los lados: a media fila de un celular de 360px, con
+     el relleno normal, "Cerrar caja" y su ícono quedaban justos */
+  .caja-acciones-fila button {
+    min-height: 44px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
 }

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { productService } from '../services/productService'
-import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus, ClipboardCheck, RotateCcw } from 'lucide-react'
+import { ShoppingCart, Pencil, Undo2, MapPin, X, PackagePlus, ClipboardCheck, RotateCcw, Loader2 } from 'lucide-react'
 import './ProductHistoryModal.css'
 import { useDialogo } from '../hooks/useDialogo'
 import { detalleMovimiento, motivoCorto } from '../utils/movimientosStock'
+import { nombreProducto } from '../utils/producto'
+import { formatFechaMovimiento } from '../utils/dateFormatter'
+import { formatNumero } from '../utils/currencyFormatter'
 
 const TIPO_CONFIG = {
   venta:        { icon: ShoppingCart, label: 'Venta',        color: '#dc2626' },
@@ -30,13 +33,6 @@ function ProductHistoryModal({ product, onClose }) {
   // Escape, foco y Tab dentro de la ventana
   const refDialogo = useDialogo({ onCerrar: onClose })
 
-  const formatFecha = (iso) => {
-    return new Date(iso).toLocaleString('es-CO', {
-      day: '2-digit', month: 'short',
-      hour: '2-digit', minute: '2-digit'
-    })
-  }
-
   return (
     <div className="phm-overlay" onClick={onClose}>
       <div className="phm-box" onClick={e => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Historial de ${product.descripcion}`}>
@@ -45,20 +41,22 @@ function ProductHistoryModal({ product, onClose }) {
           <div>
             <p className="phm-eyebrow">Historial de movimientos</p>
             <h2 className="phm-title">
-              {(product.descripcion || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+              {nombreProducto(product.descripcion)}
             </h2>
             <p className="phm-subtitle">
-              Stock actual: <strong>{product.cantidad}</strong> unidades
+              Stock actual: <strong>{formatNumero(product.cantidad)}</strong> unidades
             </p>
           </div>
-          <button className="phm-close" onClick={onClose}>
-            <X size={16} />
+          <button type="button" className="phm-close" onClick={onClose} aria-label="Cerrar historial">
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
 
         <div className="phm-body">
           {loading ? (
-            <p className="phm-empty">⏳ Cargando...</p>
+            <p className="phm-empty phm-cargando">
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Cargando...
+            </p>
           ) : history.length === 0 ? (
             <p className="phm-empty">Sin movimientos registrados aún.</p>
           ) : (
@@ -80,20 +78,20 @@ function ProductHistoryModal({ product, onClose }) {
                   }
                   const Icon = cfg.icon
                   const diff = event.diferencia
-                  const diffLabel = diff > 0 ? `+${diff}` : `${diff}`
+                  const diffLabel = diff > 0 ? `+${formatNumero(diff)}` : formatNumero(diff)
                   const diffColor = diff > 0 ? '#16a34a' : '#dc2626'
 
                   return (
                     <tr key={event.id}>
-                      <td className="phm-td-fecha">{formatFecha(event.created_at)}</td>
+                      <td className="phm-td-fecha">{formatFechaMovimiento(event.created_at)}</td>
                       <td>
                         <span className="phm-badge" style={{ background: cfg.color + '18', color: cfg.color }}>
                           <Icon size={12} />
                           {cfg.label}
                         </span>
                       </td>
-                      <td className="phm-td-num">{event.cantidad_anterior ?? '—'}</td>
-                      <td className="phm-td-num">{event.cantidad_nueva ?? '—'}</td>
+                      <td className="phm-td-num">{event.cantidad_anterior != null ? formatNumero(event.cantidad_anterior) : '—'}</td>
+                      <td className="phm-td-num">{event.cantidad_nueva != null ? formatNumero(event.cantidad_nueva) : '—'}</td>
                       <td className="phm-td-num">
                         <span style={{ color: diffColor, fontWeight: 700 }}>
                           {diff != null ? diffLabel : '—'}

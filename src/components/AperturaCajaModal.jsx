@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useId } from 'react'
 import { useCashSession } from '../contexts/CashSessionContext'
 import { useAuth } from '../contexts/AuthContext'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import { useDialogo } from '../hooks/useDialogo'
+import { Wallet, Check, Loader2 } from 'lucide-react'
 import './CajaModal.css'
 
 /**
@@ -11,7 +12,7 @@ import './CajaModal.css'
  * efectivo y no tiene por qué abrir un turno.
  *
  * No se descarta con Escape ni con clic afuera. Si llega `onOmitir`
- * (administradores y super admin), aparece "No voy a vender ahora"; el
+ * (administradores y super admin), aparece "Ahora no"; el
  * vendedor no tiene esa opción, porque vender es su trabajo. Sin caja
  * abierta la venta igual queda bloqueada, también en la base de datos.
  */
@@ -22,6 +23,8 @@ function AperturaCajaModal({ onOmitir }) {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   // Sin onCerrar: no se descarta con Escape (ver arriba)
+  // Conecta la etiqueta con su campo
+  const idBase = useId()
   const refDialogo = useDialogo()
 
   const handleSubmit = async (e) => {
@@ -41,19 +44,22 @@ function AperturaCajaModal({ onOmitir }) {
   return (
     <div className="caja-overlay">
       <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Apertura de caja">
-        <h2 className="caja-title">💰 Apertura de caja</h2>
+        <h2 className="caja-title caja-con-icono">
+          <Wallet size={22} aria-hidden="true" /> Apertura de caja
+        </h2>
         <p className="caja-subtitle">
           Ingresa el dinero en efectivo con el que arranca la caja. Al cerrar sesión
           se usará para cuadrar el arqueo del turno.
         </p>
 
         <form onSubmit={handleSubmit}>
-          <label className="caja-label">Base inicial</label>
+          <label className="caja-label" htmlFor={idBase}>Base inicial</label>
           <div className="caja-money">
-            <span className="caja-money-symbol">$</span>
+            <span className="caja-money-symbol" aria-hidden="true">$</span>
             <input
               type="text"
               inputMode="numeric"
+              id={idBase}
               placeholder="0"
               value={formatCOPInput(base)}
               onChange={(e) => setBase(parseCOP(e.target.value))}
@@ -65,28 +71,50 @@ function AperturaCajaModal({ onOmitir }) {
 
           {error && <div className="caja-alert">{error}</div>}
 
+          {/* Dos botones en fila, como en el resto de la app. El vendedor tiene
+              solo dos salidas, abrir caja o irse, así que "Cerrar sesión" va
+              a su lado con el mismo peso. El administrador tiene tres: la
+              segunda es "Ahora no" y "Cerrar sesión" baja como enlace. Los
+              textos son cortos para que quepan a media fila en el celular */}
           <div className="caja-buttons">
-            <button type="submit" className="caja-btn-primary" disabled={guardando}>
-              {guardando ? 'Abriendo caja...' : 'Abrir caja y continuar'}
-            </button>
+            <div className="caja-acciones-fila">
+              <button type="submit" className="caja-btn-primary" disabled={guardando}>
+                {guardando
+                  ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                  : <Check size={16} aria-hidden="true" />}
+                {guardando ? 'Abriendo...' : 'Abrir caja'}
+              </button>
+              {onOmitir ? (
+                <button
+                  type="button"
+                  className="caja-btn-secondary"
+                  onClick={onOmitir}
+                  disabled={guardando}
+                  title="Entrar sin abrir caja: no se podrá vender"
+                >
+                  Ahora no
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="caja-btn-secondary"
+                  onClick={logout}
+                  disabled={guardando}
+                >
+                  Cerrar sesión
+                </button>
+              )}
+            </div>
             {onOmitir && (
               <button
                 type="button"
-                className="caja-btn-secondary"
-                onClick={onOmitir}
+                className="caja-btn-ghost"
+                onClick={logout}
                 disabled={guardando}
               >
-                No voy a vender ahora
+                Cerrar sesión
               </button>
             )}
-            <button
-              type="button"
-              className="caja-btn-ghost"
-              onClick={logout}
-              disabled={guardando}
-            >
-              Cerrar sesión
-            </button>
           </div>
         </form>
       </div>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { Receipt, Loader2, X, ChevronRight, ChevronDown } from 'lucide-react'
 import { clientService } from '../services/clientService'
-import { formatCOP } from '../utils/currencyFormatter'
+import { formatCOP, formatNumero } from '../utils/currencyFormatter'
+import { nombreProducto } from '../utils/producto'
 import { useDialogo } from '../hooks/useDialogo'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { etiquetaMotivo } from '../utils/motivosAnulacion'
@@ -39,7 +41,7 @@ function HistorialComprasModal({ cliente, onClose }) {
         if (!porProducto[d.producto_id]) {
           porProducto[d.producto_id] = {
             id: d.producto_id,
-            nombre: d.productos?.descripcion || `Producto #${d.producto_id}`,
+            nombre: d.productos?.descripcion ? nombreProducto(d.productos.descripcion) : `Producto #${d.producto_id}`,
             unidades: 0
           }
         }
@@ -62,13 +64,22 @@ function HistorialComprasModal({ cliente, onClose }) {
   return (
     <div className="caja-overlay" onClick={onClose}>
       <div className="caja-box compras-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Compras de ${cliente.nombre}`}>
-        <h2 className="caja-title">Compras de {cliente.nombre}</h2>
+        <div className="caja-header">
+          <h2 className="caja-title caja-con-icono">
+            <Receipt size={22} aria-hidden="true" /> Compras de {cliente.nombre}
+          </h2>
+          <button type="button" className="caja-cerrar" onClick={onClose} aria-label="Cerrar">
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
         <p className="caja-subtitle">Documento {cliente.documento}</p>
 
         {error ? (
           <div className="caja-alert">No se pudo cargar el historial. Inténtalo de nuevo.</div>
         ) : ventas === null ? (
-          <div className="caja-loading">⏳ Cargando...</div>
+          <div className="caja-loading caja-con-icono">
+            <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Cargando...
+          </div>
         ) : ventas.length === 0 ? (
           <p className="caja-hint">Este cliente todavía no tiene compras.</p>
         ) : (
@@ -99,7 +110,7 @@ function HistorialComprasModal({ cliente, onClose }) {
                 <span className="compras-top-titulo">Lo que más compra:</span>
                 {resumen.top.map((p) => (
                   <span key={p.id} className="compras-chip">
-                    {p.nombre} · {p.unidades}
+                    {p.nombre} · {formatNumero(p.unidades)}
                   </span>
                 ))}
               </div>
@@ -138,7 +149,24 @@ function HistorialComprasModal({ cliente, onClose }) {
                             )}
                           </td>
                           <td>
-                            {abierta === v.id ? '▾' : '▸'} {unidades} unid.
+                            {/* La fila entera se abre con clic; este botón
+                                es para el teclado y el lector de pantalla,
+                                que no pueden "hacer clic" en una fila */}
+                            <button
+                              type="button"
+                              className="compras-toggle"
+                              aria-expanded={abierta === v.id}
+                              aria-label={`${abierta === v.id ? 'Ocultar' : 'Ver'} productos de la venta ${numeroDoc(v)}`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setAbierta(abierta === v.id ? null : v.id)
+                              }}
+                            >
+                              {abierta === v.id
+                                ? <ChevronDown size={14} aria-hidden="true" />
+                                : <ChevronRight size={14} aria-hidden="true" />}
+                              {formatNumero(unidades)} unid.
+                            </button>
                           </td>
                           <td>{mediosDe(v)}</td>
                           <td className="num">
@@ -154,7 +182,10 @@ function HistorialComprasModal({ cliente, onClose }) {
                               <ul>
                                 {lineas.map((d, i) => (
                                   <li key={i}>
-                                    <span>{d.cantidad} × {d.productos?.descripcion || `Producto #${d.producto_id}`}</span>
+                                    <span>
+                                      {formatNumero(d.cantidad)} ×{' '}
+                                      {d.productos?.descripcion ? nombreProducto(d.productos.descripcion) : `Producto #${d.producto_id}`}
+                                    </span>
                                     <span>{formatCOP((Number(d.precio) || 0) * (Number(d.cantidad) || 0))}</span>
                                   </li>
                                 ))}

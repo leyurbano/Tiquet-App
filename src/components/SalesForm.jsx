@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useId } from "react";
 import { toast } from '../utils/toast'
 import "./SalesForm.css";
 import { formatCOP } from "../utils/currencyFormatter";
 import { clientService } from "../services/clientService";
-import { getTodayColombia } from "../utils/dateFormatter";
+import { formatFechaLargaColombia } from "../utils/dateFormatter";
 import MixedPaymentModal from "./MixedPaymentModal";
 import { salesService } from "../services/salesService";
 import { fiadoService } from "../services/fiadoService";
 import { esConsumidorFinal } from "../utils/clientes";
 import { numeroProducto, coincideNumero } from "../utils/producto";
+import {
+  ReceiptText, User, UserPlus, ScanBarcode, Package, Trash2, Wallet,
+  CreditCard, CircleCheck, AlertTriangle, Check, X, Loader2,
+} from "lucide-react";
+
+// Item y Cantidad solo aceptan dígitos (también al pegar)
+const soloDigitos = (valor) => valor.replace(/\D/g, "");
 
 function SalesForm({
   products,
@@ -17,7 +24,13 @@ function SalesForm({
   // Logo del negocio (Configuración) para la marca de agua; sin logo, no hay
   logoUrl = null,
 }) {
-  const [saleDate, setSaleDate] = useState(getTodayColombia);
+  // 🔧 Antes era un campo editable que no se guardaba: registrar_venta usa
+  // now() del servidor. Ahora solo se muestra, y se refresca tras cada venta
+  // por si el turno pasa la medianoche.
+  const [fechaHoy, setFechaHoy] = useState(formatFechaLargaColombia);
+  // Prefijo de los id que conectan cada etiqueta con su campo: tocar la
+  // etiqueta enfoca el campo y el lector de pantalla lo anuncia por su nombre
+  const idCampo = useId();
   const [customer, setCustomer] = useState({ name: "", cedula: "", phone: "" });
   const [items, setItems] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -101,7 +114,7 @@ function SalesForm({
     }
 
     if (filteredProducts.length === 0) {
-      setStockError(` Ningún producto coincide con "${texto}".`);
+      setStockError(`Ningún producto coincide con "${texto}".`);
     }
   };
 
@@ -179,7 +192,7 @@ function SalesForm({
     if (!product || pedida <= 0) return;
 
     if (product.cantidad === 0) {
-      setStockError(` El producto "${product.descripcion}" está agotado y no se puede registrar.`);
+      setStockError(`El producto "${product.descripcion}" está agotado y no se puede registrar.`);
       return;
     }
 
@@ -190,7 +203,7 @@ function SalesForm({
     const yaEnCarrito = items.find((i) => i.product_id === product.id)?.quantity || 0;
     if (yaEnCarrito + pedida > product.cantidad) {
       setStockError(
-        ` Stock insuficiente para "${product.descripcion}". Disponible: ${product.cantidad}` +
+        `Stock insuficiente para "${product.descripcion}". Disponible: ${product.cantidad}` +
         (yaEnCarrito ? `, ya agregaste ${yaEnCarrito}` : "") +
         `, solicitado: ${pedida}.`
       );
@@ -199,6 +212,13 @@ function SalesForm({
 
     // si pasa la validación limpia el error
     setStockError('');
+
+    // $0 es válido (obsequios), pero el cajero tiene que saberlo: puede ser
+    // un producto al que se le olvidó poner precio
+    const precio = Number(product.precio_venta) || 0;
+    if (precio === 0 && !yaEnCarrito) {
+      toast.aviso(`"${product.descripcion}" tiene precio $0: se venderá gratis.`);
+    }
 
     if (!customerFound && !autoSetFinalCustomer && !customer.cedula.trim()) {
       await searchCustomerByCedula("222222222");
@@ -220,7 +240,9 @@ function SalesForm({
             {
               product_id: product.id,
               product_name: product.descripcion || product.name,
-              unit_price: product.precio_venta || product.price,
+              // 🔧 Era `precio_venta || product.price`: con precio 0 quedaba
+              // undefined, el total salía NaN y la base rechazaba la venta
+              unit_price: precio,
               quantity: pedida,
             },
           ];
@@ -282,11 +304,11 @@ function SalesForm({
     for (const item of items) {
       const producto = products.find(p => p.id === item.product_id);
       if (!producto || producto.cantidad === 0) {
-        setStockError(`❌ El producto "${item.product_name}" está agotado y no puede venderse.`);
+        setStockError(`El producto "${item.product_name}" está agotado y no puede venderse.`);
         return;
       }
       if (producto.cantidad < item.quantity) {
-        setStockError(`❌ Stock insuficiente para "${item.product_name}". Disponible: ${producto.cantidad}, solicitado: ${item.quantity}.`);
+        setStockError(`Stock insuficiente para "${item.product_name}". Disponible: ${producto.cantidad}, solicitado: ${item.quantity}.`);
         return;
       }
     }
@@ -304,7 +326,6 @@ function SalesForm({
     setIsSubmitting(true);
     const resultado = await onSubmit({
       cliente_id: customerFound?.id || null,
-      fecha: saleDate,
       total: calculateTotal(),
       medio_pago_id: pagosMixtos ? null : paymentMethod,
       pagos: pagosMixtos || [
@@ -327,7 +348,7 @@ function SalesForm({
       return;
     }
 
-    setSaleDate(getTodayColombia());
+    setFechaHoy(formatFechaLargaColombia());
     setCustomer({ name: "", cedula: "", phone: "" });
     setItems([]);
     setPaymentMethod("");
@@ -346,35 +367,28 @@ function SalesForm({
         />
       )}
 
-      <h2 className="form-title">📝 Nueva Venta</h2>
+      <h2 className="sf-title">
+        <span className="sf-title-texto">
+          <ReceiptText size={22} aria-hidden="true" /> Nueva Venta
+        </span>
+        <span className="sf-fecha">{fechaHoy}</span>
+      </h2>
 
       <div className="sf-section">
-        <div className="form-row-2">
-          <div className="form-group">
-            <label className="form-label">Fecha</label>
+        <h3 className="sf-section-title">
+          <User size={18} aria-hidden="true" /> Datos del Cliente
+        </h3>
+        <div className="sf-row-3">
+          <div className="sf-group">
+            <label className="sf-label" htmlFor={`${idCampo}-documento`}>N° Documento</label>
             <input
-              type="date"
-              value={saleDate}
-              onChange={(e) => setSaleDate(e.target.value)}
-              required
-              className="form-input"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="sf-section">
-        <h3 className="form-section-title">Datos del Cliente</h3>
-        <div className="form-row-3">
-          <div className="form-group">
-            <label className="form-label">N° Documento</label>
-            <input
+              id={`${idCampo}-documento`}
               type="text"
               placeholder="CC, CE, NIT"
               value={customer.cedula}
               onChange={(e) => searchCustomerByCedula(e.target.value)}
               maxLength="10"
-              className="form-input"
+              className="sf-input"
             />
             {showAddCustomerBtn && customer.cedula.trim().length > 0 && (
               <button
@@ -382,13 +396,14 @@ function SalesForm({
                 onClick={addNewCustomer}
                 className="btn-add-customer"
               >
-                ➕ Agregar Cliente
+                <UserPlus size={14} aria-hidden="true" /> Agregar Cliente
               </button>
             )}
           </div>
-          <div className="form-group">
-            <label className="form-label">Nombre Completo</label>
+          <div className="sf-group">
+            <label className="sf-label" htmlFor={`${idCampo}-nombre`}>Nombre Completo</label>
             <input
+              id={`${idCampo}-nombre`}
               type="text"
               placeholder="Nombre del cliente"
               value={customer.name}
@@ -396,12 +411,13 @@ function SalesForm({
                 setCustomer({ ...customer, name: e.target.value })
               }
               required
-              className="form-input"
+              className="sf-input"
             />
           </div>
-          <div className="form-group">
-            <label className="form-label">Celular</label>
+          <div className="sf-group">
+            <label className="sf-label" htmlFor={`${idCampo}-celular`}>Celular</label>
             <input
+              id={`${idCampo}-celular`}
               type="tel"
               placeholder="3100000000"
               value={customer.phone}
@@ -409,27 +425,34 @@ function SalesForm({
                 setCustomer({ ...customer, phone: e.target.value })
               }
               maxLength="10"
-              className="form-input"
+              className="sf-input"
             />
           </div>
         </div>
       </div>
 
       <div className="sf-section">
-        <h3 className="form-section-title">🛒 Agregar Productos</h3>
+        <h3 className="sf-section-title">
+          <ScanBarcode size={18} aria-hidden="true" /> Agregar Productos
+        </h3>
         <div className="add-product-section">
-          <div className="form-row-add-item">
-            <div className="form-group">
-              <label className="form-label">Item</label>
+          <div className="sf-row-item">
+            <div className="sf-group">
+              <label className="sf-label" htmlFor={`${idCampo}-item`}>Item</label>
+              {/* 🔧 type="text" + inputMode: maxLength no funciona en
+                  type="number", que además acepta "e", "-" y "." */}
               <input
-                type="number"
+                id={`${idCampo}-item`}
+                type="text"
+                inputMode="numeric"
                 placeholder="producto"
                 value={selectedProduct}
                 onChange={(e) => {
-                  setSelectedProduct(e.target.value);
-                  if (e.target.value) {
+                  const numero = soloDigitos(e.target.value);
+                  setSelectedProduct(numero);
+                  if (numero) {
                     const product = products.find(
-                      (p) => coincideNumero(p, e.target.value),
+                      (p) => coincideNumero(p, numero),
                     );
                     if (product) setProductSearch(product.descripcion);
                   } else {
@@ -437,19 +460,20 @@ function SalesForm({
                   }
                 }}
                 maxLength="5"
-                className="form-input"
+                className="sf-input"
               />
             </div>
-            <div className="form-group product-search-group">
-              <label className="form-label">Descripción</label>
+            <div className="sf-group product-search-group">
+              <label className="sf-label" htmlFor={`${idCampo}-descripcion`}>Descripción</label>
               <input
+                id={`${idCampo}-descripcion`}
                 type="text"
                 placeholder="Escanea el código o busca por nombre..."
                 value={productSearch}
                 onChange={(e) => handleProductSearch(e.target.value)}
                 onKeyDown={manejarEnterBusqueda}
                 autoComplete="off"
-                className="form-input"
+                className="sf-input"
               />
               {filteredProducts.length > 0 && (
                 <div className="product-dropdown">
@@ -470,30 +494,31 @@ function SalesForm({
                 </div>
               )}
             </div>
-            <div className="form-group">
-              <label className="form-label">Cantidad</label>
+            <div className="sf-group">
+              <label className="sf-label" htmlFor={`${idCampo}-cantidad`}>Cantidad</label>
               <input
-                type="number"
+                id={`${idCampo}-cantidad`}
+                type="text"
+                inputMode="numeric"
                 placeholder="Cantidad"
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                onKeyPress={(e) => {
+                onChange={(e) => setQuantity(soloDigitos(e.target.value))}
+                onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
                     addItem();
                   }
                 }}
-                min="1"
                 maxLength="5"
-                className="form-input"
+                className="sf-input"
               />
             </div>
           </div>
 
           {/* 🔧 CAMBIO — mensaje de stock va justo debajo de los campos de producto */}
           {stockError && (
-            <div className="stock-error-msg">
-              {stockError}
+            <div className="stock-error-msg" role="alert">
+              <AlertTriangle size={16} aria-hidden="true" /> {stockError}
             </div>
           )}
 
@@ -502,14 +527,18 @@ function SalesForm({
 
       {items.length > 0 && (
         <div className="sf-section">
-          <h3 className="form-section-title">📦 Productos en la Venta</h3>
+          <h3 className="sf-section-title">
+            <Package size={18} aria-hidden="true" /> Productos en la Venta
+          </h3>
           <div className="sales-items-table">
             <div className="table-header-sales">
               <div className="col-number">#</div>
               <div className="col-product">Descripción</div>
               <div className="col-qty">Cantidad</div>
-              <div className="col-total">Total del Producto</div>
-              <div className="col-action">Acción</div>
+              <div className="col-total">Subtotal</div>
+              <div className="col-action">
+                <span className="sf-col-action-txt">Acción</span>
+              </div>
             </div>
             {items.map((item, index) => (
               <div key={item.product_id} className="table-row-sales">
@@ -524,8 +553,9 @@ function SalesForm({
                     type="button"
                     onClick={() => removeItem(item.product_id)}
                     className="btn-remove-item"
+                    aria-label={`Quitar ${item.product_name}`}
                   >
-                    🗑️
+                    <Trash2 size={15} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -533,20 +563,25 @@ function SalesForm({
           </div>
 
           <div className="sf-total">
-            <span className="total-label">💰 Total de la Compra:</span>
+            <span className="total-label">
+              <Wallet size={18} aria-hidden="true" /> Total de la Compra:
+            </span>
             <span className="total-amount">{formatCOP(calculateTotal())}</span>
           </div>
         </div>
       )}
 
-      <div className="form-group">
-        <label className="form-label">Forma de Pago</label>
-        <div className="form-pago">
+      <div className="sf-section sf-section-pago">
+        <h3 className="sf-section-title">
+          <CreditCard size={18} aria-hidden="true" /> Forma de Pago
+        </h3>
+        <div className="sf-pago">
           {mediosPago.map((medio) => (
             <button
               key={medio.id}
               type="button"
               className={paymentMethod === medio.id ? "active" : ""}
+              aria-pressed={paymentMethod === medio.id}
               onClick={() => {
                 setPaymentMethod(medio.id);
                 setPagosMixtos(null);
@@ -558,6 +593,7 @@ function SalesForm({
           <button
             type="button"
             className={pagosMixtos ? "active" : ""}
+            aria-pressed={!!pagosMixtos}
             onClick={() => setShowMixedModal(true)}
           >
             Pago Mixto
@@ -565,38 +601,41 @@ function SalesForm({
         </div>
 
         {pagosMixtos && (
-          <p style={{ color: "#065f46", fontSize: "0.85rem", marginTop: "4px" }}>
-            ✅ Pago mixto configurado ({pagosMixtos.length} medios)
+          <p className="sf-pago-nota sf-pago-ok">
+            <CircleCheck size={14} aria-hidden="true" /> Pago mixto configurado ({pagosMixtos.length} medios)
           </p>
         )}
 
-        {!paymentMethod && !pagosMixtos && (
-          <p style={{ color: "#c0392b", fontSize: "0.85rem", marginTop: "4px" }}>
-            Selecciona una forma de pago
+        {/* 🔧 Antes salía en rojo apenas se abría el formulario, como si fuera
+            un error. Ahora solo aparece cuando ya hay productos, y explica
+            por qué "Registrar Venta" sigue deshabilitado */}
+        {items.length > 0 && !paymentMethod && !pagosMixtos && (
+          <p className="sf-pago-nota">
+            Elige cómo paga el cliente para registrar la venta
           </p>
+        )}
+
+        {hayFiado && (
+          <div className={`sf-fiado-info ${!clienteFiable || superaCupo ? "sf-fiado-alerta" : ""}`}>
+            {!clienteFiable ? (
+              "Para vender fiado, busca o registra al cliente con su documento. A Consumidor final no se le puede fiar."
+            ) : saldoCliente === null ? (
+              "Consultando el cupo del cliente..."
+            ) : (
+              <>
+                Fiado: <strong>{formatCOP(montoFiado)}</strong> · Cupo {formatCOP(cupoCliente)} ·
+                Debe {formatCOP(saldoCliente)} · Disponible <strong>{formatCOP(disponibleFiado)}</strong>
+                {superaCupo && (
+                  <>
+                    <br />
+                    Supera el cupo: la venta será rechazada. Un administrador puede subirle el cupo en Clientes.
+                  </>
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
-
-      {hayFiado && (
-        <div className={`sf-fiado-info ${!clienteFiable || superaCupo ? "sf-fiado-alerta" : ""}`}>
-          {!clienteFiable ? (
-            "Para vender fiado, busca o registra al cliente con su documento. A Consumidor final no se le puede fiar."
-          ) : saldoCliente === null ? (
-            "Consultando el cupo del cliente..."
-          ) : (
-            <>
-              Fiado: <strong>{formatCOP(montoFiado)}</strong> · Cupo {formatCOP(cupoCliente)} ·
-              Debe {formatCOP(saldoCliente)} · Disponible <strong>{formatCOP(disponibleFiado)}</strong>
-              {superaCupo && (
-                <>
-                  <br />
-                  Supera el cupo: la venta será rechazada. Un administrador puede subirle el cupo en Clientes.
-                </>
-              )}
-            </>
-          )}
-        </div>
-      )}
 
       {showMixedModal && (
         <MixedPaymentModal
@@ -611,16 +650,24 @@ function SalesForm({
         />
       )}
 
-      <div className="form-buttons">
+      <div className="sf-buttons">
         <button
           type="submit"
-          className="btn-submit"
+          className="sf-btn-submit"
           disabled={(!paymentMethod && !pagosMixtos) || items.length === 0 || isSubmitting}
         >
-          {isSubmitting ? "⏳ Guardando..." : "✅ Registrar Venta"}
+          {isSubmitting ? (
+            <>
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Guardando...
+            </>
+          ) : (
+            <>
+              <Check size={16} aria-hidden="true" /> Registrar Venta
+            </>
+          )}
         </button>
-        <button type="button" onClick={onCancel} className="btn-cancel">
-          ❌ Cancelar
+        <button type="button" onClick={onCancel} className="sf-btn-cancel">
+          <X size={16} aria-hidden="true" /> Cancelar
         </button>
       </div>
 

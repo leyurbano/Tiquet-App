@@ -9,24 +9,28 @@ import { formatCOP } from '../utils/currencyFormatter'
 import { fiadoService } from '../services/fiadoService'
 import { numeroDoc } from '../utils/documento'
 import { useDialogo } from '../hooks/useDialogo'
+import '../components/CajaModal.css'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
 import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
 import { useAuth } from '../contexts/AuthContext'
 import { useCashSession } from '../contexts/CashSessionContext'
 import AperturaCajaModal from '../components/AperturaCajaModal'
+import { ShoppingCart, PlusCircle, Printer, SkipForward, Lock } from 'lucide-react'
 import './SalesPage.css'
 
 function SalesPage() {
   // Anular mueve stock y dinero: la RLS lo restringe a administradores
-  const { esAdministrador, esSuperAdmin, estadoCuenta } = useAuth()
+  const { esAdministrador, esSuperAdmin, estadoCuenta, saliendo } = useAuth()
 
   // 🆕 La caja se abre al venir a vender, no al iniciar sesión
   const { session, loading: cargandoCaja } = useCashSession()
   const [aperturaOmitida, setAperturaOmitida] = useState(false)
   const puedeOmitirApertura = esAdministrador || esSuperAdmin
+  // !saliendo: al cerrar sesión, la caja se cierra primero y por un momento
+  // no hay caja abierta; sin esto aparecía "Abrir caja" mientras salía
   const mostrarApertura =
-    !cargandoCaja && !session && estadoCuenta === 'activo' && !aperturaOmitida
+    !cargandoCaja && !session && estadoCuenta === 'activo' && !aperturaOmitida && !saliendo
   const [sales, setSales] = useState([])
   const [products, setProducts] = useState([])
   const [clients, setClients] = useState([])
@@ -354,16 +358,30 @@ function SalesPage() {
         />
       )}
 
+      {/* Con la caja de los demás modales (caja-box). Sin ✕ a propósito: el
+          foco cae en Imprimir para que Enter imprima, y una ✕ antes le
+          quitaría ese lugar; Escape ya equivale a Saltar */}
       {showPrintModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" ref={refImprimir} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Imprimir recibo">
-            <h2>¿Desea imprimir el recibo?</h2>
-            <div className="modal-buttons">
-              <button onClick={handlePrint} className="btn-print">
-                🖨️ Imprimir
+        <div className="caja-overlay">
+          <div className="caja-box imprimir-box" ref={refImprimir} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Imprimir recibo">
+            <h2 className="caja-title caja-con-icono">
+              <Printer size={22} aria-hidden="true" /> ¿Imprimir el recibo?
+            </h2>
+            {lastSale && (
+              <p className="caja-subtitle">
+                Venta #{lastSale.numero} registrada por {formatCOP(lastSale.total || 0)}.
+              </p>
+            )}
+            <div className="caja-acciones-fila">
+              <button type="button" onClick={handlePrint} className="caja-btn-primary">
+                <Printer size={16} aria-hidden="true" /> Imprimir
               </button>
-              <button onClick={() => { setShowPrintModal(false); setFormKey(k => k + 1) }} className="btn-skip">
-                ⏭️ Saltar
+              <button
+                type="button"
+                onClick={() => { setShowPrintModal(false); setFormKey(k => k + 1) }}
+                className="caja-btn-secondary"
+              >
+                <SkipForward size={16} aria-hidden="true" /> Saltar
               </button>
             </div>
           </div>
@@ -371,10 +389,12 @@ function SalesPage() {
       )}
 
       <div className="sales-header">
-        <h1 className="sales-title">💰 Gestión de Ventas</h1>
+        <h1 className="sales-title">
+          <ShoppingCart size={30} aria-hidden="true" /> Gestión de Ventas
+        </h1>
         {!showForm && (
           <button onClick={() => setShowForm(true)} className="btn-new-sale">
-            ➕ Nueva Venta
+            <PlusCircle size={18} aria-hidden="true" /> Nueva Venta
           </button>
         )}
       </div>
@@ -394,7 +414,9 @@ function SalesPage() {
               />
             ) : (
               <div className="caja-cerrada-aviso">
-                <p className="caja-cerrada-titulo">🔒 Caja cerrada</p>
+                <p className="caja-cerrada-titulo">
+                  <Lock size={18} aria-hidden="true" /> Caja cerrada
+                </p>
                 <p>Para registrar ventas, abre la caja con la base del turno.</p>
                 <button
                   type="button"

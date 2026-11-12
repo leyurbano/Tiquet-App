@@ -73,6 +73,26 @@
 
 .compras-tabla .num { text-align: right; white-space: nowrap; }
 .compras-fila { cursor: pointer; }
+
+/* Parece texto, pero es un botón: se alcanza con Tab y abre con Enter */
+.compras-box .compras-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.compras-box .compras-toggle:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
 .compras-fila:hover td { background: #f9fafb; }
 .compras-fecha { font-size: 0.78rem; color: #6b7280; white-space: nowrap; }
 

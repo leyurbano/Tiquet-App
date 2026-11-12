@@ -14,3 +14,19 @@ export const numeroProducto = (producto) => producto?.codigo ?? producto?.id
 /** ¿El texto escrito corresponde al número de este producto? */
 export const coincideNumero = (producto, texto) =>
   String(numeroProducto(producto)) === String(texto).trim()
+
+/**
+ * Nombre del producto con la primera letra de cada palabra en mayúscula.
+ *
+ * 🔧 Antes era /\b\w/g, que solo reconoce letras sin tilde: tomaba la ó de
+ * "PANTALÓN" como separador y mostraba "PantalóN NiñO". \p{L} es cualquier
+ * letra; una palabra empieza tras algo que no sea letra ni número, así
+ * "500G" sigue quedando "500g".
+ */
+export const nombreProducto = (texto) =>
+  (texto || '')
+    .toLocaleLowerCase('es')
+    .replace(
+      /(^|[^\p{L}\p{N}])(\p{L})/gu,
+      (_, antes, letra) => antes + letra.toLocaleUpperCase('es'),
+    )

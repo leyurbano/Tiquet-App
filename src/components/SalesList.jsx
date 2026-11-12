@@ -5,6 +5,7 @@ import { getTodayColombia } from '../utils/dateFormatter'
 import AnularVentaModal from './AnularVentaModal'
 import DevolucionModal from './DevolucionModal'
 import { numeroDoc } from '../utils/documento'
+import { Loader2, CalendarDays, Inbox, Receipt, RotateCcw, Ban, History } from 'lucide-react'
 
 function SalesList({
   sales, clients = [], loading = false, onViewInvoice, onDelete, selectedDate, onDateChange,
@@ -70,16 +71,21 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
   const handleDelete = (sale) => setAnulando(sale)
 
   if (loading) {
-    return <div className="vl-cargando">⏳ Cargando ventas...</div>
+    return <div className="vl-cargando">
+      <Loader2 size={18} className="animate-spin" aria-hidden="true" /> Cargando ventas...
+    </div>
   }
 
   return (
     <div className="sales-list-container">
-      <h2 className="sales-list-title">Historial de Ventas</h2>
+      <h2 className="sales-list-title">
+        <History size={20} aria-hidden="true" /> Historial de Ventas
+      </h2>
 
       <div className="sales-search-bar">
         <input
           type="text"
+          aria-label="Buscar venta por cliente"
           placeholder="Buscar cliente..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -91,7 +97,7 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
             onClick={handleDateButtonClick}
             title="Seleccionar fecha"
           >
-            📅 {formatDateLabel(selectedDate)}
+            <CalendarDays size={14} aria-hidden="true" /> {formatDateLabel(selectedDate)}
           </button>
           <input
             ref={dateInputRef}
@@ -105,7 +111,7 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
 
       {filteredSales.length === 0 ? (
         <p className="vl-vacio">
-          📭 No hay ventas para el {formatDateLabel(selectedDate) === 'Hoy' ? 'día de hoy' : formatDateLabel(selectedDate)}
+          <Inbox size={16} aria-hidden="true" /> No hay ventas para el {formatDateLabel(selectedDate) === 'Hoy' ? 'día de hoy' : formatDateLabel(selectedDate)}
         </p>
       ) : (
         <>
@@ -131,16 +137,18 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
                           onClick={() => onViewInvoice && onViewInvoice(sale)}
                           className="btn-invoice"
                           title="Ver factura"
+                          aria-label={`Ver factura de la venta ${numeroDoc(sale)}`}
                         >
-                          📄
+                          <Receipt size={15} aria-hidden="true" />
                         </button>
                         {puedeDevolver && (
                           <button
                             onClick={() => setDevolviendo(sale)}
                             className="btn-devolver-sale"
                             title="Registrar devolución de productos"
+                            aria-label={`Registrar devolución de la venta ${numeroDoc(sale)}`}
                           >
-                            ↩️
+                            <RotateCcw size={15} aria-hidden="true" />
                           </button>
                         )}
                         {onDelete && (
@@ -148,8 +156,9 @@ const resumenPorMedio = filteredSales.reduce((acc, sale) => {
                             onClick={() => handleDelete(sale)}
                             className="btn-delete-sale"
                             title="Anular venta y restaurar stock"
+                            aria-label={`Anular la venta ${numeroDoc(sale)}`}
                           >
-                            🗑️
+                            <Ban size={15} aria-hidden="true" />
                           </button>
                         )}
                       </div>

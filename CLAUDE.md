@@ -56,7 +56,7 @@ Verify changes with `npm run lint`, `npm run build` and `npm test`.
 
 ## Sales, stock and cash
 
-- **Register sales only through the RPC `registrar_venta`.** It is atomic, computes the total, requires payments to equal the total, locks stock rows (`FOR UPDATE`), freezes `costo_unitario`, and requires an open cash session. Never insert into `ventas`, `detalle_ventas` or `pagos_venta` from the client.
+- **Register sales only through the RPC `registrar_venta`.** It is atomic, takes each line's price from `productos.precio_venta` (never from the browser; it rejects the sale if the price changed while the cart was open, migration 36), computes the total, requires payments to equal the total, locks stock rows (`FOR UPDATE`), freezes `costo_unitario`, and requires an open cash session. Never insert into `ventas`, `detalle_ventas` or `pagos_venta` from the client.
 - **Void sales with the RPC `anular_venta`** (administrators only). Sales are never deleted; voided ones keep `anulada_en` and `motivo_anulacion`.
 - Stock is decremented by the trigger `descontar_inventario` on `detalle_ventas`. The trigger `proteger_campos_producto` uses `pg_trigger_depth()`: sellers can only change stock through a sale, and can't change description, cost, price or `stock_minimo`.
 - **Stock goes up only through the RPC `registrar_entrada`** (Inventario page, administrators). It adds the units, recomputes `costo` as a weighted average, snapshots before/after in `detalle_entradas`, and logs an `entrada` event. Entries are never updated or deleted. An entry line may create a product that isn't in the catalog yet (`nuevo`), inside the same transaction.

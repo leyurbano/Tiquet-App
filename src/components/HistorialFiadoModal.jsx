@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Wallet, Loader2, X } from 'lucide-react'
 import { fiadoService } from '../services/fiadoService'
 import { formatCOP } from '../utils/currencyFormatter'
 import { useDialogo } from '../hooks/useDialogo'
@@ -35,7 +36,14 @@ function HistorialFiadoModal({ cliente, onClose }) {
   return (
     <div className="caja-overlay" onClick={onClose}>
       <div className="caja-box fiado-box fiado-box-ancha" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Fiado de ${cliente.nombre}`}>
-        <h2 className="caja-title">Fiado de {cliente.nombre}</h2>
+        <div className="caja-header">
+          <h2 className="caja-title caja-con-icono">
+            <Wallet size={22} aria-hidden="true" /> Fiado de {cliente.nombre}
+          </h2>
+          <button type="button" className="caja-cerrar" onClick={onClose} aria-label="Cerrar">
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
         <p className="caja-subtitle">
           Cupo {formatCOP(cliente.cupo_fiado || 0)}
           {movimientos && (
@@ -46,7 +54,9 @@ function HistorialFiadoModal({ cliente, onClose }) {
         {error ? (
           <div className="caja-alert">No se pudo cargar el historial. Inténtalo de nuevo.</div>
         ) : movimientos === null ? (
-          <div className="caja-loading">⏳ Cargando...</div>
+          <div className="caja-loading caja-con-icono">
+            <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Cargando...
+          </div>
         ) : movimientos.length === 0 ? (
           <p className="caja-hint">Este cliente no tiene movimientos de fiado.</p>
         ) : (

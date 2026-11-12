@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useId } from 'react'
 import { MOTIVOS_ANULACION } from '../utils/motivosAnulacion'
 import { formatCOP } from '../utils/currencyFormatter'
 import { numeroDoc } from '../utils/documento'
 import { useDialogo } from '../hooks/useDialogo'
+import { Ban, Loader2, X } from 'lucide-react'
 import './CajaModal.css'
 
 /**
@@ -14,6 +15,8 @@ import './CajaModal.css'
 function AnularVentaModal({ sale, clientName, onCancel, onConfirm }) {
   const [motivo, setMotivo] = useState('')
   const [procesando, setProcesando] = useState(false)
+  // Nombra el grupo de motivos para el lector de pantalla
+  const idMotivo = useId()
   const refDialogo = useDialogo({ onCerrar: procesando ? null : onCancel })
 
   const confirmar = async () => {
@@ -27,7 +30,20 @@ function AnularVentaModal({ sale, clientName, onCancel, onConfirm }) {
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
       <div className="caja-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Anular venta ${numeroDoc(sale)}`}>
-        <h2 className="caja-title">Anular venta #{numeroDoc(sale)}</h2>
+        <div className="caja-header">
+          <h2 className="caja-title caja-con-icono">
+            <Ban size={22} color="#dc2626" aria-hidden="true" /> Anular venta #{numeroDoc(sale)}
+          </h2>
+          <button
+            type="button"
+            className="caja-cerrar"
+            onClick={onCancel}
+            disabled={procesando}
+            aria-label="Cerrar sin anular"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
         <p className="caja-subtitle">
           {clientName} · {formatCOP(sale.total || 0)}
           <br />
@@ -35,8 +51,8 @@ function AnularVentaModal({ sale, clientName, onCancel, onConfirm }) {
           registrada como anulada.
         </p>
 
-        <label className="caja-label">Motivo de la anulación</label>
-        <div className="anular-motivos">
+        <div className="caja-label" id={idMotivo}>Motivo de la anulación</div>
+        <div className="anular-motivos" role="radiogroup" aria-labelledby={idMotivo}>
           {MOTIVOS_ANULACION.map((m) => (
             <label className="anular-motivo" key={m.codigo}>
               <input
@@ -52,23 +68,36 @@ function AnularVentaModal({ sale, clientName, onCancel, onConfirm }) {
           ))}
         </div>
 
+        {/* El botón queda desactivado sin motivo: se dice por qué, para que
+            no parezca que la pantalla no responde */}
+        {!motivo && (
+          <p className="caja-hint">Elige el motivo para poder anular la venta.</p>
+        )}
+
+        {/* En fila, como en el resto de la app. Sigue en rojo: anular
+            devuelve stock y saca la venta de la caja, y no se deshace */}
         <div className="caja-buttons">
-          <button
-            type="button"
-            className="caja-btn-danger"
-            onClick={confirmar}
-            disabled={procesando || !motivo}
-          >
-            {procesando ? 'Anulando...' : 'Anular venta'}
-          </button>
-          <button
-            type="button"
-            className="caja-btn-secondary"
-            onClick={onCancel}
-            disabled={procesando}
-          >
-            Cancelar
-          </button>
+          <div className="caja-acciones-fila">
+            <button
+              type="button"
+              className="caja-btn-danger"
+              onClick={confirmar}
+              disabled={procesando || !motivo}
+            >
+              {procesando
+                ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                : <Ban size={16} aria-hidden="true" />}
+              {procesando ? 'Anulando...' : 'Anular venta'}
+            </button>
+            <button
+              type="button"
+              className="caja-btn-secondary"
+              onClick={onCancel}
+              disabled={procesando}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       </div>
     </div>

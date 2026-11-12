@@ -9,13 +9,16 @@
   max-width: 420px;
 }
 
+/* El encabezado con ✕ y los botones en fila vienen de CajaModal.css
+   (caja-header, caja-cerrar, caja-acciones-fila) */
+
+/* Sin text-transform: el nombre ya llega con nombreProducto() */
 .mov-producto {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
   font-weight: 600;
   color: #111827;
-  text-transform: capitalize;
 }
 
 .mov-numero {
@@ -109,6 +112,23 @@
   margin-bottom: 0.5rem;
 }
 
+/* El costo con el mismo aspecto que Unidades, Motivo y Detalle: el de
+   CajaModal.css (más grande, en negrita y con otro borde) es para contar
+   plata en la caja. Tres clases para ganarle a .caja-money .caja-input */
+.mov-box .caja-money .caja-input {
+  padding: 0.6rem 0.75rem 0.6rem 1.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #111827;
+}
+
+.mov-box .caja-money .caja-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
 .mov-opcional {
   font-weight: 400;
   color: #9ca3af;
@@ -143,15 +163,6 @@
   margin-bottom: 1rem;
 }
 
-.mov-acciones {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.mov-acciones button {
-  flex: 1;
-}
-
 .mov-pie {
   font-size: 0.75rem;
   color: #9ca3af;
@@ -159,8 +170,11 @@
   margin: 0.9rem 0 0;
 }
 
-@media (max-width: 480px) {
-  .mov-acciones {
-    flex-direction: column-reverse;
+/* 44px: el mínimo cómodo para el dedo, como en Crear/Editar producto */
+@media (max-width: 768px) {
+  .mov-box .mov-input,
+  .mov-box .caja-money .caja-input,
+  .mov-box .mov-dir-btn {
+    min-height: 44px;
   }
 }

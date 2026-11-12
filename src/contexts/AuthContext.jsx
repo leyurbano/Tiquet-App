@@ -5,6 +5,28 @@ import { toast } from '../utils/toast'
 
 const AuthContext = createContext()
 
+// Espera una promesa como máximo `ms`: si tarda más, falla. signOut() puede
+// quedarse colgado en el celular (red lenta, o la pestaña que estuvo en
+// segundo plano), y la persona quedaba atrapada adentro sin poder salir
+const conLimite = (promesa, ms) =>
+  Promise.race([
+    promesa,
+    new Promise((_, rechazar) => setTimeout(() => rechazar(new Error('Tiempo agotado')), ms))
+  ])
+
+// Último recurso: borra la sesión que Supabase guarda en este navegador
+// (sb-<proyecto>-auth-token). Si queda ahí, al recargar la página la
+// persona vuelve a entrar sola
+const borrarSesionGuardada = () => {
+  try {
+    Object.keys(localStorage)
+      .filter((clave) => /^sb-.*-auth-token$/.test(clave))
+      .forEach((clave) => localStorage.removeItem(clave))
+  } catch {
+    // Sin acceso al almacenamiento (modo privado): no hay nada que borrar
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   // 🆕 Perfil: rol dentro del negocio, negocio_id y si es super admin
@@ -12,6 +34,9 @@ export function AuthProvider({ children }) {
   // 🆕 Si puede operar, o por qué no (negocio suspendido, usuario inactivo...)
   const [estadoCuenta, setEstadoCuenta] = useState(null)
   const [loading, setLoading] = useState(true)
+  // Cerrando sesión: mientras dura, las pantallas no deben reaccionar a que
+  // ya no hay caja abierta (ver SalesPage)
+  const [saliendo, setSaliendo] = useState(false)
 
   useEffect(() => {
     // Verificar sesión actual
@@ -65,11 +90,20 @@ export function AuthProvider({ children }) {
    * después de que pidió salir es peor que cualquier error de red, sobre todo
    * en un computador compartido entre turnos.
    */
+  //
+  // 🔧 En el celular, al cerrar sesión desde el cierre de caja, aparecía la
+  // ventana "Abrir caja" y, si se recargaba la página, la persona seguía
+  // adentro. Dos causas: la caja se cierra antes que la sesión, así que en
+  // ese intervalo Ventas veía "sin caja abierta" y pedía abrirla; y
+  // signOut() podía tardar mucho o no terminar nunca con red lenta, y el
+  // token seguía guardado. Ahora `saliendo` tapa ese intervalo, signOut()
+  // tiene un tiempo máximo y, si no se pudo, se borra el token a mano.
   async function logout() {
     let fallo = null
+    setSaliendo(true)
 
     try {
-      const { error } = await supabase.auth.signOut()
+      const { error } = await conLimite(supabase.auth.signOut(), 5000)
       if (error) throw error
     } catch (error) {
       fallo = error
@@ -77,14 +111,16 @@ export function AuthProvider({ children }) {
       // la sesión guardada en este navegador: si no, el token sigue ahí y al
       // recargar la persona vuelve a entrar sola.
       try {
-        await supabase.auth.signOut({ scope: 'local' })
+        await conLimite(supabase.auth.signOut({ scope: 'local' }), 2000)
       } catch {
-        // Ya no hay sesión que borrar: es el resultado que se buscaba
+        // Ya no hay sesión que borrar, o tampoco respondió: se borra abajo
       }
+      borrarSesionGuardada()
     } finally {
       setUser(null)
       setPerfil(null)
       setEstadoCuenta(null)
+      setSaliendo(false)
     }
 
     return fallo ? { success: false, error: fallo.message } : { success: true }
@@ -164,6 +200,7 @@ export function AuthProvider({ children }) {
         esAdministrador: perfil?.rol === 'administrador',
         esSuperAdmin: !!perfil?.es_super_admin,
         loading,
+        saliendo,
         login,
         logout
       }}

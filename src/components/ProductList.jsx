@@ -1,12 +1,13 @@
 import React, { useState, useRef } from "react";
 import "./ProductList.css";
-import { formatCOP } from "../utils/currencyFormatter";
+import { formatCOP, formatNumero } from "../utils/currencyFormatter";
 import ProductHistoryModal from "./ProductHistoryModal";
 import MovimientoStockModal from "./MovimientoStockModal";
 import Paginacion from "./Paginacion";
-import { Pencil, History, Package, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { Pencil, History, Package, AlertTriangle, ArrowUpDown, ArrowDownWideNarrow, Loader2 } from "lucide-react";
 import { estadoStock, contarBajos, umbralDe } from "../utils/stock";
-import { numeroProducto, coincideNumero } from "../utils/producto";
+import { numeroProducto, coincideNumero, nombreProducto } from "../utils/producto";
+import { useEsCelular } from "../hooks/useEsCelular";
 
 // 25 y no 50: sin scroll interno, 50 filas son casi tres pantallas y la
 // paginación queda al fondo. Para buscar algo puntual está el buscador
@@ -37,7 +38,7 @@ const ORDENES = {
 
 /**
  * Lista del catálogo. Recibe TODOS los productos (los totales y las alertas
- * de stock se calculan sobre el catálogo completo) y pinta 50 por página:
+ * de stock se calculan sobre el catálogo completo) y pinta POR_PAGINA a la vez:
  * pintar miles de filas a la vez es lo que volvía lenta la pantalla.
  */
 function ProductList({
@@ -58,6 +59,7 @@ function ProductList({
   const [soloBajos, setSoloBajos] = useState(false);
   const [pagina, setPagina] = useState(1);
   const inicioLista = useRef(null);
+  const esCelular = useEsCelular();
 
   const alertas = contarBajos(products || [], minimoNegocio, rotacion);
   const totalAlertas = alertas.agotados + alertas.bajos;
@@ -102,13 +104,17 @@ function ProductList({
   return (
     <div className="product-list-container" ref={inicioLista}>
       <h2 className="product-list-title">
-        <Package size={22} /> Lista de Productos ({filteredProducts.length})
+        <Package size={20} aria-hidden="true" /> Lista de Productos ({filteredProducts.length})
       </h2>
 
       <div className="search-and-stats-wrapper">
+        {/* La búsqueda ya encontraba por código de barras, pero no lo decía.
+            En celular el texto completo no cabe y se cortaba: ahí se omite,
+            aunque se sigue buscando por código */}
         <input
           type="text"
-          placeholder="Buscar por descripción o número..."
+          aria-label="Buscar por nombre, número o código de barras"
+          placeholder={esCelular ? "Nombre o número" : "Nombre, número o código de barras"}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -116,9 +122,14 @@ function ProductList({
           }}
           className="pl-buscador"
         />
-        <label className="orden-campo">
+        {/* En celular se ve solo el icono (ver ProductList.css). El
+            aria-label nombra el menú aunque la etiqueta esté oculta */}
+        <label className={`orden-campo ${orden !== "numero" ? "orden-activo" : ""}`}>
           <span className="orden-etiqueta">Ordenar por</span>
+          <ArrowDownWideNarrow size={20} className="orden-icono" aria-hidden="true" />
           <select
+            aria-label="Ordenar por"
+            title={`Ordenar por: ${ORDENES[orden].etiqueta}`}
             value={orden}
             onChange={(e) => {
               setOrden(e.target.value);
@@ -134,7 +145,7 @@ function ProductList({
         <div className="stats-container">
           <div className="stat-label">
             <span className="stat-label-text">Unidades en stock:</span>
-            <span className="stat-value">{totalProducts}</span>
+            <span className="stat-value">{formatNumero(totalProducts)}</span>
           </div>
           {mostrarCostos && (
             <div className="stat-label">
@@ -147,13 +158,15 @@ function ProductList({
 
       {totalAlertas > 0 && (
         <button
+          type="button"
           className={`stock-alert-bar ${soloBajos ? "stock-alert-activa" : ""}`}
+          aria-pressed={soloBajos}
           onClick={() => {
             setSoloBajos((v) => !v);
             setPagina(1);
           }}
         >
-          <AlertTriangle size={16} />
+          <AlertTriangle size={16} aria-hidden="true" />
           <span>
             {alertas.agotados > 0 && (
               <strong>{alertas.agotados} agotado{alertas.agotados !== 1 ? "s" : ""}</strong>
@@ -171,7 +184,9 @@ function ProductList({
       )}
 
       {loading ? (
-        <div className="pl-cargando">⏳ Cargando productos...</div>
+        <div className="pl-cargando">
+          <Loader2 size={18} className="animate-spin" aria-hidden="true" /> Cargando productos...
+        </div>
       ) : filteredProducts.length === 0 ? (
         <p className="pl-vacio">
           {soloBajos
@@ -184,17 +199,19 @@ function ProductList({
             <table className="products-table">
               <thead>
                 <tr className="pl-cabecera">
-                  <th style={{ textAlign: 'right' }}>#</th>
-                  <th style={{ textAlign: 'left' }}>Descripción</th>
-                  <th style={{ textAlign: 'right' }}>Stock</th>
+                  {/* Alineadas a la derecha por defecto (.pl-cabecera th),
+                      igual que las cifras que encabezan */}
+                  <th>#</th>
+                  <th className="pl-th-izq">Descripción</th>
+                  <th>Stock</th>
                   {mostrarCostos && (
                     <>
-                      <th style={{ textAlign: 'right' }} className="hide-mobile">Costo Unit.</th>
-                      <th style={{ textAlign: 'right' }} className="hide-mobile">Costo Total</th>
+                      <th className="hide-mobile">Costo Unit.</th>
+                      <th className="hide-mobile">Costo Total</th>
                     </>
                   )}
-                  <th style={{ textAlign: 'right' }}>Precio Venta</th>
-                  <th style={{ textAlign: 'center' }}>Acciones</th>
+                  <th>Precio Venta</th>
+                  <th className="pl-th-centro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,17 +221,15 @@ function ProductList({
                   <tr key={product.id} className={`pl-fila fila-${estado}`}>
                     <td className="cell-numeric">{numeroProducto(product)}</td>
                     <td className="cell-description">
-                      {(product.descripcion || "")
-                        .toLowerCase()
-                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                      {nombreProducto(product.descripcion)}
                     </td>
                     <td className="cell-numeric">
                       <span className={`stock-valor stock-${estado}`}>
-                        {product.cantidad || 0}
+                        {formatNumero(product.cantidad)}
                       </span>
                       {estado !== "ok" && (
                         <div className="stock-minimo">
-                          mín. {umbralDe(product, minimoNegocio)}
+                          mín. {formatNumero(umbralDe(product, minimoNegocio))}
                         </div>
                       )}
                     </td>
@@ -232,45 +247,47 @@ function ProductList({
                       {product.precio_venta ? (
                         formatCOP(product.precio_venta)
                       ) : (
-                        <span style={{ color: "#9ca3af", fontSize: "12px" }}>
-                          Sin precio
-                        </span>
+                        <span className="pl-sin-precio">Sin precio</span>
                       )}
                     </td>
                     <td className="cell-actions">
-                      {onEdit && (
+                      {/* El flex va en un div y no en el td: un td con
+                          display:flex deja de ser celda y descuadra la fila */}
+                      <div className="pl-acciones">
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(product)}
+                            className="btn-edit"
+                            title="Editar producto"
+                            aria-label={`Editar ${product.descripcion}`}
+                          >
+                            {/* El texto va en <span>: en celular se oculta y
+                                queda solo el ícono */}
+                            <Pencil size={14} aria-hidden="true" /> <span>Editar</span>
+                          </button>
+                        )}
+                        {/* Reponer es lo que más se hace desde esta lista: antes
+                            obligaba a irse a Inventario y buscar el producto otra vez */}
+                        {puedeMoverStock && (
+                          <button
+                            onClick={() => setMovimientoProduct(product)}
+                            className="btn-stock"
+                            title="Sumar o bajar unidades"
+                            aria-label={`Mover stock de ${product.descripcion}`}
+                          >
+                            <ArrowUpDown size={14} aria-hidden="true" /> <span>Stock</span>
+                          </button>
+                        )}
+                        {/* Botón eliminar deshabilitado: evita romper el historial de productos con ventas asociadas */}
                         <button
-                          onClick={() => onEdit(product)}
-                          className="btn-edit"
-                          title="Editar producto"
-                          aria-label={`Editar ${product.descripcion}`}
+                          onClick={() => setHistoryProduct(product)}
+                          className="btn-history"
+                          title="Ver historial de movimientos"
+                          aria-label={`Historial de ${product.descripcion}`}
                         >
-                          {/* El texto va en <span>: en celular se oculta y
-                              queda solo el ícono */}
-                          <Pencil size={14} aria-hidden="true" /> <span>Editar</span>
+                          <History size={14} aria-hidden="true" /> <span>Historial</span>
                         </button>
-                      )}
-                      {/* Reponer es lo que más se hace desde esta lista: antes
-                          obligaba a irse a Inventario y buscar el producto otra vez */}
-                      {puedeMoverStock && (
-                        <button
-                          onClick={() => setMovimientoProduct(product)}
-                          className="btn-stock"
-                          title="Sumar o bajar unidades"
-                          aria-label={`Mover stock de ${product.descripcion}`}
-                        >
-                          <ArrowUpDown size={14} aria-hidden="true" /> <span>Stock</span>
-                        </button>
-                      )}
-                      {/* Botón eliminar deshabilitado: evita romper el historial de productos con ventas asociadas */}
-                      <button
-                        onClick={() => setHistoryProduct(product)}
-                        className="btn-history"
-                        title="Ver historial de movimientos"
-                        aria-label={`Historial de ${product.descripcion}`}
-                      >
-                        <History size={14} aria-hidden="true" /> <span>Historial</span>
-                      </button>
+                      </div>
                     </td>
                   </tr>
                   );
