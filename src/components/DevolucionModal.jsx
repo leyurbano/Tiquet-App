@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useId } from 'react'
 import { devolucionService } from '../services/devolucionService'
-import { MOTIVOS_DEVOLUCION } from '../utils/motivosDevolucion'
+import { MOTIVOS_DEVOLUCION, noSeRevende } from '../utils/motivosDevolucion'
 import { formatCOP } from '../utils/currencyFormatter'
 import { numeroDoc } from '../utils/documento'
 import { useDialogo } from '../hooks/useDialogo'
-import { RotateCcw, Loader2 } from 'lucide-react'
+import { RotateCcw, Loader2, X } from 'lucide-react'
 import './CajaModal.css'
 import './DevolucionModal.css'
 
@@ -23,6 +23,19 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
   const [cantidades, setCantidades] = useState({})
   const [noReintegra, setNoReintegra] = useState({})
   const [motivo, setMotivo] = useState('')
+
+  // Si el administrador elige "defectuoso" o "vencido", "vuelve al
+  // inventario" se desmarca solo en todas las líneas (y se vuelve a marcar
+  // si cambia a otro motivo). Antes dependía de que se acordara de hacerlo,
+  // y lo dañado volvía al stock. Solo actúa cuando cambia de dañado a no
+  // dañado o al revés: lo que haya marcado a mano en el medio se respeta.
+  // Al vendedor no se le toca: lo suyo siempre vuelve al inventario
+  const cambiarMotivo = (nuevo) => {
+    if (esAdministrador && noSeRevende(nuevo) !== noSeRevende(motivo)) {
+      setNoReintegra(Object.fromEntries(lineas.map((l) => [l.id, noSeRevende(nuevo)])))
+    }
+    setMotivo(nuevo)
+  }
   const [medioPagoId, setMedioPagoId] = useState(
     () => (mediosPago.find((m) => /efectivo/i.test(m.pago)) || mediosPago[0])?.id ?? ''
   )
@@ -105,9 +118,20 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
   return (
     <div className="caja-overlay" onClick={procesando ? undefined : onCancel}>
       <div className="caja-box dev-box" onClick={(e) => e.stopPropagation()} ref={refDialogo} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`Devolución de la venta ${numeroDoc(sale)}`}>
-        <h2 className="caja-title caja-con-icono">
-          <RotateCcw size={22} color="#b45309" aria-hidden="true" /> Devolución · venta #{numeroDoc(sale)}
-        </h2>
+        <div className="caja-header">
+          <h2 className="caja-title caja-con-icono">
+            <RotateCcw size={22} color="#b45309" aria-hidden="true" /> Devolución · venta #{numeroDoc(sale)}
+          </h2>
+          <button
+            type="button"
+            className="caja-cerrar"
+            onClick={onCancel}
+            disabled={procesando}
+            aria-label="Cerrar sin devolver"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
         <p className="caja-subtitle">
           {clientName} · {formatCOP(sale.total || 0)}
           <br />
@@ -133,7 +157,12 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
                     <th>Producto</th>
                     <th className="num">Vendidas</th>
                     <th className="num">Devolver</th>
-                    <th className="centro">Vuelve al inventario</th>
+                    {/* Corto para que la tabla quepa en el modal angosto;
+                        el nombre completo queda para el lector y el mouse */}
+                    <th className="centro" title="Vuelve al inventario">
+                      <span aria-hidden="true">Al stock</span>
+                      <span className="dev-oculto">Vuelve al inventario</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -150,14 +179,16 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
                         )}
                       </td>
                       <td className="num">
+                        {/* Texto con solo dígitos y no type="number": ese
+                            acepta "e" y "-", y la rueda del mouse cambiaba
+                            la cantidad sin querer. El tope lo revisa confirmar */}
                         <input
-                          type="number"
-                          min="0"
-                          max={l.disponible}
-                          step="1"
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="off"
                           placeholder="0"
                           value={cantidades[l.id] ?? ''}
-                          onChange={(e) => setCantidades((prev) => ({ ...prev, [l.id]: e.target.value }))}
+                          onChange={(e) => setCantidades((prev) => ({ ...prev, [l.id]: e.target.value.replace(/D/g, '') }))}
                           disabled={procesando || l.disponible === 0}
                           className="dev-cantidad"
                           aria-label={`Unidades de ${l.nombre} que se devuelven`}
@@ -195,13 +226,22 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
                     name="motivo-devolucion"
                     value={m.codigo}
                     checked={motivo === m.codigo}
-                    onChange={(e) => setMotivo(e.target.value)}
+                    onChange={(e) => cambiarMotivo(e.target.value)}
                     disabled={procesando}
                   />
                   <span>{m.etiqueta}</span>
                 </label>
               ))}
             </div>
+
+            {/* Que se vea por qué cambiaron las casillas de arriba */}
+            {esAdministrador && noSeRevende(motivo) && (
+              <p className="caja-hint">
+                Como llega dañado o vencido, se desmarcó «Al stock»: se le
+                devuelve la plata, pero no suma al stock. Márcalo si alguna unidad sí se
+                puede vender.
+              </p>
+            )}
 
             <div className="dev-fila">
               <label className="dev-campo">
@@ -218,7 +258,7 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
                 </select>
               </label>
               <label className="dev-campo">
-                <span className="caja-label">Nota (opcional)</span>
+                <span className="caja-label">Nota <span className="dev-opcional">(opcional)</span></span>
                 <input
                   type="text"
                   value={nota}
@@ -237,25 +277,38 @@ function DevolucionModal({ sale, clientName, mediosPago = [], esAdministrador, n
           </>
         )}
 
+        {/* El botón queda desactivado sin unidades: se dice por qué */}
+        {devuelto !== null && !errorCarga && !nadaDisponible && elegidas.length === 0 && (
+          <p className="caja-hint">Escribe cuántas unidades devuelve de al menos un producto.</p>
+        )}
+
         {error && <div className="caja-alert">{error}</div>}
 
+        {/* En fila, como en el resto de la app. Sigue en rojo: devolver saca
+            plata de la caja y no se deshace. Sin el monto en el botón: a
+            media fila en el celular no cabía, y ya está en "Total a devolver" */}
         <div className="caja-buttons">
-          <button
-            type="button"
-            className="caja-btn-danger"
-            onClick={confirmar}
-            disabled={procesando || devuelto === null || nadaDisponible || elegidas.length === 0 || !!avisoVendedor}
-          >
-            {procesando ? 'Registrando...' : `Devolver ${formatCOP(total)}`}
-          </button>
-          <button
-            type="button"
-            className="caja-btn-secondary"
-            onClick={onCancel}
-            disabled={procesando}
-          >
-            Cancelar
-          </button>
+          <div className="caja-acciones-fila">
+            <button
+              type="button"
+              className="caja-btn-danger"
+              onClick={confirmar}
+              disabled={procesando || devuelto === null || nadaDisponible || elegidas.length === 0 || !!avisoVendedor}
+            >
+              {procesando
+                ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                : <RotateCcw size={16} aria-hidden="true" />}
+              {procesando ? 'Registrando...' : 'Devolver'}
+            </button>
+            <button
+              type="button"
+              className="caja-btn-secondary"
+              onClick={onCancel}
+              disabled={procesando}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       </div>
     </div>
