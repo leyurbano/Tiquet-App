@@ -327,6 +327,11 @@
 }
 
 .caja-medio-dif {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
   margin-top: 0.4rem;
   padding: 0.35rem 0.5rem;
   border-radius: 0.375rem;
@@ -336,6 +341,10 @@
 }
 
 .caja-diferencia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   padding: 0.75rem;
   border-radius: 0.5rem;
   text-align: center;
@@ -552,7 +561,11 @@
     height: 44px;
   }
 
+  /* Menos relleno a los lados: a media fila de un celular de 360px, con
+     el relleno normal, "Cerrar caja" y su ícono quedaban justos */
   .caja-acciones-fila button {
     min-height: 44px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }

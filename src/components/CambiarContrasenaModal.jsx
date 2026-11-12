@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { perfilService } from '../services/perfilService'
 import { useDialogo } from '../hooks/useDialogo'
 import { revisarContrasena } from '../utils/contrasena'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, KeyRound, Save, Loader2, X, CircleCheck } from 'lucide-react'
 import './CajaModal.css'
 import './CambiarContrasenaModal.css'
 
@@ -41,7 +41,7 @@ function CampoClave({ id, etiqueta, valor, onChange, autoComplete, ayuda = null,
           aria-pressed={ver}
           disabled={disabled}
         >
-          {ver ? <EyeOff size={18} /> : <Eye size={18} />}
+          {ver ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
         </button>
       </div>
       {ayuda && <p className="pwd-ayuda">{ayuda}</p>}
@@ -98,7 +98,23 @@ function CambiarContrasenaModal({ obligatorio = false, onCerrar }) {
   return (
     <div className="caja-overlay">
       <div className="caja-box" ref={refDialogo} role="dialog" aria-modal="true" aria-labelledby="pwd-titulo" tabIndex={-1}>
-        <h2 id="pwd-titulo" className="caja-title">🔑 {obligatorio ? 'Crea tu contraseña' : 'Cambiar contraseña'}</h2>
+        {/* ✕ solo si se puede cerrar: la obligatoria no se descarta */}
+        <div className="caja-header">
+          <h2 id="pwd-titulo" className="caja-title caja-con-icono">
+            <KeyRound size={22} aria-hidden="true" /> {obligatorio ? 'Crea tu contraseña' : 'Cambiar contraseña'}
+          </h2>
+          {!obligatorio && (
+            <button
+              type="button"
+              className="caja-cerrar"
+              onClick={onCerrar}
+              disabled={guardando}
+              aria-label="Cerrar sin cambiar la contraseña"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+          )}
+        </div>
         <p className="caja-subtitle">
           {obligatorio
             ? 'Tu contraseña fue asignada por el administrador. Por seguridad, cámbiala por una que solo tú conozcas.'
@@ -106,7 +122,9 @@ function CambiarContrasenaModal({ obligatorio = false, onCerrar }) {
         </p>
 
         {listo ? (
-          <div className="pwd-ok">✅ Contraseña actualizada</div>
+          <div className="pwd-ok" role="status">
+            <CircleCheck size={18} aria-hidden="true" /> Contraseña actualizada
+          </div>
         ) : (
           <form onSubmit={guardar}>
             <CampoClave
@@ -146,19 +164,27 @@ function CambiarContrasenaModal({ obligatorio = false, onCerrar }) {
 
             {error && <div className="caja-alert">{error}</div>}
 
+            {/* En fila, como en el resto de la app. Cuando es obligatoria, la
+                única otra salida es irse: "Cerrar sesión" va al lado con el
+                mismo peso, igual que en la apertura de caja del vendedor */}
             <div className="caja-buttons">
-              <button type="submit" className="caja-btn-primary" disabled={guardando}>
-                {guardando ? 'Guardando...' : 'Guardar contraseña'}
-              </button>
-              {obligatorio ? (
-                <button type="button" className="caja-btn-ghost" onClick={logout} disabled={guardando}>
-                  Cerrar sesión
+              <div className="caja-acciones-fila">
+                <button type="submit" className="caja-btn-primary" disabled={guardando}>
+                  {guardando
+                    ? <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                    : <Save size={16} aria-hidden="true" />}
+                  {guardando ? 'Guardando...' : 'Guardar'}
                 </button>
-              ) : (
-                <button type="button" className="caja-btn-secondary" onClick={onCerrar} disabled={guardando}>
-                  Cancelar
-                </button>
-              )}
+                {obligatorio ? (
+                  <button type="button" className="caja-btn-secondary" onClick={logout} disabled={guardando}>
+                    Cerrar sesión
+                  </button>
+                ) : (
+                  <button type="button" className="caja-btn-secondary" onClick={onCerrar} disabled={guardando}>
+                    Cancelar
+                  </button>
+                )}
+              </div>
             </div>
           </form>
         )}

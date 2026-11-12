@@ -9,7 +9,8 @@
   font-size: 1rem;
   font-family: inherit;
   background: #fff;
-  margin-bottom: 0.85rem;
+  margin: 0;
+  min-height: 44px;
 }
 
 .caja-box .pwd-input:focus {
@@ -25,6 +26,10 @@
 }
 
 .pwd-ok {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   background: #dcfce7;
   color: #166534;
   font-weight: 700;
@@ -37,10 +42,13 @@
    Clases propias del modal a propósito: las del inicio de sesión viven en
    InicioPage.css y el CSS de esta app es global, así que depender de ellas
    funcionaría por casualidad y se rompería el día que alguien las renombre. */
+/* El margen va en el contenedor y no en el campo: antes el campo tenía
+   margin-bottom adentro de este flex, el ojo se centraba respecto del campo
+   más su margen y quedaba unos 7px más abajo. Es lo mismo que se corrigió
+   en el inicio de sesión */
 .pwd-campo {
   position: relative;
-  display: flex;
-  align-items: center;
+  margin-bottom: 0.85rem;
 }
 
 .pwd-campo .pwd-input {
@@ -48,11 +56,16 @@
   padding-right: 44px; /* deja lugar al botón del ojo */
 }
 
+/* Todo el alto del campo y 44px de ancho: se centra solo y es fácil de tocar */
 .pwd-ver {
   position: absolute;
-  right: 10px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 44px;
   display: flex;
   align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   padding: 0;

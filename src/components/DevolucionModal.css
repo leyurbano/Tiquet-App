@@ -1,7 +1,10 @@
 /* Devolución parcial. Reutiliza caja-* y anular-* de CajaModal.css. */
 
+/* 30rem, como Crear/Editar producto: antes medía 40rem y se veía mucho
+   más grande que los demás modales. La tabla cabe porque la última columna
+   dice "Al stock" en vez de "Vuelve al inventario" */
 .caja-box.dev-box {
-  max-width: 40rem;
+  max-width: 30rem;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -39,7 +42,48 @@
 .dev-precio { display: block; font-size: 0.75rem; color: #6b7280; }
 .dev-ya { display: block; font-size: 0.72rem; color: #b45309; }
 
-/* Anidado: styles.css define input[type="number"] con especificidad (0,1,1) */
+/* Solo para el lector de pantalla */
+.dev-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dev-opcional {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+/* Motivos en dos columnas: uno debajo del otro, los cinco ocupaban casi
+   la mitad de la altura del modal. Solo aquí; Anular usa la lista normal */
+.dev-box .anular-motivos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.dev-box .anular-motivos .anular-motivo {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.25;
+}
+
+.dev-box .anular-motivos .anular-motivo:nth-child(odd) {
+  border-right: 1px solid #f3f4f6;
+}
+
+/* El último queda solo en su fila: sin borde de abajo ni de la derecha */
+.dev-box .anular-motivos .anular-motivo:last-child {
+  border-right: none;
+}
+
+/* Anidado: styles.css define input[type="text"] con especificidad (0,1,1) */
 .dev-tabla .dev-cantidad {
   width: 4.5rem;
   padding: 0.3rem 0.4rem;
@@ -50,14 +94,15 @@
   font-family: inherit;
 }
 
+/* "Se le devuelve en" y "Nota" lado a lado, también en celular */
 .dev-fila {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   margin-top: 0.75rem;
 }
 
-.dev-campo { display: flex; flex-direction: column; }
+.dev-campo { display: flex; flex-direction: column; min-width: 0; }
 
 .dev-box .dev-select,
 .dev-box .dev-input {
@@ -68,6 +113,17 @@
   font-size: 0.9rem;
   font-family: inherit;
   background: #fff;
+}
+
+/* 16px y 44px en celular: con menos letra, Safari en iPhone hace zoom al
+   tocar el campo y descuadra el modal */
+@media (max-width: 768px) {
+  .dev-tabla .dev-cantidad,
+  .dev-box .dev-select,
+  .dev-box .dev-input {
+    min-height: 44px;
+    font-size: 1rem;
+  }
 }
 
 .dev-total {

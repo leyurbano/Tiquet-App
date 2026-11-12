@@ -9,6 +9,7 @@ import { formatCOP } from '../utils/currencyFormatter'
 import { fiadoService } from '../services/fiadoService'
 import { numeroDoc } from '../utils/documento'
 import { useDialogo } from '../hooks/useDialogo'
+import '../components/CajaModal.css'
 import { productService } from '../services/productService'
 import { clientService } from '../services/clientService'
 import { getTodayColombia, formatToColombia } from '../utils/dateFormatter'
@@ -357,16 +358,30 @@ function SalesPage() {
         />
       )}
 
+      {/* Con la caja de los demás modales (caja-box). Sin ✕ a propósito: el
+          foco cae en Imprimir para que Enter imprima, y una ✕ antes le
+          quitaría ese lugar; Escape ya equivale a Saltar */}
       {showPrintModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" ref={refImprimir} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Imprimir recibo">
-            <h2>¿Desea imprimir el recibo?</h2>
-            <div className="modal-buttons">
-              <button onClick={handlePrint} className="btn-print">
-                <Printer size={18} aria-hidden="true" /> Imprimir
+        <div className="caja-overlay">
+          <div className="caja-box imprimir-box" ref={refImprimir} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Imprimir recibo">
+            <h2 className="caja-title caja-con-icono">
+              <Printer size={22} aria-hidden="true" /> ¿Imprimir el recibo?
+            </h2>
+            {lastSale && (
+              <p className="caja-subtitle">
+                Venta #{lastSale.numero} registrada por {formatCOP(lastSale.total || 0)}.
+              </p>
+            )}
+            <div className="caja-acciones-fila">
+              <button type="button" onClick={handlePrint} className="caja-btn-primary">
+                <Printer size={16} aria-hidden="true" /> Imprimir
               </button>
-              <button onClick={() => { setShowPrintModal(false); setFormKey(k => k + 1) }} className="btn-skip">
-                <SkipForward size={18} aria-hidden="true" /> Saltar
+              <button
+                type="button"
+                onClick={() => { setShowPrintModal(false); setFormKey(k => k + 1) }}
+                className="caja-btn-secondary"
+              >
+                <SkipForward size={16} aria-hidden="true" /> Saltar
               </button>
             </div>
           </div>
