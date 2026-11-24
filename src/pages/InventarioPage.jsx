@@ -3,15 +3,17 @@ import { productService } from '../services/productService'
 import { inventarioService } from '../services/inventarioService'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from '../utils/toast'
-import { formatCOP } from '../utils/currencyFormatter'
+import { formatCOP, formatNumero } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import './InventarioPage.css'
-import { PackagePlus, Trash2, ClipboardCheck, FileSpreadsheet } from 'lucide-react'
+import { PackagePlus, Trash2, ClipboardCheck, FileSpreadsheet, Warehouse, History, Loader2 } from 'lucide-react'
 import AjusteInventario from '../components/AjusteInventario'
 import { numeroProducto, coincideNumero } from '../utils/producto'
 import { numeroDoc } from '../utils/documento'
 import ImportarProductos from '../components/ImportarProductos'
+import ConfirmarRegistroModal from '../components/ConfirmarRegistroModal'
+import { useCambiosPendientes } from '../hooks/useCambiosPendientes'
 
 // Mismo cálculo que hace registrar_entrada en la base de datos: promedio
 // ponderado entre lo que había y lo que llega. Aquí solo se usa para mostrar
@@ -49,6 +51,14 @@ function InventarioPage() {
   const [cabecera, setCabecera] = useState(VACIO)
   const [guardando, setGuardando] = useState(false)
   const [pestana, setPestana] = useState('entradas')
+  // 🔧 Antes, cambiar de pestaña desmontaba Ajuste e Importar y se perdía lo
+  // que tenían: un conteo a medio llenar o un archivo ya revisado. Ahora cada
+  // pestaña se monta la primera vez que se abre y después solo se oculta
+  const [visitadas, setVisitadas] = useState(['entradas'])
+  // Sube cada vez que una pestaña registra algo: las otras recargan su
+  // catálogo, porque el stock y el costo cambiaron
+  const [version, setVersion] = useState(0)
+  const [confirmando, setConfirmando] = useState(false)
   // Formulario del producto nuevo que se está por agregar (o null)
   const [nuevoForm, setNuevoForm] = useState(null)
   // Las líneas de productos nuevos aún no tienen id: se identifican con esto
@@ -68,6 +78,20 @@ function InventarioPage() {
   useEffect(() => {
     if (esAdministrador) cargar()
   }, [esAdministrador])
+
+  const abrirPestana = (id) => {
+    setPestana(id)
+    setVisitadas((v) => (v.includes(id) ? v : [...v, id]))
+  }
+
+  // Después de registrar en cualquier pestaña: esta recarga y las otras también
+  const refrescarTodo = () => {
+    cargar()
+    setVersion((v) => v + 1)
+  }
+
+  // Una factura a medio cargar no se pierde sin avisar al salir del menú
+  useCambiosPendientes(lineas.length > 0 || !!nuevoForm, 'Hay una entrada de mercancía sin registrar.')
 
   // Hasta 8 coincidencias por descripción o por número de producto
   const sugerencias = useMemo(() => {
@@ -148,14 +172,21 @@ function InventarioPage() {
     (s, l) => s + (parseInt(l.cantidad, 10) || 0) * (parseFloat(l.costo) || 0), 0
   )
 
-  const guardar = async () => {
+  const unidades = lineas.reduce((s, l) => s + (parseInt(l.cantidad, 10) || 0), 0)
+  const nuevos = lineas.filter((l) => l.esNuevo).length
+
+  // Primero se valida y se muestra el resumen; registrar() guarda
+  const guardar = () => {
     if (lineas.length === 0) return toast.aviso('Agrega al menos un producto')
 
     const invalida = lineas.find((l) => !(parseInt(l.cantidad, 10) > 0) || l.costo === '')
     if (invalida) {
       return toast.aviso(`Revisa "${invalida.descripcion}": falta la cantidad o el costo`)
     }
+    setConfirmando(true)
+  }
 
+  const registrar = async () => {
     setGuardando(true)
     const { entrada, error } = await inventarioService.registrarEntrada({
       ...cabecera,
@@ -177,6 +208,7 @@ function InventarioPage() {
       })
     })
     setGuardando(false)
+    setConfirmando(false)
 
     if (error) return toast.error('No se pudo registrar la entrada: ' + error)
 
@@ -187,7 +219,7 @@ function InventarioPage() {
     )
     setLineas([])
     setCabecera(VACIO)
-    cargar()
+    refrescarTodo()
   }
 
   if (!esAdministrador) {
@@ -200,7 +232,7 @@ function InventarioPage() {
 
   return (
     <div className="inv-page">
-      <h1 className="inv-title"><PackagePlus size={26} /> Inventario</h1>
+      <h1 className="inv-title"><Warehouse size={30} aria-hidden="true" /> Inventario</h1>
 
       {/* Stock y costo solo cambian aquí: entradas (compras) y ajustes */}
       <div className="inv-tabs" role="tablist">
@@ -209,293 +241,329 @@ function InventarioPage() {
           role="tab"
           aria-selected={pestana === 'entradas'}
           className={`inv-tab ${pestana === 'entradas' ? 'inv-tab-activa' : ''}`}
-          onClick={() => setPestana('entradas')}
+          onClick={() => abrirPestana('entradas')}
         >
-          <PackagePlus size={16} /> Entrada de mercancía
+          <PackagePlus size={16} aria-hidden="true" />
+          <span className="inv-tab-largo">Entrada de mercancía</span>
+          <span className="inv-tab-corto">Entrada</span>
         </button>
         <button
           type="button"
           role="tab"
           aria-selected={pestana === 'ajustes'}
           className={`inv-tab ${pestana === 'ajustes' ? 'inv-tab-activa' : ''}`}
-          onClick={() => setPestana('ajustes')}
+          onClick={() => abrirPestana('ajustes')}
         >
-          <ClipboardCheck size={16} /> Ajuste por conteo
+          <ClipboardCheck size={16} aria-hidden="true" />
+          <span className="inv-tab-largo">Ajuste por conteo</span>
+          <span className="inv-tab-corto">Ajuste</span>
         </button>
         <button
           type="button"
           role="tab"
           aria-selected={pestana === 'importar'}
           className={`inv-tab ${pestana === 'importar' ? 'inv-tab-activa' : ''}`}
-          onClick={() => setPestana('importar')}
+          onClick={() => abrirPestana('importar')}
         >
-          <FileSpreadsheet size={16} /> Importar desde Excel
+          <FileSpreadsheet size={16} aria-hidden="true" />
+          <span className="inv-tab-largo">Importar desde Excel</span>
+          <span className="inv-tab-corto">Importar</span>
         </button>
       </div>
 
-      {pestana === 'importar' ? (
-        // Al importar se recargan productos y entradas de la otra pestaña
-        <ImportarProductos onImportado={cargar} />
-      ) : pestana === 'ajustes' ? (
-        <AjusteInventario />
-      ) : (
-        <>
-          <div className="inv-card">
-            {/* ---------- Datos de la compra ---------- */}
-            <div className="inv-cabecera">
-              <label className="inv-campo">
-                <span>Proveedor</span>
-                <input
-                  type="text"
-                  value={cabecera.proveedor}
-                  onChange={(e) => setCabecera((c) => ({ ...c, proveedor: e.target.value }))}
-                  disabled={guardando}
-                  className="inv-input"
-                />
-              </label>
-              <label className="inv-campo">
-                <span>N.º de factura (opcional)</span>
-                <input
-                  type="text"
-                  value={cabecera.factura}
-                  onChange={(e) => setCabecera((c) => ({ ...c, factura: e.target.value }))}
-                  disabled={guardando}
-                  className="inv-input"
-                />
-              </label>
-              <label className="inv-campo inv-campo-ancho">
-                <span>Nota (opcional)</span>
-                <input
-                  type="text"
-                  value={cabecera.nota}
-                  onChange={(e) => setCabecera((c) => ({ ...c, nota: e.target.value }))}
-                  disabled={guardando}
-                  className="inv-input"
-                />
-              </label>
-            </div>
-
-            {/* ---------- Buscar, agregar o crear productos ---------- */}
-            <div className="inv-buscador">
+      {visitadas.includes('importar') && (
+        <div role="tabpanel" hidden={pestana !== 'importar'}>
+          <ImportarProductos version={version} onRegistrado={refrescarTodo} />
+        </div>
+      )}
+      {visitadas.includes('ajustes') && (
+        <div role="tabpanel" hidden={pestana !== 'ajustes'}>
+          <AjusteInventario version={version} onRegistrado={refrescarTodo} />
+        </div>
+      )}
+      <div role="tabpanel" hidden={pestana !== 'entradas'}>
+        <div className="inv-card">
+          {/* ---------- Datos de la compra ---------- */}
+          <div className="inv-cabecera">
+            <label className="inv-campo">
+              <span>Proveedor</span>
               <input
                 type="text"
-                placeholder={cargando ? 'Cargando productos...' : 'Buscar producto por nombre o número...'}
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                disabled={cargando || guardando || !!nuevoForm}
+                value={cabecera.proveedor}
+                onChange={(e) => setCabecera((c) => ({ ...c, proveedor: e.target.value }))}
+                disabled={guardando}
                 className="inv-input"
               />
-              {busqueda.trim() && (sugerencias.length > 0 || !existeExacto) && (
-                <ul className="inv-sugerencias">
-                  {sugerencias.map((p) => (
-                    <li key={p.id}>
-                      <button type="button" onClick={() => agregar(p)}>
-                        <span>#{numeroProducto(p)} · {p.descripcion}</span>
-                        <span className="inv-sug-stock">stock {p.cantidad ?? 0}</span>
-                      </button>
-                    </li>
-                  ))}
-                  {!existeExacto && (
-                    <li>
-                      <button type="button" className="inv-crear" onClick={abrirNuevo}>
-                        + Crear producto «{busqueda.trim()}»
-                      </button>
-                    </li>
-                  )}
-                </ul>
-              )}
-            </div>
-
-            {nuevoForm && (
-              <div className="inv-nuevo-form">
-                <p className="inv-nuevo-titulo">Producto nuevo</p>
-                <div className="inv-cabecera">
-                  <label className="inv-campo">
-                    <span>Nombre</span>
-                    <input
-                      type="text"
-                      value={nuevoForm.descripcion}
-                      onChange={(e) => setNuevoForm((f) => ({ ...f, descripcion: e.target.value }))}
-                      autoFocus
-                      className="inv-input"
-                    />
-                  </label>
-                  <label className="inv-campo">
-                    <span>Precio de venta</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={formatCOPInput(nuevoForm.precio)}
-                      onChange={(e) => setNuevoForm((f) => ({ ...f, precio: parseCOP(e.target.value) }))}
-                      className="inv-input"
-                    />
-                  </label>
-                  <label className="inv-campo">
-                    <span>Stock mínimo (opcional)</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={nuevoForm.stockMinimo}
-                      onChange={(e) => setNuevoForm((f) => ({ ...f, stockMinimo: e.target.value }))}
-                      className="inv-input"
-                    />
-                  </label>
-                </div>
-                <p className="inv-hint">
-                  Se crea solo si registras la entrada. Su costo será el de esta compra.
-                </p>
-                <div className="inv-nuevo-acciones">
-                  <button type="button" className="inv-btn" onClick={agregarNuevo}>
-                    Agregar a la entrada
-                  </button>
-                  <button type="button" className="inv-btn-sec" onClick={() => setNuevoForm(null)}>
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ---------- Líneas de la entrada ---------- */}
-            {lineas.length === 0 ? (
-              <p className="inv-vacio">Busca los productos que llegaron y agrégalos aquí.</p>
-            ) : (
-              <div className="inv-tabla-wrap">
-                <table className="inv-tabla">
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th className="num">Llegan</th>
-                      <th className="num">Costo unit.</th>
-                      <th className="num">Stock</th>
-                      <th className="num">Costo prom.</th>
-                      <th className="num">Subtotal</th>
-                      <th aria-label="Quitar" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lineas.map((l) => {
-                      const cant = parseInt(l.cantidad, 10) || 0
-                      const costo = parseFloat(l.costo) || 0
-                      const nuevoCosto = cant > 0 ? costoPromedio(l.stock, l.costoActual, cant, costo) : l.costoActual
-                      return (
-                        <tr key={l.clave}>
-                          <td className="inv-desc">
-                            {l.descripcion}
-                            {l.esNuevo && <span className="inv-badge-nuevo">Nuevo</span>}
-                          </td>
-                          <td className="num">
-                            <input
-                              type="number"
-                              min="1"
-                              step="1"
-                              value={l.cantidad}
-                              onChange={(e) => editarLinea(l.clave, 'cantidad', e.target.value)}
-                              disabled={guardando}
-                              className="inv-input inv-input-num"
-                              aria-label={`Unidades que llegan de ${l.descripcion}`}
-                            />
-                          </td>
-                          <td className="num">
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={formatCOPInput(l.costo)}
-                              onChange={(e) => editarLinea(l.clave, 'costo', parseCOP(e.target.value))}
-                              disabled={guardando}
-                              className="inv-input inv-input-num"
-                              aria-label={`Costo unitario de ${l.descripcion}`}
-                            />
-                          </td>
-                          {/* Vista previa: lo que queda después de la entrada */}
-                          <td className="num">
-                            {l.stock}
-                            {cant > 0 && <span className="inv-nuevo"> → {l.stock + cant}</span>}
-                          </td>
-                          <td className="num">
-                            {l.esNuevo ? '—' : formatCOP(l.costoActual)}
-                            {cant > 0 && Math.round(nuevoCosto) !== Math.round(l.costoActual) && (
-                              <span className="inv-nuevo"> → {formatCOP(nuevoCosto)}</span>
-                            )}
-                          </td>
-                          <td className="num">{formatCOP(cant * costo)}</td>
-                          <td>
-                            <button
-                              type="button"
-                              className="inv-quitar"
-                              onClick={() => quitarLinea(l.clave)}
-                              disabled={guardando}
-                              aria-label={`Quitar ${l.descripcion}`}
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            <div className="inv-pie">
-              <span className="inv-total">Total de la compra: <strong>{formatCOP(total)}</strong></span>
-              <button
-                type="button"
-                className="inv-btn"
-                onClick={guardar}
-                disabled={guardando || lineas.length === 0 || !!nuevoForm}
-              >
-                {guardando ? 'Registrando...' : 'Registrar entrada'}
-              </button>
-            </div>
-            <p className="inv-hint">
-              Las unidades se <strong>suman</strong> al stock. El costo pasa a ser el promedio
-              entre lo que había y lo que llegó, así el margen de los reportes sigue siendo exacto.
-            </p>
+            </label>
+            <label className="inv-campo">
+              <span>N.º de factura (opcional)</span>
+              <input
+                type="text"
+                value={cabecera.factura}
+                onChange={(e) => setCabecera((c) => ({ ...c, factura: e.target.value }))}
+                disabled={guardando}
+                className="inv-input"
+              />
+            </label>
+            <label className="inv-campo inv-campo-ancho">
+              <span>Nota (opcional)</span>
+              <input
+                type="text"
+                value={cabecera.nota}
+                onChange={(e) => setCabecera((c) => ({ ...c, nota: e.target.value }))}
+                disabled={guardando}
+                className="inv-input"
+              />
+            </label>
           </div>
 
-          {/* ---------- Entradas recientes ---------- */}
-          <div className="inv-card">
-            <h2 className="inv-subtitle">Entradas recientes</h2>
-            {entradas.length === 0 ? (
-              <p className="inv-vacio">Todavía no hay entradas registradas.</p>
-            ) : (
-              <div className="inv-tabla-wrap">
-                <table className="inv-tabla">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Fecha</th>
-                      <th>Proveedor</th>
-                      <th>Factura</th>
-                      <th>Productos</th>
-                      <th className="num">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entradas.map((e) => {
-                      const det = e.detalle_entradas || []
-                      const unidades = det.reduce((s, d) => s + (Number(d.cantidad) || 0), 0)
-                      return (
-                        <tr key={e.id}>
-                          <td>{numeroDoc(e)}</td>
-                          <td className="inv-fecha">{formatToColombiaShort(e.fecha)}</td>
-                          <td>{e.proveedor || '—'}</td>
-                          <td>{e.factura || '—'}</td>
-                          <td>
-                            {det.length} {det.length === 1 ? 'producto' : 'productos'} · {unidades} unid.
-                          </td>
-                          <td className="num">{formatCOP(e.total)}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+          {/* ---------- Buscar, agregar o crear productos ---------- */}
+          <div className="inv-buscador">
+            <input
+              type="text"
+              placeholder={cargando ? 'Cargando productos...' : 'Buscar producto por nombre o número...'}
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              disabled={cargando || guardando || !!nuevoForm}
+              className="inv-input"
+            />
+            {busqueda.trim() && (sugerencias.length > 0 || !existeExacto) && (
+              <ul className="inv-sugerencias">
+                {sugerencias.map((p) => (
+                  <li key={p.id}>
+                    <button type="button" onClick={() => agregar(p)}>
+                      <span>#{numeroProducto(p)} · {p.descripcion}</span>
+                      <span className="inv-sug-stock">stock {p.cantidad ?? 0}</span>
+                    </button>
+                  </li>
+                ))}
+                {!existeExacto && (
+                  <li>
+                    <button type="button" className="inv-crear" onClick={abrirNuevo}>
+                      + Crear producto «{busqueda.trim()}»
+                    </button>
+                  </li>
+                )}
+              </ul>
             )}
           </div>
-        </>
+
+          {nuevoForm && (
+            <div className="inv-nuevo-form">
+              <p className="inv-nuevo-titulo">Producto nuevo</p>
+              <div className="inv-cabecera">
+                <label className="inv-campo">
+                  <span>Nombre</span>
+                  <input
+                    type="text"
+                    value={nuevoForm.descripcion}
+                    onChange={(e) => setNuevoForm((f) => ({ ...f, descripcion: e.target.value }))}
+                    autoFocus
+                    className="inv-input"
+                  />
+                </label>
+                <label className="inv-campo">
+                  <span>Precio de venta</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={formatCOPInput(nuevoForm.precio)}
+                    onChange={(e) => setNuevoForm((f) => ({ ...f, precio: parseCOP(e.target.value) }))}
+                    className="inv-input"
+                  />
+                </label>
+                <label className="inv-campo">
+                  <span>Stock mínimo (opcional)</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={nuevoForm.stockMinimo}
+                    onChange={(e) => setNuevoForm((f) => ({ ...f, stockMinimo: e.target.value }))}
+                    className="inv-input"
+                  />
+                </label>
+              </div>
+              <p className="inv-hint">
+                Se crea solo si registras la entrada. Su costo será el de esta compra.
+              </p>
+              <div className="inv-nuevo-acciones">
+                <button type="button" className="inv-btn" onClick={agregarNuevo}>
+                  Agregar a la entrada
+                </button>
+                <button type="button" className="inv-btn-sec" onClick={() => setNuevoForm(null)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ---------- Líneas de la entrada ---------- */}
+          {lineas.length === 0 ? (
+            <p className="inv-vacio">Busca los productos que llegaron y agrégalos aquí.</p>
+          ) : (
+            <div className="inv-tabla-wrap">
+              <table className="inv-tabla">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th className="num">Llegan</th>
+                    <th className="num">Costo unit.</th>
+                    <th className="num">Stock</th>
+                    <th className="num">Costo prom.</th>
+                    <th className="num">Subtotal</th>
+                    <th aria-label="Quitar" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {lineas.map((l) => {
+                    const cant = parseInt(l.cantidad, 10) || 0
+                    const costo = parseFloat(l.costo) || 0
+                    const nuevoCosto = cant > 0 ? costoPromedio(l.stock, l.costoActual, cant, costo) : l.costoActual
+                    return (
+                      <tr key={l.clave}>
+                        <td className="inv-desc">
+                          {l.descripcion}
+                          {l.esNuevo && <span className="inv-badge-nuevo">Nuevo</span>}
+                        </td>
+                        <td className="num">
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={l.cantidad}
+                            onChange={(e) => editarLinea(l.clave, 'cantidad', e.target.value)}
+                            disabled={guardando}
+                            className="inv-input inv-input-num"
+                            aria-label={`Unidades que llegan de ${l.descripcion}`}
+                          />
+                        </td>
+                        <td className="num">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={formatCOPInput(l.costo)}
+                            onChange={(e) => editarLinea(l.clave, 'costo', parseCOP(e.target.value))}
+                            disabled={guardando}
+                            className="inv-input inv-input-num"
+                            aria-label={`Costo unitario de ${l.descripcion}`}
+                          />
+                        </td>
+                        {/* Vista previa: lo que queda después de la entrada */}
+                        <td className="num">
+                          {l.stock}
+                          {cant > 0 && <span className="inv-nuevo"> → {l.stock + cant}</span>}
+                        </td>
+                        <td className="num">
+                          {l.esNuevo ? '—' : formatCOP(l.costoActual)}
+                          {cant > 0 && Math.round(nuevoCosto) !== Math.round(l.costoActual) && (
+                            <span className="inv-nuevo"> → {formatCOP(nuevoCosto)}</span>
+                          )}
+                        </td>
+                        <td className="num">{formatCOP(cant * costo)}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="inv-quitar"
+                            onClick={() => quitarLinea(l.clave)}
+                            disabled={guardando}
+                            aria-label={`Quitar ${l.descripcion}`}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="inv-pie">
+            <span className="inv-total">Total de la compra: <strong>{formatCOP(total)}</strong></span>
+            <button
+              type="button"
+              className="inv-btn"
+              onClick={guardar}
+              disabled={guardando || lineas.length === 0 || !!nuevoForm}
+            >
+              {guardando ? 'Registrando...' : 'Registrar entrada'}
+            </button>
+          </div>
+          <p className="inv-hint">
+            Las unidades se <strong>suman</strong> al stock. El costo pasa a ser el promedio
+            entre lo que había y lo que llegó, así el margen de los reportes sigue siendo exacto.
+          </p>
+        </div>
+
+        {/* ---------- Entradas recientes ---------- */}
+        <div className="inv-card">
+          <h2 className="inv-subtitle inv-subtitle-icono">
+            <History size={20} aria-hidden="true" /> Entradas recientes
+          </h2>
+          {/* Antes, mientras cargaba, decía que no había entradas */}
+          {cargando && entradas.length === 0 ? (
+            <div className="inv-cargando">
+              <Loader2 size={18} className="animate-spin" aria-hidden="true" /> Cargando entradas...
+            </div>
+          ) : entradas.length === 0 ? (
+            <p className="inv-vacio">Todavía no hay entradas registradas.</p>
+          ) : (
+            <div className="inv-tabla-wrap">
+              <table className="inv-tabla">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Fecha</th>
+                    <th>Proveedor</th>
+                    <th>Factura</th>
+                    <th>Productos</th>
+                    <th className="num">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entradas.map((e) => {
+                    const det = e.detalle_entradas || []
+                    const unidades = det.reduce((s, d) => s + (Number(d.cantidad) || 0), 0)
+                    return (
+                      <tr key={e.id}>
+                        <td>{numeroDoc(e)}</td>
+                        <td className="inv-fecha">{formatToColombiaShort(e.fecha)}</td>
+                        <td>{e.proveedor || '—'}</td>
+                        <td>{e.factura || '—'}</td>
+                        <td>
+                          {det.length} {det.length === 1 ? 'producto' : 'productos'} · {unidades} unid.
+                        </td>
+                        <td className="num">{formatCOP(e.total)}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {confirmando && (
+        <ConfirmarRegistroModal
+          titulo="Registrar entrada"
+          icono={PackagePlus}
+          lineas={[
+            {
+              etiqueta: 'Productos',
+              valor: formatNumero(lineas.length) + (nuevos > 0 ? ` (${nuevos} ${nuevos === 1 ? 'nuevo' : 'nuevos'})` : '')
+            },
+            { etiqueta: 'Unidades que entran', valor: formatNumero(unidades) },
+            { etiqueta: 'Total de la compra', valor: formatCOP(total) }
+          ]}
+          aviso="Las unidades se SUMAN al stock, y la entrada no se puede editar después. Si algo queda mal, se corrige con un ajuste."
+          textoConfirmar="Registrar"
+          procesando={guardando}
+          onConfirmar={registrar}
+          onCancelar={() => setConfirmando(false)}
+        />
       )}
     </div>
   )

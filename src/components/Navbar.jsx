@@ -8,6 +8,7 @@ import { formatHoraColombia } from '../utils/dateFormatter'
 import CierreCajaModal from './CierreCajaModal'
 import CambiarContrasenaModal from './CambiarContrasenaModal'
 import AcercaDeModal from './AcercaDeModal'
+import { confirmarSalida } from '../hooks/useCambiosPendientes'
 import {
   ChevronDown, KeyRound, LogOut, ShoppingCart, Package, Boxes, Warehouse,
   Users, BarChart3, Store, Settings, UserCog, LayoutGrid, Info
@@ -109,7 +110,10 @@ function Navbar() {
     setAbierto(null)
   }
 
+  // confirmarSalida: si una pantalla tiene trabajo sin guardar (una entrada
+  // de mercancía a medio cargar, por ejemplo), pregunta antes de irse
   const handleNav = (path) => {
+    if (path !== location.pathname && !confirmarSalida()) return
     navigate(path)
     cerrarMenus()
   }
@@ -122,6 +126,7 @@ function Navbar() {
   // Con caja abierta, primero se hace el arqueo del turno; sin caja abierta
   // (por ejemplo si se omitió la apertura) se cierra sesión directamente
   const handleLogout = () => {
+    if (!confirmarSalida()) return
     cerrarMenus()
     if (session) setShowCierre(true)
     else salir()
