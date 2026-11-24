@@ -243,7 +243,9 @@ function InventarioPage() {
           className={`inv-tab ${pestana === 'entradas' ? 'inv-tab-activa' : ''}`}
           onClick={() => abrirPestana('entradas')}
         >
-          <PackagePlus size={16} aria-hidden="true" /> Entrada de mercancía
+          <PackagePlus size={16} aria-hidden="true" />
+          <span className="inv-tab-largo">Entrada de mercancía</span>
+          <span className="inv-tab-corto">Entrada</span>
         </button>
         <button
           type="button"
@@ -252,7 +254,9 @@ function InventarioPage() {
           className={`inv-tab ${pestana === 'ajustes' ? 'inv-tab-activa' : ''}`}
           onClick={() => abrirPestana('ajustes')}
         >
-          <ClipboardCheck size={16} aria-hidden="true" /> Ajuste por conteo
+          <ClipboardCheck size={16} aria-hidden="true" />
+          <span className="inv-tab-largo">Ajuste por conteo</span>
+          <span className="inv-tab-corto">Ajuste</span>
         </button>
         <button
           type="button"
@@ -261,7 +265,9 @@ function InventarioPage() {
           className={`inv-tab ${pestana === 'importar' ? 'inv-tab-activa' : ''}`}
           onClick={() => abrirPestana('importar')}
         >
-          <FileSpreadsheet size={16} aria-hidden="true" /> Importar desde Excel
+          <FileSpreadsheet size={16} aria-hidden="true" />
+          <span className="inv-tab-largo">Importar desde Excel</span>
+          <span className="inv-tab-corto">Importar</span>
         </button>
       </div>
 

@@ -335,3 +335,33 @@
   border-radius: 0.25rem;
   vertical-align: middle;
 }
+
+/* ---- Celular ----
+   🔧 Antes la página no tenía ningún ajuste para celular aparte del título:
+   las tres pestañas no cabían en 360px y «Importar desde Excel» quedaba
+   fuera de la pantalla. 768px, el mismo corte que Productos y Ventas */
+
+.inv-tab-corto { display: none; }
+
+@media (max-width: 768px) {
+  .inv-page { padding: 1rem 0.75rem; }
+  .inv-card { padding: 1rem; }
+
+  /* Tres pestañas del mismo ancho, con su nombre corto y fáciles de tocar */
+  .inv-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .inv-tab-largo { display: none; }
+  .inv-tab-corto { display: inline; }
+
+  /* 16px: con menos, Safari en iPhone hace zoom al tocar el campo */
+  .inv-page .inv-input { font-size: 1rem; }
+
+  .inv-btn,
+  .inv-btn-sec { min-height: 44px; }
+}

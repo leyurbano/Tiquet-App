@@ -59,20 +59,44 @@
   cursor: pointer;
 }
 
-.imp-tabla-wrap { max-height: 28rem; overflow-y: auto; }
+/* Solo en escritorio: una caja con scroll propio y encabezado pegado. En el
+   celular atrapa el dedo (se mueve la tabla y no la página) y el encabezado
+   queda flotando sobre las filas, el mismo problema que ya se corrigió en
+   ProductList.css */
+@media (min-width: 769px) {
+  .imp-tabla-wrap { max-height: 28rem; overflow-y: auto; }
 
-.imp-tabla-wrap thead th {
-  position: sticky;
-  top: 0;
-  background: #fff;
+  .imp-tabla-wrap thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+  }
 }
 
 .imp-fila-error td { background: #fef2f2; }
 
-.imp-obs { font-size: 0.8rem; color: #6b7280; }
+.imp-obs { font-size: 0.8rem; color: #6b7280; font-weight: 400; }
 .imp-fila-error .imp-obs { color: #991b1b; }
 
-.imp-proveedor { max-width: 24rem; margin-top: 1rem; }
+.imp-cabecera { margin: 0.75rem 0 0; }
+
+/* Recordatorio del modo junto al nombre del archivo */
+.imp-modo-chip {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  vertical-align: middle;
+}
+
+.imp-modo-chip-conteo { background: #dbeafe; color: #1e40af; }
+
+/* Columnas solo de escritorio y detalle solo de celular */
+.imp-movil { display: none; }
 
 .imp-alerta {
   background: #fef2f2;
@@ -94,6 +118,8 @@
   margin: 0 0 1rem;
   padding: 0;
   border: none;
+  /* Un fieldset no se encoge por debajo de su contenido sin esto */
+  min-width: 0;
 }
 
 .imp-modos-titulo {
@@ -119,6 +145,16 @@
 
 .imp-modo:hover { border-color: #d1d5db; background: #f9fafb; }
 
+/* styles.css le da a TODO input width: 100%, padding y borde, radios
+   incluidos: el radio se comía la tarjeta y sacaba el icono y el texto */
+.imp-modo input,
+.imp-filtro input {
+  width: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+
 .imp-modo input {
   margin-top: 0.2rem;
   accent-color: #2563eb;
@@ -142,6 +178,41 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 640px) {
+/* ---- Celular ----
+   768px, el mismo corte que Productos, Ventas y Clientes */
+@media (max-width: 768px) {
   .imp-modos { grid-template-columns: 1fr; }
+
+  /* Toda la tarjeta se toca, así que basta con que sea cómoda al dedo */
+  .imp-modo { min-height: 44px; }
+
+  .imp-escritorio { display: none; }
+  .imp-movil { display: flex; }
+
+  .imp-detalle-movil {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.4rem;
+    margin-top: 0.3rem;
+  }
+
+  .imp-tabla-wrap .inv-tabla { font-size: 0.8rem; }
+
+  .imp-tabla-wrap .inv-tabla th,
+  .imp-tabla-wrap .inv-tabla td { padding: 0.5rem 0.35rem; }
+
+  /* Los botones ocupan el ancho: el pulgar los alcanza y el texto no se corta */
+  .imp-acciones .inv-btn,
+  .imp-acciones .inv-btn-sec {
+    flex: 1 1 12rem;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .inv-pie .imp-acciones { width: 100%; }
+
+  .imp-filtro { min-height: 44px; }
+  .imp-filtro input { width: 1.1rem; height: 1.1rem; }
+
+  .imp-modo-chip { margin: 0.35rem 0 0; display: table; }
 }

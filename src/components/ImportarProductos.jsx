@@ -13,7 +13,7 @@ import {
 } from '../utils/importarProductos'
 import { useCambiosPendientes } from '../hooks/useCambiosPendientes'
 import ConfirmarRegistroModal from './ConfirmarRegistroModal'
-import { Download, Upload, PackagePlus, ClipboardCheck, FileSpreadsheet } from 'lucide-react'
+import { Download, Upload, PackagePlus, ClipboardCheck } from 'lucide-react'
 import './ImportarProductos.css'
 
 const ESTADOS = {
@@ -27,6 +27,22 @@ const ESTADOS = {
   sin_conteo: { etiqueta: 'Sin conteo', clase: 'imp-omitida' },
   error: { etiqueta: 'Error', clase: 'imp-error' }
 }
+
+const observacion = (f) => (f.errores.length > 0 ? f.errores.join(' · ') : f.aviso || '')
+
+const ChipEstado = ({ estado }) => (
+  <span className={`imp-chip ${ESTADOS[estado].clase}`}>{ESTADOS[estado].etiqueta}</span>
+)
+
+// En el celular, Estado y Observación no caben como columnas: se muestran
+// debajo del nombre. Así el error de la fila se sigue leyendo sin tener que
+// arrastrar la tabla hacia un lado
+const DetalleMovil = ({ fila }) => (
+  <span className="imp-movil imp-detalle-movil">
+    <ChipEstado estado={fila.estado} />
+    {observacion(fila) && <span className="imp-obs">{observacion(fila)}</span>}
+  </span>
+)
 
 /**
  * Importar desde Excel (.xlsx o .csv), de dos formas:
@@ -223,11 +239,9 @@ function ImportarProductos({ version = 0, onRegistrado }) {
       }
 
   return (
+    // 🔧 Antes repetía el título "Importar desde Excel" que ya dice la pestaña:
+    // Entrada y Ajuste no lo hacen, y en el celular empujaba todo hacia abajo
     <div className="inv-card">
-      <h2 className="inv-subtitle inv-subtitle-icono">
-        <FileSpreadsheet size={20} aria-hidden="true" /> Importar desde Excel
-      </h2>
-
       {errorCatalogo && (
         <p className="imp-alerta">
           No se pudo cargar el catálogo actual. Recarga la página antes de importar.
@@ -333,9 +347,31 @@ function ImportarProductos({ version = 0, onRegistrado }) {
 
       {archivo && filas.length > 0 && (
         <>
+          {/* El modo se repite aquí: en el celular el selector quedó muy arriba,
+              y cambiarlo reclasifica el mismo archivo */}
           <p className="imp-archivo">
             <strong>{archivo}</strong> · {formatNumero(filas.length)} {filas.length === 1 ? 'fila' : 'filas'}
+            <span className={`imp-modo-chip ${modo === 'conteo' ? 'imp-modo-chip-conteo' : ''}`}>
+              {modo === 'conteo' ? 'Conteo físico: fija el stock' : 'Mercancía que llegó: suma stock'}
+            </span>
           </p>
+
+          {/* Datos del documento arriba, como en Entrada de mercancía. Antes
+              quedaba debajo de la tabla y en el celular nadie lo veía */}
+          {modo === 'entrada' && (
+            <div className="inv-cabecera imp-cabecera">
+              <label className="inv-campo">
+                <span>Proveedor (opcional)</span>
+                <input
+                  type="text"
+                  value={proveedor}
+                  onChange={(e) => setProveedor(e.target.value)}
+                  disabled={guardando}
+                  className="inv-input"
+                />
+              </label>
+            </div>
+          )}
 
           <div className="imp-resumen">
             {modo === 'conteo' ? (
@@ -372,13 +408,13 @@ function ImportarProductos({ version = 0, onRegistrado }) {
                 <thead>
                   <tr>
                     <th className="num">Fila</th>
-                    <th>Estado</th>
+                    <th className="imp-escritorio">Estado</th>
                     <th>Producto</th>
                     <th className="num">Sistema</th>
                     <th className="num">Contado</th>
-                    <th className="num">Diferencia</th>
-                    <th className="num">Valor</th>
-                    <th>Observación</th>
+                    <th className="num">Dif.</th>
+                    <th className="num imp-escritorio">Valor</th>
+                    <th className="imp-escritorio">Observación</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -387,19 +423,18 @@ function ImportarProductos({ version = 0, onRegistrado }) {
                     return (
                       <tr key={f.fila} className={f.estado === 'error' ? 'imp-fila-error' : ''}>
                         <td className="num">{f.fila}</td>
-                        <td>
-                          <span className={`imp-chip ${ESTADOS[f.estado].clase}`}>{ESTADOS[f.estado].etiqueta}</span>
-                        </td>
+                        <td className="imp-escritorio"><ChipEstado estado={f.estado} /></td>
                         <td className="inv-desc">
                           {f.producto ? nombreProducto(f.nombre) : f.nombre || f.numero || '—'}
+                          <DetalleMovil fila={f} />
                         </td>
                         <td className="num">{f.producto ? formatNumero(f.stockSistema) : '—'}</td>
                         <td className="num">{f.contado === null || Number.isNaN(f.contado) ? '—' : formatNumero(f.contado)}</td>
                         <td className={`num ${tono}`}>
                           {f.diferencia === null ? '—' : f.diferencia > 0 ? `+${formatNumero(f.diferencia)}` : formatNumero(f.diferencia)}
                         </td>
-                        <td className={`num ${tono}`}>{f.diferencia ? formatCOP(f.valor) : '—'}</td>
-                        <td className="imp-obs">{f.errores.length > 0 ? f.errores.join(' · ') : f.aviso || ''}</td>
+                        <td className={`num imp-escritorio ${tono}`}>{f.diferencia ? formatCOP(f.valor) : '—'}</td>
+                        <td className="imp-obs imp-escritorio">{observacion(f)}</td>
                       </tr>
                     )
                   })}
@@ -410,47 +445,35 @@ function ImportarProductos({ version = 0, onRegistrado }) {
                 <thead>
                   <tr>
                     <th className="num">Fila</th>
-                    <th>Estado</th>
+                    <th className="imp-escritorio">Estado</th>
                     <th>Nombre</th>
                     <th className="num">Precio</th>
-                    <th className="num">Cantidad</th>
+                    <th className="num">Cant.</th>
                     <th className="num">Costo</th>
-                    <th>Observación</th>
+                    <th className="imp-escritorio">Observación</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visibles.map((f) => (
                     <tr key={f.fila} className={f.estado === 'error' ? 'imp-fila-error' : ''}>
                       <td className="num">{f.fila}</td>
-                      <td>
-                        <span className={`imp-chip ${ESTADOS[f.estado].clase}`}>{ESTADOS[f.estado].etiqueta}</span>
+                      <td className="imp-escritorio"><ChipEstado estado={f.estado} /></td>
+                      <td className="inv-desc">
+                        {f.nombre || '—'}
+                        <DetalleMovil fila={f} />
                       </td>
-                      <td className="inv-desc">{f.nombre || '—'}</td>
                       <td className="num">
                         {f.producto ? formatCOP(f.producto.precio_venta) : f.precio === null || Number.isNaN(f.precio) ? '—' : formatCOP(f.precio)}
                       </td>
                       <td className="num">{formatNumero(f.cantidad)}</td>
                       <td className="num">{formatCOP(f.costo)}</td>
-                      <td className="imp-obs">{f.errores.length > 0 ? f.errores.join(' · ') : f.aviso || ''}</td>
+                      <td className="imp-obs imp-escritorio">{observacion(f)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
           </div>
-
-          {modo === 'entrada' && (
-            <label className="inv-campo imp-proveedor">
-              <span>Proveedor (opcional)</span>
-              <input
-                type="text"
-                value={proveedor}
-                onChange={(e) => setProveedor(e.target.value)}
-                disabled={guardando}
-                className="inv-input"
-              />
-            </label>
-          )}
 
           <div className="inv-pie">
             <span className="inv-total">
@@ -479,9 +502,11 @@ function ImportarProductos({ version = 0, onRegistrado }) {
                 onClick={() => setConfirmando(true)}
                 disabled={guardando || importables === 0 || cargando}
               >
-                {modo === 'conteo'
-                  ? `Fijar ${formatNumero(importables)} ${importables === 1 ? 'producto' : 'productos'}`
-                  : `Importar ${formatNumero(importables)} ${importables === 1 ? 'fila' : 'filas'}`}
+                {guardando
+                  ? 'Importando...'
+                  : modo === 'conteo'
+                    ? `Fijar ${formatNumero(importables)} ${importables === 1 ? 'producto' : 'productos'}`
+                    : `Importar ${formatNumero(importables)} ${importables === 1 ? 'fila' : 'filas'}`}
               </button>
             </div>
           </div>
