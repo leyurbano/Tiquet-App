@@ -82,3 +82,66 @@
   font-size: 0.875rem;
   margin-bottom: 0.75rem;
 }
+
+/* ---- Qué tiene el archivo: compra o conteo ----
+   Sin uno elegido por defecto: sumar un conteo duplicaría el stock y fijar
+   una compra lo borraría, así que se elige a propósito */
+
+.imp-modos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: none;
+}
+
+.imp-modos-titulo {
+  grid-column: 1 / -1;
+  padding: 0;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.imp-modo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 0.6rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.imp-modo:hover { border-color: #d1d5db; background: #f9fafb; }
+
+.imp-modo input {
+  margin-top: 0.2rem;
+  accent-color: #2563eb;
+  flex-shrink: 0;
+}
+
+.imp-modo svg { color: #2563eb; flex-shrink: 0; margin-top: 0.05rem; }
+
+.imp-modo span { display: flex; flex-direction: column; gap: 0.15rem; }
+.imp-modo strong { font-size: 0.9rem; color: #111827; }
+.imp-modo small { font-size: 0.78rem; color: #6b7280; line-height: 1.35; }
+
+.imp-modo-activo,
+.imp-modo-activo:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.imp-modo:focus-within {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .imp-modos { grid-template-columns: 1fr; }
+}

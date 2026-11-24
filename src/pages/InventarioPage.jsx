@@ -3,15 +3,17 @@ import { productService } from '../services/productService'
 import { inventarioService } from '../services/inventarioService'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from '../utils/toast'
-import { formatCOP } from '../utils/currencyFormatter'
+import { formatCOP, formatNumero } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import './InventarioPage.css'
-import { PackagePlus, Trash2, ClipboardCheck, FileSpreadsheet } from 'lucide-react'
+import { PackagePlus, Trash2, ClipboardCheck, FileSpreadsheet, Warehouse, History, Loader2 } from 'lucide-react'
 import AjusteInventario from '../components/AjusteInventario'
 import { numeroProducto, coincideNumero } from '../utils/producto'
 import { numeroDoc } from '../utils/documento'
 import ImportarProductos from '../components/ImportarProductos'
+import ConfirmarRegistroModal from '../components/ConfirmarRegistroModal'
+import { useCambiosPendientes } from '../hooks/useCambiosPendientes'
 
 // Mismo cálculo que hace registrar_entrada en la base de datos: promedio
 // ponderado entre lo que había y lo que llega. Aquí solo se usa para mostrar
@@ -49,6 +51,14 @@ function InventarioPage() {
   const [cabecera, setCabecera] = useState(VACIO)
   const [guardando, setGuardando] = useState(false)
   const [pestana, setPestana] = useState('entradas')
+  // 🔧 Antes, cambiar de pestaña desmontaba Ajuste e Importar y se perdía lo
+  // que tenían: un conteo a medio llenar o un archivo ya revisado. Ahora cada
+  // pestaña se monta la primera vez que se abre y después solo se oculta
+  const [visitadas, setVisitadas] = useState(['entradas'])
+  // Sube cada vez que una pestaña registra algo: las otras recargan su
+  // catálogo, porque el stock y el costo cambiaron
+  const [version, setVersion] = useState(0)
+  const [confirmando, setConfirmando] = useState(false)
   // Formulario del producto nuevo que se está por agregar (o null)
   const [nuevoForm, setNuevoForm] = useState(null)
   // Las líneas de productos nuevos aún no tienen id: se identifican con esto
@@ -68,6 +78,20 @@ function InventarioPage() {
   useEffect(() => {
     if (esAdministrador) cargar()
   }, [esAdministrador])
+
+  const abrirPestana = (id) => {
+    setPestana(id)
+    setVisitadas((v) => (v.includes(id) ? v : [...v, id]))
+  }
+
+  // Después de registrar en cualquier pestaña: esta recarga y las otras también
+  const refrescarTodo = () => {
+    cargar()
+    setVersion((v) => v + 1)
+  }
+
+  // Una factura a medio cargar no se pierde sin avisar al salir del menú
+  useCambiosPendientes(lineas.length > 0 || !!nuevoForm, 'Hay una entrada de mercancía sin registrar.')
 
   // Hasta 8 coincidencias por descripción o por número de producto
   const sugerencias = useMemo(() => {
@@ -148,14 +172,21 @@ function InventarioPage() {
     (s, l) => s + (parseInt(l.cantidad, 10) || 0) * (parseFloat(l.costo) || 0), 0
   )
 
-  const guardar = async () => {
+  const unidades = lineas.reduce((s, l) => s + (parseInt(l.cantidad, 10) || 0), 0)
+  const nuevos = lineas.filter((l) => l.esNuevo).length
+
+  // Primero se valida y se muestra el resumen; registrar() guarda
+  const guardar = () => {
     if (lineas.length === 0) return toast.aviso('Agrega al menos un producto')
 
     const invalida = lineas.find((l) => !(parseInt(l.cantidad, 10) > 0) || l.costo === '')
     if (invalida) {
       return toast.aviso(`Revisa "${invalida.descripcion}": falta la cantidad o el costo`)
     }
+    setConfirmando(true)
+  }
 
+  const registrar = async () => {
     setGuardando(true)
     const { entrada, error } = await inventarioService.registrarEntrada({
       ...cabecera,
@@ -177,6 +208,7 @@ function InventarioPage() {
       })
     })
     setGuardando(false)
+    setConfirmando(false)
 
     if (error) return toast.error('No se pudo registrar la entrada: ' + error)
 
@@ -187,7 +219,7 @@ function InventarioPage() {
     )
     setLineas([])
     setCabecera(VACIO)
-    cargar()
+    refrescarTodo()
   }
 
   if (!esAdministrador) {
@@ -200,7 +232,7 @@ function InventarioPage() {
 
   return (
     <div className="inv-page">
-      <h1 className="inv-title"><PackagePlus size={26} /> Inventario</h1>
+      <h1 className="inv-title"><Warehouse size={30} aria-hidden="true" /> Inventario</h1>
 
       {/* Stock y costo solo cambian aquí: entradas (compras) y ajustes */}
       <div className="inv-tabs" role="tablist">
@@ -209,37 +241,41 @@ function InventarioPage() {
           role="tab"
           aria-selected={pestana === 'entradas'}
           className={`inv-tab ${pestana === 'entradas' ? 'inv-tab-activa' : ''}`}
-          onClick={() => setPestana('entradas')}
+          onClick={() => abrirPestana('entradas')}
         >
-          <PackagePlus size={16} /> Entrada de mercancía
+          <PackagePlus size={16} aria-hidden="true" /> Entrada de mercancía
         </button>
         <button
           type="button"
           role="tab"
           aria-selected={pestana === 'ajustes'}
           className={`inv-tab ${pestana === 'ajustes' ? 'inv-tab-activa' : ''}`}
-          onClick={() => setPestana('ajustes')}
+          onClick={() => abrirPestana('ajustes')}
         >
-          <ClipboardCheck size={16} /> Ajuste por conteo
+          <ClipboardCheck size={16} aria-hidden="true" /> Ajuste por conteo
         </button>
         <button
           type="button"
           role="tab"
           aria-selected={pestana === 'importar'}
           className={`inv-tab ${pestana === 'importar' ? 'inv-tab-activa' : ''}`}
-          onClick={() => setPestana('importar')}
+          onClick={() => abrirPestana('importar')}
         >
-          <FileSpreadsheet size={16} /> Importar desde Excel
+          <FileSpreadsheet size={16} aria-hidden="true" /> Importar desde Excel
         </button>
       </div>
 
-      {pestana === 'importar' ? (
-        // Al importar se recargan productos y entradas de la otra pestaña
-        <ImportarProductos onImportado={cargar} />
-      ) : pestana === 'ajustes' ? (
-        <AjusteInventario />
-      ) : (
-        <>
+      {visitadas.includes('importar') && (
+        <div role="tabpanel" hidden={pestana !== 'importar'}>
+          <ImportarProductos version={version} onRegistrado={refrescarTodo} />
+        </div>
+      )}
+      {visitadas.includes('ajustes') && (
+        <div role="tabpanel" hidden={pestana !== 'ajustes'}>
+          <AjusteInventario version={version} onRegistrado={refrescarTodo} />
+        </div>
+      )}
+      <div role="tabpanel" hidden={pestana !== 'entradas'}>
           <div className="inv-card">
             {/* ---------- Datos de la compra ---------- */}
             <div className="inv-cabecera">
@@ -457,8 +493,15 @@ function InventarioPage() {
 
           {/* ---------- Entradas recientes ---------- */}
           <div className="inv-card">
-            <h2 className="inv-subtitle">Entradas recientes</h2>
-            {entradas.length === 0 ? (
+            <h2 className="inv-subtitle inv-subtitle-icono">
+              <History size={20} aria-hidden="true" /> Entradas recientes
+            </h2>
+            {/* Antes, mientras cargaba, decía que no había entradas */}
+            {cargando && entradas.length === 0 ? (
+              <div className="inv-cargando">
+                <Loader2 size={18} className="animate-spin" aria-hidden="true" /> Cargando entradas...
+              </div>
+            ) : entradas.length === 0 ? (
               <p className="inv-vacio">Todavía no hay entradas registradas.</p>
             ) : (
               <div className="inv-tabla-wrap">
@@ -495,7 +538,26 @@ function InventarioPage() {
               </div>
             )}
           </div>
-        </>
+      </div>
+
+      {confirmando && (
+        <ConfirmarRegistroModal
+          titulo="Registrar entrada"
+          icono={PackagePlus}
+          lineas={[
+            {
+              etiqueta: 'Productos',
+              valor: formatNumero(lineas.length) + (nuevos > 0 ? ` (${nuevos} ${nuevos === 1 ? 'nuevo' : 'nuevos'})` : '')
+            },
+            { etiqueta: 'Unidades que entran', valor: formatNumero(unidades) },
+            { etiqueta: 'Total de la compra', valor: formatCOP(total) }
+          ]}
+          aviso="Las unidades se SUMAN al stock, y la entrada no se puede editar después. Si algo queda mal, se corrige con un ajuste."
+          textoConfirmar="Registrar"
+          procesando={guardando}
+          onConfirmar={registrar}
+          onCancelar={() => setConfirmando(false)}
+        />
       )}
     </div>
   )

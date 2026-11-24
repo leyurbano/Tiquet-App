@@ -14,11 +14,34 @@
   margin-bottom: 1.5rem;
 }
 
+/* Azul y el mismo ícono del menú, como Ventas, Productos y Clientes */
+.inv-title svg { color: #2563eb; flex-shrink: 0; }
+
 .inv-subtitle {
   font-size: 1.05rem;
   font-weight: 700;
   color: #111827;
   margin-bottom: 1rem;
+}
+
+/* Título de sección con icono, como los títulos de lista del resto */
+.inv-subtitle-icono {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inv-subtitle-icono svg { color: #2563eb; flex-shrink: 0; }
+
+/* Cargando las tablas de recientes: antes decía "Todavía no hay..." */
+.inv-cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  padding: 1.5rem 1rem;
+  font-size: 0.9rem;
 }
 
 .inv-card {
