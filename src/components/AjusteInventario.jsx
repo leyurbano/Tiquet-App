@@ -3,11 +3,14 @@ import { productService } from '../services/productService'
 import { numeroProducto, coincideNumero } from '../utils/producto'
 import { inventarioService } from '../services/inventarioService'
 import { toast } from '../utils/toast'
-import { formatCOP } from '../utils/currencyFormatter'
+import { formatCOP, formatNumero } from '../utils/currencyFormatter'
 import { formatToColombiaShort } from '../utils/dateFormatter'
 import { parseCOP, formatCOPInput } from '../utils/cashSummary'
 import { MOTIVOS_AJUSTE } from '../utils/motivosAjuste'
-import { Trash2 } from 'lucide-react'
+import { numeroDoc } from '../utils/documento'
+import { useCambiosPendientes } from '../hooks/useCambiosPendientes'
+import ConfirmarRegistroModal from './ConfirmarRegistroModal'
+import { Trash2, ClipboardCheck, Loader2, History } from 'lucide-react'
 import '../pages/InventarioPage.css'
 
 /**
@@ -19,8 +22,11 @@ import '../pages/InventarioPage.css'
  *
  * También es el único lugar para corregir un costo: en Productos, stock y
  * costo son de solo lectura al editar.
+ *
+ * version: sube cuando otra pestaña registró algo; se recarga el catálogo
+ * (las líneas ya agregadas se conservan). onRegistrado: avisa a la página.
  */
-function AjusteInventario() {
+function AjusteInventario({ version = 0, onRegistrado }) {
   const [productos, setProductos] = useState([])
   const [ajustes, setAjustes] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -28,6 +34,10 @@ function AjusteInventario() {
   const [lineas, setLineas] = useState([])
   const [nota, setNota] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
+
+  // Un conteo a medio llenar no se pierde sin avisar al salir del menú
+  useCambiosPendientes(lineas.length > 0, 'Hay un ajuste de inventario sin registrar.')
 
   const cargar = async () => {
     setCargando(true)
@@ -40,7 +50,8 @@ function AjusteInventario() {
     setCargando(false)
   }
 
-  useEffect(() => { cargar() }, [])
+  // Al abrir la pestaña y cada vez que otra pestaña registra algo
+  useEffect(() => { cargar() }, [version])
 
   const sugerencias = useMemo(() => {
     const t = busqueda.trim().toLowerCase()
@@ -94,7 +105,13 @@ function AjusteInventario() {
     { faltante: 0, sobrante: 0 }
   )
 
-  const guardar = async () => {
+  const conDiferencia = lineas.filter((l) => {
+    const { diferencia } = calcular(l)
+    return diferencia !== null && diferencia !== 0
+  }).length
+
+  // Primero se valida y se muestra el resumen; registrar() guarda
+  const guardar = () => {
     if (lineas.length === 0) return toast.aviso('Agrega al menos un producto')
 
     const invalida = lineas.find((l) => {
@@ -104,7 +121,10 @@ function AjusteInventario() {
     if (invalida) {
       return toast.aviso(`Revisa "${invalida.descripcion}": escribe cuántas unidades contaste`)
     }
+    setConfirmando(true)
+  }
 
+  const registrar = async () => {
     setGuardando(true)
     const { ajuste, error } = await inventarioService.registrarAjuste({
       nota,
@@ -121,17 +141,20 @@ function AjusteInventario() {
       })
     })
     setGuardando(false)
+    setConfirmando(false)
 
     if (error) return toast.error('No se pudo registrar el ajuste: ' + error)
 
+    // 🔧 Antes mostraba ajuste.id, el id interno de la base de datos
     toast.exito(
       ajuste.cambios > 0
-        ? `Ajuste #${ajuste.id} registrado: ${ajuste.cambios} ${ajuste.cambios === 1 ? 'producto corregido' : 'productos corregidos'}`
-        : `Ajuste #${ajuste.id} registrado: el conteo coincidió con el sistema`
+        ? `Ajuste #${numeroDoc(ajuste)} registrado: ${ajuste.cambios} ${ajuste.cambios === 1 ? 'producto corregido' : 'productos corregidos'}`
+        : `Ajuste #${numeroDoc(ajuste)} registrado: el conteo coincidió con el sistema`
     )
     setLineas([])
     setNota('')
-    cargar()
+    // La página sube la versión: este catálogo y el de las otras pestañas se recargan
+    onRegistrado?.()
   }
 
   return (
@@ -286,8 +309,15 @@ function AjusteInventario() {
       </div>
 
       <div className="inv-card">
-        <h2 className="inv-subtitle">Ajustes recientes</h2>
-        {ajustes.length === 0 ? (
+        <h2 className="inv-subtitle inv-subtitle-icono">
+          <History size={20} aria-hidden="true" /> Ajustes recientes
+        </h2>
+        {/* Antes, mientras cargaba, decía que no había ajustes */}
+        {cargando && ajustes.length === 0 ? (
+          <div className="inv-cargando">
+            <Loader2 size={18} className="animate-spin" aria-hidden="true" /> Cargando ajustes...
+          </div>
+        ) : ajustes.length === 0 ? (
           <p className="inv-vacio">Todavía no hay ajustes registrados.</p>
         ) : (
           <div className="inv-tabla-wrap">
@@ -308,7 +338,7 @@ function AjusteInventario() {
                   const neto = det.reduce((s, d) => s + (Number(d.valor_diferencia) || 0), 0)
                   return (
                     <tr key={a.id}>
-                      <td>{a.id}</td>
+                      <td>{numeroDoc(a)}</td>
                       <td className="inv-fecha">{formatToColombiaShort(a.fecha)}</td>
                       <td>{a.nota || '—'}</td>
                       <td>{det.length} contados · {conCambio} con diferencia</td>
@@ -323,6 +353,24 @@ function AjusteInventario() {
           </div>
         )}
       </div>
+
+      {confirmando && (
+        <ConfirmarRegistroModal
+          titulo="Registrar ajuste"
+          icono={ClipboardCheck}
+          lineas={[
+            { etiqueta: 'Productos contados', valor: formatNumero(lineas.length) },
+            { etiqueta: 'Con diferencia', valor: formatNumero(conDiferencia) },
+            ...(resumen.faltante < 0 ? [{ etiqueta: 'Faltante (al costo)', valor: formatCOP(resumen.faltante), tono: 'falta' }] : []),
+            ...(resumen.sobrante > 0 ? [{ etiqueta: 'Sobrante (al costo)', valor: `+${formatCOP(resumen.sobrante)}`, tono: 'sobra' }] : [])
+          ]}
+          aviso="El stock de estos productos queda IGUAL a lo contado, y el ajuste no se puede editar después."
+          textoConfirmar="Registrar"
+          procesando={guardando}
+          onConfirmar={registrar}
+          onCancelar={() => setConfirmando(false)}
+        />
+      )}
     </>
   )
 }

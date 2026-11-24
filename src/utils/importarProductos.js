@@ -1,10 +1,17 @@
 /**
  * Lectura y revisión de un archivo de productos (.xlsx o .csv) antes de
  * importarlo. Aquí no se guarda nada: solo se clasifica cada fila para que
- * el administrador vea qué va a pasar. La importación la hace
- * registrar_entrada en la base de datos, que vuelve a validar todo.
+ * el administrador vea qué va a pasar.
+ *
+ * Dos formas de importar, porque son dos cosas distintas:
+ *  - Mercancía que llegó (clasificarFilas): se SUMA al stock, como una
+ *    factura de compra. La guarda registrar_entrada.
+ *  - Conteo físico (clasificarConteo): el stock queda IGUAL a lo contado.
+ *    La guarda registrar_ajuste, que deja cada diferencia con su motivo.
+ * En los dos casos la base de datos vuelve a validar todo.
  */
 import { formatCOP } from './currencyFormatter'
+import { numeroProducto } from './producto'
 
 // Mismo límite que registrar_entrada (migración 24)
 export const MAX_FILAS = 2000
@@ -23,8 +30,20 @@ const ALIAS = {
   precio: ['precioventa', 'preciodeventa', 'precio', 'pventa', 'venta'],
   cantidad: ['cantidad', 'stock', 'stockinicial', 'unidades', 'existencias'],
   costo: ['costo', 'costounitario', 'preciocompra', 'preciodecompra', 'costocompra'],
-  stockMinimo: ['stockminimo', 'minimo', 'stockmin']
+  stockMinimo: ['stockminimo', 'minimo', 'stockmin'],
+  // Solo para el conteo: el número del producto y lo que se contó
+  numero: ['numero', 'numeroproducto', 'codigo', 'num', 'no'],
+  contado: ['contado', 'conteo', 'cantidadcontada', 'fisico', 'stockfisico']
 }
+
+// Columnas del archivo para contar: lo descarga el sistema con el catálogo
+// y el stock de ese momento; se llena "Contado" y se vuelve a subir
+export const COLUMNAS_CONTEO = [
+  { clave: 'numero', titulo: 'Número' },
+  { clave: 'nombre', titulo: 'Nombre' },
+  { clave: 'sistema', titulo: 'Sistema' },
+  { clave: 'contado', titulo: 'Contado' }
+]
 
 const normalizarEncabezado = (v) =>
   String(v ?? '')
@@ -154,15 +173,10 @@ const mapearColumnas = (encabezado) => {
 const vacia = (fila) => !fila.some((c) => c !== null && c !== undefined && String(c).trim() !== '')
 
 /**
- * Clasifica cada fila contra el catálogo actual:
- *  - nuevo:     no existe; se crea (con o sin stock)
- *  - existente: ya existe; se le SUMA la cantidad al costo indicado
- *  - omitida:   ya existe y no trae cantidad; no cambia nada
- *  - error:     no se importa; `errores` dice por qué
- *
- * Devuelve { filas } o { error } si el archivo no sirve en conjunto.
+ * Lo común a los dos modos: quita filas vacías, separa el encabezado y
+ * revisa el tamaño. Devuelve { indices, datos } o { error }.
  */
-export function clasificarFilas(crudas, productos) {
+const prepararArchivo = (crudas) => {
   const conNumero = crudas
     .map((celdas, i) => ({ celdas, fila: i + 1 }))
     .filter((f) => !vacia(f.celdas))
@@ -172,12 +186,29 @@ export function clasificarFilas(crudas, productos) {
   const [encabezado, ...datos] = conNumero
   const indices = mapearColumnas(encabezado.celdas)
 
-  if (indices.nombre === undefined) {
-    return { error: 'No encontré la columna "Nombre". Descarga la plantilla y usa sus encabezados.' }
-  }
   if (datos.length === 0) return { error: 'El archivo solo tiene encabezados, sin productos' }
   if (datos.length > MAX_FILAS) {
     return { error: `El archivo tiene ${datos.length} filas y el máximo es ${MAX_FILAS}: divídelo en partes` }
+  }
+  return { indices, datos }
+}
+
+/**
+ * Clasifica cada fila contra el catálogo actual:
+ *  - nuevo:     no existe; se crea (con o sin stock)
+ *  - existente: ya existe; se le SUMA la cantidad al costo indicado
+ *  - omitida:   ya existe y no trae cantidad; no cambia nada
+ *  - error:     no se importa; `errores` dice por qué
+ *
+ * Devuelve { filas } o { error } si el archivo no sirve en conjunto.
+ */
+export function clasificarFilas(crudas, productos) {
+  const archivo = prepararArchivo(crudas)
+  if (archivo.error) return archivo
+  const { indices, datos } = archivo
+
+  if (indices.nombre === undefined) {
+    return { error: 'No encontré la columna "Nombre". Descarga la plantilla y usa sus encabezados.' }
   }
 
   const porNombre = new Map(productos.map((p) => [normalizarNombre(p.descripcion), p]))
@@ -269,3 +300,148 @@ export const aItems = (filas) =>
           }
         : { producto_id: f.producto.id, cantidad: f.cantidad, costo_unitario: f.costo }
     )
+
+// ---------------------------------------------------------------------
+// Conteo físico: el stock queda IGUAL al archivo
+// ---------------------------------------------------------------------
+
+/**
+ * Catálogo para descargar y contar: número, nombre, stock del sistema en
+ * este momento y la columna "Contado" vacía. Ordenado por número, que es
+ * como se recorre la bodega con la lista en la mano.
+ */
+export const filasPlantillaConteo = (productos) =>
+  [...productos]
+    .sort((a, b) => numeroProducto(a) - numeroProducto(b))
+    .map((p) => ({
+      numero: numeroProducto(p),
+      nombre: p.descripcion,
+      sistema: Number(p.cantidad) || 0,
+      contado: ''
+    }))
+
+/**
+ * Clasifica cada fila de un conteo contra el catálogo:
+ *  - ajuste:     lo contado es distinto del stock; queda en lo contado
+ *  - igual:      coincide; se registra igual, como producto contado
+ *  - sin_conteo: la celda "Contado" está vacía; no cambia nada
+ *  - error:      no se importa; `errores` dice por qué
+ *
+ * Se compara contra el stock de AHORA (el del catálogo cargado), no contra la
+ * columna "Sistema" del archivo, que es la foto de cuando se descargó. La
+ * base de datos vuelve a comparar al guardar y rechaza todo si una venta
+ * movió el stock en medio.
+ *
+ * Un ajuste no crea productos: los que no existen son error, y se importan
+ * primero como mercancía que llegó.
+ *
+ * Devuelve { filas } o { error } si el archivo no sirve en conjunto.
+ */
+export function clasificarConteo(crudas, productos) {
+  const archivo = prepararArchivo(crudas)
+  if (archivo.error) return archivo
+  const { indices, datos } = archivo
+
+  if (indices.nombre === undefined && indices.numero === undefined) {
+    return { error: 'No encontré la columna "Nombre" ni "Número". Descarga el catálogo para contar y usa ese archivo.' }
+  }
+  // "Contado" si está; si no, "Cantidad" (un archivo propio del negocio)
+  const columnaConteo = indices.contado ?? indices.cantidad
+  if (columnaConteo === undefined) {
+    return { error: 'No encontré la columna "Contado" con lo que se contó. Descarga el catálogo para contar y llénala.' }
+  }
+
+  const porNumero = new Map(productos.map((p) => [String(numeroProducto(p)), p]))
+  const porNombre = new Map(productos.map((p) => [normalizarNombre(p.descripcion), p]))
+  const vistos = new Map()
+
+  const filas = datos.map(({ celdas, fila }) => {
+    const valor = (i) => (i === undefined ? null : celdas[i])
+
+    const numero = limpiarTexto(valor(indices.numero))
+    const nombre = limpiarTexto(valor(indices.nombre))
+    const contado = parseNumero(valor(columnaConteo))
+    const errores = []
+
+    // El número manda: el nombre pudo cambiarse después de descargar
+    let producto = null
+    if (numero) {
+      producto = porNumero.get(numero) || null
+      if (!producto) errores.push(`No hay un producto con el número ${numero}`)
+    } else if (nombre) {
+      producto = porNombre.get(normalizarNombre(nombre)) || null
+      if (!producto) {
+        errores.push('No existe en el catálogo. Si es nuevo, impórtalo como «Mercancía que llegó»')
+      }
+    } else {
+      errores.push('Falta el nombre o el número del producto')
+    }
+
+    if (producto) {
+      if (vistos.has(producto.id)) errores.push(`Repetido: ya está en la fila ${vistos.get(producto.id)}`)
+      else vistos.set(producto.id, fila)
+    }
+
+    if (Number.isNaN(contado)) errores.push('Lo contado no es un número')
+    else if (contado !== null && (contado < 0 || !Number.isInteger(contado))) {
+      errores.push('Lo contado debe ser un número entero, cero o más')
+    }
+
+    const stockSistema = producto ? Number(producto.cantidad) || 0 : 0
+    const costo = producto ? Number(producto.costo) || 0 : 0
+    let estado
+    let diferencia = null
+    let aviso = null
+
+    if (errores.length > 0) {
+      estado = 'error'
+    } else if (contado === null) {
+      estado = 'sin_conteo'
+      aviso = 'Sin conteo: no cambia nada'
+    } else {
+      diferencia = contado - stockSistema
+      estado = diferencia === 0 ? 'igual' : 'ajuste'
+    }
+
+    return {
+      fila,
+      numero,
+      nombre: producto ? producto.descripcion : nombre,
+      producto,
+      stockSistema,
+      contado,
+      diferencia,
+      valor: diferencia === null ? 0 : diferencia * costo,
+      estado,
+      errores,
+      aviso
+    }
+  })
+
+  return { filas }
+}
+
+/** Filas contadas → líneas para registrar_ajuste (sin tocar el costo). */
+export const aItemsAjuste = (filas) =>
+  filas
+    .filter((f) => f.estado === 'ajuste' || f.estado === 'igual')
+    .map((f) => ({
+      producto_id: f.producto.id,
+      // Foto del stock que se mostró: la base de datos la compara al guardar
+      stock_sistema: f.stockSistema,
+      stock_contado: f.contado,
+      costo_unitario: null,
+      motivo: 'conteo'
+    }))
+
+/** Cuántas filas de cada tipo y cuánto vale la diferencia, al costo. */
+export const resumenConteo = (filas) =>
+  filas.reduce(
+    (r, f) => {
+      r[f.estado] += 1
+      if (f.valor < 0) r.faltante += f.valor
+      else r.sobrante += f.valor
+      return r
+    },
+    { ajuste: 0, igual: 0, sin_conteo: 0, error: 0, faltante: 0, sobrante: 0 }
+  )

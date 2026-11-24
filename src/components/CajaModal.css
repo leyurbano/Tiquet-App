@@ -569,3 +569,21 @@
     padding-right: 0.5rem;
   }
 }
+
+/* ---- Resumen antes de registrar (ConfirmarRegistroModal) ---- */
+
+.confirmar-lineas {
+  margin: 0.75rem 0 0.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.caja-row-value.confirmar-falta { color: #b91c1c; }
+.caja-row-value.confirmar-sobra { color: #15803d; }
+
+/* Lo que no se puede deshacer: que se lea antes del botón */
+.confirmar-aviso {
+  background: #fffbeb;
+  color: #92400e;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+}

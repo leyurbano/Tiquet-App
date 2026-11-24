@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId } from "react";
+import React, { useState, useEffect, useId, useRef } from "react";
 import { toast } from '../utils/toast'
 import "./SalesForm.css";
 import { formatCOP } from "../utils/currencyFormatter";
@@ -11,7 +11,7 @@ import { esConsumidorFinal } from "../utils/clientes";
 import { numeroProducto, coincideNumero } from "../utils/producto";
 import {
   ReceiptText, User, UserPlus, ScanBarcode, Package, Trash2, Wallet,
-  CreditCard, CircleCheck, AlertTriangle, Check, X, Loader2,
+  CreditCard, CircleCheck, AlertTriangle, Check, X, Loader2, Plus,
 } from "lucide-react";
 
 // Item y Cantidad solo aceptan dígitos (también al pegar)
@@ -37,6 +37,8 @@ function SalesForm({
   const [productSearch, setProductSearch] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [quantity, setQuantity] = useState("");
+  // Al elegir un producto, el cursor salta a Cantidad
+  const cantidadRef = useRef(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [customerFound, setCustomerFound] = useState(null);
   const [showAddCustomerBtn, setShowAddCustomerBtn] = useState(false);
@@ -81,6 +83,9 @@ function SalesForm({
     setSelectedProduct(String(numeroProducto(product)));
     setProductSearch(product.descripcion);
     setFilteredProducts([]);
+    // Síncrono, dentro del toque o del Enter: iOS solo abre el teclado si
+    // el foco llega en el mismo gesto del usuario
+    cantidadRef.current?.focus();
   };
 
   /**
@@ -172,14 +177,28 @@ function SalesForm({
     }
   };
 
+  /**
+   * 🔧 Antes solo se llegaba aquí con Enter en Cantidad, y ese campo abre el
+   * teclado numérico (inputMode="numeric"), que en iPhone no tiene tecla
+   * Enter: desde un iPhone no había forma de agregar un producto a mano.
+   * Ahora también lo llama el botón Agregar. Y antes, sin producto o sin
+   * cantidad, no pasaba nada y nadie sabía por qué.
+   */
   const addItem = async () => {
-    if (!selectedProduct || !quantity) return;
+    if (!selectedProduct) {
+      setStockError("Elige un producto por su número o por su nombre.");
+      return;
+    }
 
     // El campo "Item" es el número del negocio, no el id interno
     const product = products.find((p) => coincideNumero(p, selectedProduct));
-    if (!product) return;
+    if (!product) {
+      setStockError(`No hay ningún producto con el número ${selectedProduct}.`);
+      return;
+    }
 
-    await agregarProducto(product, parseInt(quantity));
+    // Vacía cuenta como 1, igual que al escanear
+    await agregarProducto(product, parseInt(quantity) || 1);
   };
 
   /**
@@ -472,6 +491,7 @@ function SalesForm({
                 value={productSearch}
                 onChange={(e) => handleProductSearch(e.target.value)}
                 onKeyDown={manejarEnterBusqueda}
+                enterKeyHint="search"
                 autoComplete="off"
                 className="sf-input"
               />
@@ -496,22 +516,37 @@ function SalesForm({
             </div>
             <div className="sf-group">
               <label className="sf-label" htmlFor={`${idCampo}-cantidad`}>Cantidad</label>
-              <input
-                id={`${idCampo}-cantidad`}
-                type="text"
-                inputMode="numeric"
-                placeholder="Cantidad"
-                value={quantity}
-                onChange={(e) => setQuantity(soloDigitos(e.target.value))}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addItem();
-                  }
-                }}
-                maxLength="5"
-                className="sf-input"
-              />
+              <div className="sf-cantidad-fila">
+                <input
+                  ref={cantidadRef}
+                  id={`${idCampo}-cantidad`}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Cantidad"
+                  value={quantity}
+                  onChange={(e) => setQuantity(soloDigitos(e.target.value))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addItem();
+                    }
+                  }}
+                  maxLength="5"
+                  className="sf-input"
+                />
+                {/* Solo se ve en iPhone/iPad (SalesForm.css): su teclado
+                    numérico no tiene Enter, y sin este botón no había forma
+                    de agregar un producto a mano. En el resto, oculto */}
+                <button
+                  type="button"
+                  className="sf-btn-agregar"
+                  onClick={addItem}
+                  disabled={!selectedProduct}
+                  aria-label="Agregar a la venta"
+                >
+                  <Plus size={20} aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </div>
 

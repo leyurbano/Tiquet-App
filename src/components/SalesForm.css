@@ -107,6 +107,37 @@
   width: 100%;
 }
 
+/* Botón + junto a Cantidad, SOLO en iPhone/iPad. Su teclado numérico no
+   tiene Enter, que era la única forma de agregar un producto a mano; en
+   computador y Android Enter sí existe, así que ahí no se muestra y el
+   diseño queda igual. -webkit-touch-callout solo existe en el WebKit de
+   iOS (todos los navegadores del iPhone lo usan; Safari de Mac no) */
+.sf-cantidad-fila {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.sf-cantidad-fila .sf-input { flex: 1; min-width: 0; }
+
+.sf-btn-agregar { display: none; }
+
+@supports (-webkit-touch-callout: none) {
+  .sf-btn-agregar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    min-height: 44px;
+    border: none;
+    border-radius: 0.375rem;
+    background: #2563eb;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .sf-btn-agregar:disabled { background: #93c5fd; }
+}
+
 .sf-group {
   display: flex;
   flex-direction: column;

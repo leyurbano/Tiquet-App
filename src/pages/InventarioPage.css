@@ -14,11 +14,34 @@
   margin-bottom: 1.5rem;
 }
 
+/* Azul y el mismo ícono del menú, como Ventas, Productos y Clientes */
+.inv-title svg { color: #2563eb; flex-shrink: 0; }
+
 .inv-subtitle {
   font-size: 1.05rem;
   font-weight: 700;
   color: #111827;
   margin-bottom: 1rem;
+}
+
+/* Título de sección con icono, como los títulos de lista del resto */
+.inv-subtitle-icono {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inv-subtitle-icono svg { color: #2563eb; flex-shrink: 0; }
+
+/* Cargando las tablas de recientes: antes decía "Todavía no hay..." */
+.inv-cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  padding: 1.5rem 1rem;
+  font-size: 0.9rem;
 }
 
 .inv-card {
@@ -311,4 +334,34 @@
   padding: 0.1rem 0.35rem;
   border-radius: 0.25rem;
   vertical-align: middle;
+}
+
+/* ---- Celular ----
+   🔧 Antes la página no tenía ningún ajuste para celular aparte del título:
+   las tres pestañas no cabían en 360px y «Importar desde Excel» quedaba
+   fuera de la pantalla. 768px, el mismo corte que Productos y Ventas */
+
+.inv-tab-corto { display: none; }
+
+@media (max-width: 768px) {
+  .inv-page { padding: 1rem 0.75rem; }
+  .inv-card { padding: 1rem; }
+
+  /* Tres pestañas del mismo ancho, con su nombre corto y fáciles de tocar */
+  .inv-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .inv-tab-largo { display: none; }
+  .inv-tab-corto { display: inline; }
+
+  /* 16px: con menos, Safari en iPhone hace zoom al tocar el campo */
+  .inv-page .inv-input { font-size: 1rem; }
+
+  .inv-btn,
+  .inv-btn-sec { min-height: 44px; }
 }

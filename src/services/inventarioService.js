@@ -133,7 +133,8 @@ export const inventarioService = {
     try {
       const { data, error } = await supabase
         .from('ajustes')
-        .select('id, fecha, nota, detalle_ajustes ( diferencia, valor_diferencia )')
+        // numero: el consecutivo del negocio, que es lo que se muestra
+        .select('id, numero, fecha, nota, detalle_ajustes ( diferencia, valor_diferencia )')
         .order('fecha', { ascending: false })
         .limit(limite)
 
